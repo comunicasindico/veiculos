@@ -2,72 +2,65 @@
 const form=document.getElementById("formAbastecimento")
 const busca=document.getElementById("buscaAbastecimento")
 const btnCalc=document.getElementById("btnCalcularValorLitro")
-let ABASTECIMENTO_EDITANDO_ID=null
 form?.addEventListener("submit",salvarAbastecimento)
-form?.addEventListener("reset",()=>{
-setTimeout(()=>cancelarEdicaoAbastecimento(),0)
-})
 busca?.addEventListener("input",renderizarAbastecimentos)
 btnCalc?.addEventListener("click",calcularValorLitro)
-function numeroSeguro(v){
-if(v===null||v===undefined||v==="")return 0
-const n=Number(String(v).replace(",","."))
-return Number.isFinite(n)?n:0
-}
+
 function calcularValorLitro(){
-const litros=numeroSeguro(document.getElementById("litrosAbastecimento")?.value||0)
-const total=numeroSeguro(document.getElementById("valorTotalAbastecimento")?.value||0)
+const litros=Number(document.getElementById("litrosAbastecimento")?.value||0)
+const total=Number(document.getElementById("valorTotalAbastecimento")?.value||0)
 if(!litros||!total){window.toast("Informe litros e valor total");return}
 document.getElementById("valorLitroAbastecimento").value=(total/litros).toFixed(3)
 window.toast("Valor por litro calculado")
 }
-function salvarAbastecimento(e){
+
+async function salvarAbastecimento(e){
 e.preventDefault()
 const veiculoId=document.getElementById("veiculoAbastecimento")?.value||""
 const dataAbastecimento=document.getElementById("dataAbastecimento")?.value||""
 if(!veiculoId){window.toast("Selecione o veículo");return}
 if(!dataAbastecimento){window.toast("Informe a data do abastecimento");return}
+
 const item={
-id:ABASTECIMENTO_EDITANDO_ID||window.Utils.gerarId(),
-veiculoId,
-motoristaId:document.getElementById("motoristaAbastecimento")?.value||"",
-dataAbastecimento,
+veiculo_id:veiculoId,
+motorista_id:document.getElementById("motoristaAbastecimento")?.value||null,
+data_abastecimento:dataAbastecimento,
 posto:document.getElementById("postoAbastecimento")?.value?.trim()||"",
-cnpjPosto:document.getElementById("cnpjPosto")?.value?.trim()||"",
-tipoCombustivel:document.getElementById("tipoCombustivelAbastecimento")?.value||"",
-litros:numeroSeguro(document.getElementById("litrosAbastecimento")?.value||0),
-valorTotal:numeroSeguro(document.getElementById("valorTotalAbastecimento")?.value||0),
-valorLitro:numeroSeguro(document.getElementById("valorLitroAbastecimento")?.value||0),
-quilometragem:numeroSeguro(document.getElementById("quilometragemAbastecimento")?.value||0),
+cnpj_posto:document.getElementById("cnpjPosto")?.value?.trim()||"",
+tipo_combustivel:document.getElementById("tipoCombustivelAbastecimento")?.value||"",
+litros:Number(document.getElementById("litrosAbastecimento")?.value||0),
+valor_total:Number(document.getElementById("valorTotalAbastecimento")?.value||0),
+valor_litro:Number(document.getElementById("valorLitroAbastecimento")?.value||0),
+quilometragem:Number(document.getElementById("quilometragemAbastecimento")?.value||0),
 observacoes:document.getElementById("observacoesAbastecimento")?.value?.trim()||"",
-createdAt:ABASTECIMENTO_EDITANDO_ID?(window.APP_STATE.abastecimentos.find(a=>String(a.id)===String(ABASTECIMENTO_EDITANDO_ID))?.createdAt||new Date().toISOString()):new Date().toISOString(),
-updatedAt:new Date().toISOString()
+updated_at:new Date().toISOString()
 }
-if(ABASTECIMENTO_EDITANDO_ID){
-window.APP_STATE.abastecimentos=window.APP_STATE.abastecimentos.map(a=>String(a.id)===String(ABASTECIMENTO_EDITANDO_ID)?item:a)
-window.toast("Abastecimento atualizado com sucesso")
+
+if(window.db){
+const {data,error}=await window.db.from("abastecimentos").insert(item).select().single()
+if(error){console.error(error);window.toast("Erro ao salvar abastecimento");return}
+window.APP_STATE.abastecimentos.unshift(data)
+await window.db.from("veiculos").update({km_atual:item.quilometragem,updated_at:new Date().toISOString()}).eq("id",veiculoId)
+const veiculo=window.APP_STATE.veiculos.find(v=>v.id===veiculoId)
+if(veiculo)veiculo.km_atual=item.quilometragem
 }else{
+item.id=window.Utils.gerarId()
+item.created_at=new Date().toISOString()
 window.APP_STATE.abastecimentos.unshift(item)
-window.toast("Abastecimento salvo com sucesso")
-}
-atualizarKmAtualDoVeiculo(veiculoId)
+const veiculo=window.APP_STATE.veiculos.find(v=>v.id===veiculoId)
+if(veiculo)veiculo.km_atual=item.quilometragem
 window.salvarDadosLocal()
-cancelarEdicaoAbastecimento()
+}
+
+form.reset()
+document.getElementById("dataAbastecimento").value=window.Utils.agoraInputDateTime()
 renderizarAbastecimentos()
 window.renderizarVeiculos?.()
 window.renderizarRelatorios?.()
 window.atualizarDashboard()
+window.toast("Abastecimento salvo com sucesso")
 }
-function atualizarKmAtualDoVeiculo(veiculoId){
-const veiculo=window.APP_STATE.veiculos.find(v=>String(v.id)===String(veiculoId))
-if(!veiculo)return
-const historico=window.APP_STATE.abastecimentos
-.filter(a=>String(a.veiculoId)===String(veiculoId))
-.filter(a=>numeroSeguro(a.quilometragem)>0)
-.sort((a,b)=>new Date(b.dataAbastecimento)-new Date(a.dataAbastecimento))
-const ultimoKm=historico.length?numeroSeguro(historico[0].quilometragem):numeroSeguro(veiculo.kmAtual)
-veiculo.kmAtual=ultimoKm
-}
+
 function renderizarAbastecimentos(){
 const box=document.getElementById("listaAbastecimentos")
 if(!box)return
@@ -75,103 +68,56 @@ window.atualizarSelectsVeiculos?.()
 window.atualizarSelectMotoristas?.()
 const termo=window.Utils.normalizar(document.getElementById("buscaAbastecimento")?.value||"")
 const lista=window.APP_STATE.abastecimentos.filter(a=>{
-const veiculo=window.APP_STATE.veiculos.find(v=>v.id===a.veiculoId)
-const motorista=window.APP_STATE.motoristas.find(m=>m.id===a.motoristaId)
+const veiculo=window.APP_STATE.veiculos.find(v=>v.id===a.veiculo_id)
+const motorista=window.APP_STATE.motoristas.find(m=>m.id===a.motorista_id)
 const base=`${a.posto} ${veiculo?.placa||""} ${motorista?.nome||""}`
 return !termo||window.Utils.normalizar(base).includes(termo)
 })
 if(!lista.length){
 box.className="lista-vazia"
 box.textContent="Nenhum abastecimento cadastrado."
-atualizarBotaoAbastecimento()
 return
 }
 box.className=""
 box.innerHTML=lista.map(a=>{
-const veiculo=window.APP_STATE.veiculos.find(v=>v.id===a.veiculoId)
-const motorista=window.APP_STATE.motoristas.find(m=>m.id===a.motoristaId)
+const veiculo=window.APP_STATE.veiculos.find(v=>v.id===a.veiculo_id)
+const motorista=window.APP_STATE.motoristas.find(m=>m.id===a.motorista_id)
 return `
 <div class="item-lista">
 <div class="item-lista-topo">
 <h4>${veiculo?veiculo.placa:"Veículo removido"} • ${a.posto||"Posto não informado"}</h4>
-<div style="display:flex;gap:8px;flex-wrap:wrap;">
-<button class="btn btn-secundario" onclick="editarAbastecimento('${a.id}')">Editar</button>
+<div>
 <button class="btn btn-secundario" onclick="removerAbastecimento('${a.id}')">Excluir</button>
 </div>
 </div>
 <div>
-${a.tipoCombustivel?`<span class="tag">${a.tipoCombustivel}</span>`:""}
+${a.tipo_combustivel?`<span class="tag">${a.tipo_combustivel}</span>`:""}
 ${a.litros?`<span class="tag">${window.Utils.numero(a.litros,3)} L</span>`:""}
-${a.valorTotal?`<span class="tag ok">${window.Utils.moeda(a.valorTotal)}</span>`:""}
+${a.valor_total?`<span class="tag ok">${window.Utils.moeda(a.valor_total)}</span>`:""}
 </div>
-<div class="mini">Data: ${window.Utils.formatarDataHora(a.dataAbastecimento)} • Motorista: ${motorista?motorista.nome:"-"}</div>
-<div class="mini">Valor/litro: ${a.valorLitro?window.Utils.moeda(a.valorLitro):"-"} • KM: ${a.quilometragem||"-"} • CNPJ: ${a.cnpjPosto||"-"}</div>
+<div class="mini">Data: ${window.Utils.formatarDataHora(a.data_abastecimento)} • Motorista: ${motorista?motorista.nome:"-"}</div>
+<div class="mini">Valor/litro: ${a.valor_litro?window.Utils.moeda(a.valor_litro):"-"} • KM: ${a.quilometragem||"-"} • CNPJ: ${a.cnpj_posto||"-"}</div>
 ${a.observacoes?`<div class="mini">Obs.: ${a.observacoes}</div>`:""}
 </div>
 `
 }).join("")
-atualizarBotaoAbastecimento()
 }
-function preencherFormularioAbastecimento(a){
-document.getElementById("veiculoAbastecimento").value=a.veiculoId||""
-document.getElementById("motoristaAbastecimento").value=a.motoristaId||""
-document.getElementById("dataAbastecimento").value=a.dataAbastecimento||window.Utils.agoraInputDateTime()
-document.getElementById("postoAbastecimento").value=a.posto||""
-document.getElementById("cnpjPosto").value=a.cnpjPosto||""
-document.getElementById("tipoCombustivelAbastecimento").value=a.tipoCombustivel||""
-document.getElementById("litrosAbastecimento").value=numeroSeguro(a.litros)
-document.getElementById("valorTotalAbastecimento").value=numeroSeguro(a.valorTotal)
-document.getElementById("valorLitroAbastecimento").value=numeroSeguro(a.valorLitro)
-document.getElementById("quilometragemAbastecimento").value=numeroSeguro(a.quilometragem)
-document.getElementById("observacoesAbastecimento").value=a.observacoes||""
-}
-function atualizarBotaoAbastecimento(){
-const submit=form?.querySelector('button[type="submit"]')
-if(submit)submit.textContent=ABASTECIMENTO_EDITANDO_ID?"Atualizar abastecimento":"Salvar abastecimento"
-let btnCancelar=document.getElementById("btnCancelarEdicaoAbastecimento")
-if(ABASTECIMENTO_EDITANDO_ID){
-if(!btnCancelar){
-btnCancelar=document.createElement("button")
-btnCancelar.type="button"
-btnCancelar.id="btnCancelarEdicaoAbastecimento"
-btnCancelar.className="btn btn-secundario"
-btnCancelar.textContent="Cancelar edição"
-btnCancelar.addEventListener("click",cancelarEdicaoAbastecimento)
-form?.querySelector(".actions")?.appendChild(btnCancelar)
-}
-}else{
-if(btnCancelar)btnCancelar.remove()
-}
-}
-function cancelarEdicaoAbastecimento(){
-ABASTECIMENTO_EDITANDO_ID=null
-form?.reset()
-document.getElementById("dataAbastecimento").value=window.Utils.agoraInputDateTime()
-atualizarBotaoAbastecimento()
-}
-window.editarAbastecimento=function(id){
-const a=window.APP_STATE.abastecimentos.find(x=>String(x.id)===String(id))
-if(!a)return
-ABASTECIMENTO_EDITANDO_ID=id
-preencherFormularioAbastecimento(a)
-atualizarBotaoAbastecimento()
-document.querySelector('[data-target="painelAbastecimentos"]')?.click()
-window.scrollTo({top:0,behavior:"smooth"})
-window.toast("Editando abastecimento")
-}
-window.removerAbastecimento=function(id){
+
+window.removerAbastecimento=async function(id){
 if(!confirm("Deseja excluir este abastecimento?"))return
-const item=window.APP_STATE.abastecimentos.find(a=>String(a.id)===String(id))
-window.APP_STATE.abastecimentos=window.APP_STATE.abastecimentos.filter(a=>a.id!==id)
-if(item?.veiculoId)atualizarKmAtualDoVeiculo(item.veiculoId)
+if(window.db){
+const {error}=await window.db.from("abastecimentos").delete().eq("id",id)
+if(error){console.error(error);window.toast("Erro ao excluir abastecimento");return}
+}else{
 window.salvarDadosLocal()
-if(String(ABASTECIMENTO_EDITANDO_ID)===String(id))cancelarEdicaoAbastecimento()
+}
+window.APP_STATE.abastecimentos=window.APP_STATE.abastecimentos.filter(a=>a.id!==id)
 renderizarAbastecimentos()
-window.renderizarVeiculos?.()
 window.renderizarRelatorios?.()
 window.atualizarDashboard()
 window.toast("Abastecimento excluído")
 }
+
 window.preencherAbastecimentoPorNota=function(dados={}){
 document.querySelector('[data-target="painelAbastecimentos"]')?.click()
 if(dados.posto)document.getElementById("postoAbastecimento").value=dados.posto
@@ -182,5 +128,6 @@ if(dados.valorTotal)document.getElementById("valorTotalAbastecimento").value=dad
 if(dados.valorLitro)document.getElementById("valorLitroAbastecimento").value=dados.valorLitro
 window.toast("Dados da nota enviados para abastecimento")
 }
+
 window.renderizarAbastecimentos=renderizarAbastecimentos
 })()
