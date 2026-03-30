@@ -3,7 +3,15 @@ const form=document.getElementById("formVeiculo")
 const busca=document.getElementById("buscaVeiculo")
 let VEICULO_EDITANDO_ID=null
 form?.addEventListener("submit",salvarVeiculo)
+form?.addEventListener("reset",()=>{
+setTimeout(()=>cancelarEdicaoVeiculo(),0)
+})
 busca?.addEventListener("input",renderizarVeiculos)
+function numeroSeguro(v){
+if(v===null||v===undefined||v==="")return 0
+const n=Number(String(v).replace(",","."))
+return Number.isFinite(n)?n:0
+}
 function salvarVeiculo(e){
 e.preventDefault()
 const placa=(document.getElementById("placa")?.value||"").toUpperCase().trim()
@@ -14,7 +22,7 @@ const ano=document.getElementById("ano")?.value||""
 const cor=document.getElementById("cor")?.value?.trim()||""
 const renavam=document.getElementById("renavam")?.value?.trim()||""
 const combustivelPrincipal=document.getElementById("combustivelPrincipal")?.value||""
-const kmAtual=document.getElementById("kmAtual")?.value||""
+const kmAtual=numeroSeguro(document.getElementById("kmAtual")?.value||0)
 const vencimentoIpva=document.getElementById("vencimentoIpva")?.value||""
 const vencimentoLicenciamento=document.getElementById("vencimentoLicenciamento")?.value||""
 const observacoes=document.getElementById("observacoesVeiculo")?.value?.trim()||""
@@ -63,7 +71,7 @@ window.toast("Veículo salvo com sucesso")
 }
 window.salvarDadosLocal()
 cancelarEdicaoVeiculo()
-window.renderizarVeiculos()
+renderizarVeiculos()
 window.renderizarMotoristas?.()
 window.renderizarAbastecimentos?.()
 window.renderizarAlertas?.()
@@ -104,12 +112,13 @@ ${v.ano?`<span class="tag">Ano ${v.ano}</span>`:""}
 ${v.cor?`<span class="tag">${v.cor}</span>`:""}
 </div>
 <div class="mini">${ipva} • ${lic}</div>
-<div class="mini">KM atual: ${v.kmAtual||"0"} • Renavam: ${v.renavam||"-"}</div>
+<div class="mini">KM atual: ${numeroSeguro(v.kmAtual)} • Renavam: ${v.renavam||"-"}</div>
 ${v.observacoes?`<div class="mini">Obs.: ${v.observacoes}</div>`:""}
 </div>
 `
 }).join("")
 atualizarSelectsVeiculos()
+atualizarBotaoVeiculo()
 }
 function atualizarSelectsVeiculos(){
 const selects=[
@@ -133,9 +142,59 @@ document.getElementById("ano").value=v.ano||""
 document.getElementById("cor").value=v.cor||""
 document.getElementById("renavam").value=v.renavam||""
 document.getElementById("combustivelPrincipal").value=v.combustivelPrincipal||""
-document.getElementById("kmAtual").value=v.kmAtual||""
+document.getElementById("kmAtual").value=numeroSeguro(v.kmAtual)
 document.getElementById("vencimentoIpva").value=v.vencimentoIpva||""
 document.getElementById("vencimentoLicenciamento").value=v.vencimentoLicenciamento||""
 document.getElementById("observacoesVeiculo").value=v.observacoes||""
 }
-function
+function atualizarBotaoVeiculo(){
+const submit=form?.querySelector('button[type="submit"]')
+if(submit)submit.textContent=VEICULO_EDITANDO_ID?"Atualizar veículo":"Salvar veículo"
+let btnCancelar=document.getElementById("btnCancelarEdicaoVeiculo")
+if(VEICULO_EDITANDO_ID){
+if(!btnCancelar){
+btnCancelar=document.createElement("button")
+btnCancelar.type="button"
+btnCancelar.id="btnCancelarEdicaoVeiculo"
+btnCancelar.className="btn btn-secundario"
+btnCancelar.textContent="Cancelar edição"
+btnCancelar.addEventListener("click",cancelarEdicaoVeiculo)
+form?.querySelector(".actions")?.appendChild(btnCancelar)
+}
+}else{
+if(btnCancelar)btnCancelar.remove()
+}
+}
+function cancelarEdicaoVeiculo(){
+VEICULO_EDITANDO_ID=null
+form?.reset()
+atualizarBotaoVeiculo()
+}
+window.editarVeiculo=function(id){
+const v=window.APP_STATE.veiculos.find(x=>String(x.id)===String(id))
+if(!v)return
+VEICULO_EDITANDO_ID=id
+preencherFormularioVeiculo(v)
+atualizarBotaoVeiculo()
+document.querySelector('[data-target="painelVeiculos"]')?.click()
+window.scrollTo({top:0,behavior:"smooth"})
+window.toast("Editando veículo")
+}
+window.removerVeiculo=function(id){
+if(!confirm("Deseja excluir este veículo?"))return
+window.APP_STATE.veiculos=window.APP_STATE.veiculos.filter(v=>v.id!==id)
+window.APP_STATE.motoristas=window.APP_STATE.motoristas.map(m=>m.veiculoPrincipalId===id?{...m,veiculoPrincipalId:""}:m)
+window.APP_STATE.abastecimentos=window.APP_STATE.abastecimentos.filter(a=>a.veiculoId!==id)
+window.salvarDadosLocal()
+if(String(VEICULO_EDITANDO_ID)===String(id))cancelarEdicaoVeiculo()
+renderizarVeiculos()
+window.renderizarMotoristas?.()
+window.renderizarAbastecimentos?.()
+window.renderizarAlertas?.()
+window.renderizarRelatorios?.()
+window.atualizarDashboard()
+window.toast("Veículo excluído")
+}
+window.renderizarVeiculos=renderizarVeiculos
+window.atualizarSelectsVeiculos=atualizarSelectsVeiculos
+})()
