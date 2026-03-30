@@ -1,0 +1,102 @@
+document.addEventListener("DOMContentLoaded",iniciarApp)
+function iniciarApp(){
+carregarDadosLocal()
+configurarMenus()
+configurarInstalacaoPWA()
+registrarServiceWorker()
+definirCamposIniciais()
+window.renderizarVeiculos?.()
+window.renderizarMotoristas?.()
+window.renderizarAbastecimentos?.()
+window.renderizarAlertas?.()
+window.renderizarRelatorios?.()
+atualizarDashboard()
+}
+function carregarDadosLocal(){
+const keys=window.APP_STORAGE_KEYS
+window.APP_STATE.veiculos=JSON.parse(localStorage.getItem(keys.veiculos)||"[]")
+window.APP_STATE.motoristas=JSON.parse(localStorage.getItem(keys.motoristas)||"[]")
+window.APP_STATE.abastecimentos=JSON.parse(localStorage.getItem(keys.abastecimentos)||"[]")
+}
+function salvarDadosLocal(){
+const keys=window.APP_STORAGE_KEYS
+localStorage.setItem(keys.veiculos,JSON.stringify(window.APP_STATE.veiculos))
+localStorage.setItem(keys.motoristas,JSON.stringify(window.APP_STATE.motoristas))
+localStorage.setItem(keys.abastecimentos,JSON.stringify(window.APP_STATE.abastecimentos))
+}
+window.salvarDadosLocal=salvarDadosLocal
+function configurarMenus(){
+document.querySelectorAll(".card-menu").forEach(btn=>{
+btn.addEventListener("click",()=>{
+document.querySelectorAll(".card-menu").forEach(x=>x.classList.remove("ativo"))
+document.querySelectorAll(".painel").forEach(x=>x.classList.remove("ativo"))
+btn.classList.add("ativo")
+document.getElementById(btn.dataset.target)?.classList.add("ativo")
+})
+})
+}
+function definirCamposIniciais(){
+const input=document.getElementById("dataAbastecimento")
+if(input&&!input.value)input.value=window.Utils.agoraInputDateTime()
+}
+function atualizarDashboard(){
+const veiculos=window.APP_STATE.veiculos.length
+const motoristas=window.APP_STATE.motoristas.length
+const abastecimentos=window.APP_STATE.abastecimentos.length
+const alertas=window.gerarAlertas?window.gerarAlertas().length:0
+const elV=document.getElementById("kpiVeiculos")
+const elM=document.getElementById("kpiMotoristas")
+const elA=document.getElementById("kpiAbastecimentos")
+const elL=document.getElementById("kpiAlertas")
+if(elV)elV.textContent=veiculos
+if(elM)elM.textContent=motoristas
+if(elA)elA.textContent=abastecimentos
+if(elL)elL.textContent=alertas
+const resumo=document.getElementById("resumoRapido")
+if(!resumo)return
+if(!veiculos&&!motoristas&&!abastecimentos){
+resumo.className="lista-vazia"
+resumo.textContent="Nenhum dado cadastrado ainda."
+return
+}
+const ultimo=window.APP_STATE.abastecimentos.slice().sort((a,b)=>new Date(b.dataAbastecimento)-new Date(a.dataAbastecimento))[0]
+resumo.className=""
+resumo.innerHTML=`
+<div class="item-lista">
+<div><strong>Total de veículos:</strong> ${veiculos}</div>
+<div><strong>Total de motoristas:</strong> ${motoristas}</div>
+<div><strong>Total de abastecimentos:</strong> ${abastecimentos}</div>
+<div><strong>Último abastecimento:</strong> ${ultimo?`${window.Utils.formatarDataHora(ultimo.dataAbastecimento)} • ${ultimo.posto||"Sem posto"} • ${window.Utils.moeda(ultimo.valorTotal)}`:"Nenhum"}</div>
+</div>
+`
+}
+window.atualizarDashboard=atualizarDashboard
+function toast(msg){
+const el=document.getElementById("toast")
+if(!el)return
+el.textContent=msg
+el.classList.add("show")
+clearTimeout(window.__toastTimer)
+window.__toastTimer=setTimeout(()=>el.classList.remove("show"),2500)
+}
+window.toast=toast
+function configurarInstalacaoPWA(){
+window.addEventListener("beforeinstallprompt",e=>{
+e.preventDefault()
+window.APP_STATE.deferredPrompt=e
+document.getElementById("btnInstalar")?.classList.remove("oculto")
+})
+document.getElementById("btnInstalar")?.addEventListener("click",async()=>{
+const prompt=window.APP_STATE.deferredPrompt
+if(!prompt)return
+prompt.prompt()
+await prompt.userChoice
+window.APP_STATE.deferredPrompt=null
+document.getElementById("btnInstalar")?.classList.add("oculto")
+})
+}
+function registrarServiceWorker(){
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("./service-worker.js").catch(()=>{})
+}
+}
