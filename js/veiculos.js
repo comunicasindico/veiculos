@@ -1,16 +1,18 @@
-(function(){
+window.VEICULO_EDITANDO_ID=null
+;(function(){
 const form=document.getElementById("formVeiculo")
 const busca=document.getElementById("buscaVeiculo")
 form?.addEventListener("submit",salvarVeiculo)
+form?.addEventListener("reset",()=>{
+setTimeout(()=>{
+cancelarEdicaoVeiculo()
+},0)
+})
 busca?.addEventListener("input",renderizarVeiculos)
 
-async function salvarVeiculo(e){
-e.preventDefault()
-const placa=(document.getElementById("placa")?.value||"").toUpperCase().trim()
-if(!placa){window.toast("Informe a placa do veículo");return}
-
-const item={
-placa,
+function obterPayloadVeiculo(){
+return{
+placa:(document.getElementById("placa")?.value||"").toUpperCase().trim(),
 marca:document.getElementById("marca")?.value?.trim()||"",
 modelo:document.getElementById("modelo")?.value?.trim()||"",
 ano:document.getElementById("ano")?.value?Number(document.getElementById("ano").value):null,
@@ -23,26 +25,77 @@ vencimento_licenciamento:document.getElementById("vencimentoLicenciamento")?.val
 observacoes:document.getElementById("observacoesVeiculo")?.value?.trim()||"",
 updated_at:new Date().toISOString()
 }
-
-if(window.db){
-const {data,error}=await window.db.from("veiculos").insert(item).select().single()
-if(error){console.error(error);window.toast("Erro ao salvar veículo");return}
-window.APP_STATE.veiculos.unshift(data)
-}else{
-item.id=window.Utils.gerarId()
-item.created_at=new Date().toISOString()
-window.APP_STATE.veiculos.unshift(item)
-window.salvarDadosLocal()
 }
 
-form.reset()
+async function salvarVeiculo(e){
+e.preventDefault()
+const item=obterPayloadVeiculo()
+if(!item.placa){
+window.toast("Informe a placa do veículo")
+return
+}
+const placaDuplicada=window.APP_STATE.veiculos.some(v=>{
+return String(v.placa||"").toUpperCase().trim()===item.placa&&String(v.id)!==String(window.VEICULO_EDITANDO_ID||"")
+})
+if(placaDuplicada){
+window.toast("Já existe um veículo com esta placa")
+return
+}
+if(window.VEICULO_EDITANDO_ID){
+await atualizarVeiculo(item)
+}else{
+await inserirVeiculo(item)
+}
+cancelarEdicaoVeiculo()
 renderizarVeiculos()
 window.renderizarMotoristas?.()
 window.renderizarAbastecimentos?.()
 window.renderizarAlertas?.()
 window.renderizarRelatorios?.()
 window.atualizarDashboard()
+}
+
+async function inserirVeiculo(item){
+if(window.db){
+const payload={...item}
+const {data,error}=await window.db.from("veiculos").insert(payload).select().single()
+if(error){
+console.error(error)
+window.toast("Erro ao salvar veículo")
+return
+}
+window.APP_STATE.veiculos.unshift(data)
 window.toast("Veículo salvo com sucesso")
+return
+}
+item.id=window.Utils.gerarId()
+item.created_at=new Date().toISOString()
+window.APP_STATE.veiculos.unshift(item)
+window.salvarDadosLocal()
+window.toast("Veículo salvo com sucesso")
+}
+
+async function atualizarVeiculo(item){
+if(window.db){
+const {data,error}=await window.db.from("veiculos").update(item).eq("id",window.VEICULO_EDITANDO_ID).select().single()
+if(error){
+console.error(error)
+window.toast("Erro ao atualizar veículo")
+return
+}
+window.APP_STATE.veiculos=window.APP_STATE.veiculos.map(v=>String(v.id)===String(window.VEICULO_EDITANDO_ID)?data:v)
+window.toast("Veículo atualizado com sucesso")
+return
+}
+window.APP_STATE.veiculos=window.APP_STATE.veiculos.map(v=>{
+if(String(v.id)!==String(window.VEICULO_EDITANDO_ID))return v
+return{
+...v,
+...item
+}
+})
+window.salvarDadosLocal()
+window.toast("Veículo atualizado com sucesso")
 }
 
 function renderizarVeiculos(){
@@ -58,6 +111,7 @@ if(!lista.length){
 box.className="lista-vazia"
 box.textContent="Nenhum veículo cadastrado."
 atualizarSelectsVeiculos()
+atualizarTextoBotaoVeiculo()
 return
 }
 box.className=""
@@ -68,8 +122,9 @@ return `
 <div class="item-lista">
 <div class="item-lista-topo">
 <h4>${v.placa} • ${v.marca||"Sem marca"} ${v.modelo||""}</h4>
-<div>
-<button class="btn btn-primario" onclick="editarVeiculo('${v.id}')">Editar</
+<div style="display:flex;gap:8px;flex-wrap:wrap;">
+<button class="btn" type="button" onclick="editarVeiculo('${v.id}')">Editar</button>
+<button class="btn btn-secundario" type="button" onclick="removerVeiculo('${v.id}')">Excluir</button>
 </div>
 </div>
 <div>
@@ -84,6 +139,7 @@ ${v.observacoes?`<div class="mini">Obs.: ${v.observacoes}</div>`:""}
 `
 }).join("")
 atualizarSelectsVeiculos()
+atualizarTextoBotaoVeiculo()
 }
 
 function atualizarSelectsVeiculos(){
@@ -101,20 +157,75 @@ if([...select.options].some(o=>o.value===valorAtual))select.value=valorAtual
 })
 }
 
+function preencherFormularioVeiculo(v){
+document.getElementById("placa").value=v.placa||""
+document.getElementById("marca").value=v.marca||""
+document.getElementById("modelo").value=v.modelo||""
+document.getElementById("ano").value=v.ano||""
+document.getElementById("cor").value=v.cor||""
+document.getElementById("renavam").value=v.renavam||""
+document.getElementById("combustivelPrincipal").value=v.combustivel_principal||""
+document.getElementById("kmAtual").value=v.km_atual||0
+document.getElementById("vencimentoIpva").value=v.vencimento_ipva||""
+document.getElementById("vencimentoLicenciamento").value=v.vencimento_licenciamento||""
+document.getElementById("observacoesVeiculo").value=v.observacoes||""
+}
+
+function atualizarTextoBotaoVeiculo(){
+const btnSalvar=form?.querySelector('button[type="submit"]')
+if(btnSalvar)btnSalvar.textContent=window.VEICULO_EDITANDO_ID?"Atualizar veículo":"Salvar veículo"
+let btnCancelar=document.getElementById("btnCancelarEdicaoVeiculo")
+const areaAcoes=form?.querySelector(".actions")
+if(window.VEICULO_EDITANDO_ID){
+if(!btnCancelar&&areaAcoes){
+btnCancelar=document.createElement("button")
+btnCancelar.type="button"
+btnCancelar.id="btnCancelarEdicaoVeiculo"
+btnCancelar.className="btn btn-secundario"
+btnCancelar.textContent="Cancelar edição"
+btnCancelar.addEventListener("click",cancelarEdicaoVeiculo)
+areaAcoes.appendChild(btnCancelar)
+}
+}else{
+if(btnCancelar)btnCancelar.remove()
+}
+}
+
+function cancelarEdicaoVeiculo(){
+window.VEICULO_EDITANDO_ID=null
+form?.reset()
+atualizarTextoBotaoVeiculo()
+}
+
+window.editarVeiculo=function(id){
+const v=window.APP_STATE.veiculos.find(x=>String(x.id)===String(id))
+if(!v){
+window.toast("Veículo não encontrado")
+return
+}
+window.VEICULO_EDITANDO_ID=id
+preencherFormularioVeiculo(v)
+atualizarTextoBotaoVeiculo()
+window.toast("Veículo carregado para edição")
+window.scrollTo({top:0,behavior:"smooth"})
+}
+
 window.removerVeiculo=async function(id){
 if(!confirm("Deseja excluir este veículo?"))return
 if(window.db){
 const {error}=await window.db.from("veiculos").delete().eq("id",id)
-if(error){console.error(error);window.toast("Erro ao excluir veículo");return}
+if(error){
+console.error(error)
+window.toast("Erro ao excluir veículo")
+return
+}
 }else{
-window.APP_STATE.veiculos=window.APP_STATE.veiculos.filter(v=>v.id!==id)
-window.APP_STATE.motoristas=window.APP_STATE.motoristas.map(m=>m.veiculo_principal_id===id?{...m,veiculo_principal_id:null}:m)
-window.APP_STATE.abastecimentos=window.APP_STATE.abastecimentos.filter(a=>a.veiculo_id!==id)
 window.salvarDadosLocal()
 }
 window.APP_STATE.veiculos=window.APP_STATE.veiculos.filter(v=>v.id!==id)
-window.APP_STATE.motoristas=window.APP_STATE.motoristas.map(m=>m.veiculo_principal_id===id?{...m,veiculo_principal_id:null}:m)
-window.APP_STATE.abastecimentos=window.APP_STATE.abastecimentos.filter(a=>a.veiculo_id!==id)
+window.APP_STATE.motoristas=window.APP_STATE.motoristas.map(m=>String(m.veiculo_principal_id)===String(id)?{...m,veiculo_principal_id:null}:m)
+window.APP_STATE.abastecimentos=window.APP_STATE.abastecimentos.filter(a=>String(a.veiculo_id)!==String(id))
+if(String(window.VEICULO_EDITANDO_ID)===String(id))cancelarEdicaoVeiculo()
 renderizarVeiculos()
 window.renderizarMotoristas?.()
 window.renderizarAbastecimentos?.()
