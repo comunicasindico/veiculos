@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Veículo Familiar</title>
+<meta name="theme-color" content="#0f172a">
+<meta name="description" content="Controle de veículos, motoristas, abastecimentos, IPVA e CNH">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+<div class="brand">
+<div class="brand-logo">🚗</div>
+<div>
+<h1>Veículo Familiar</h1>
+<p>Controle de veículo, combustível, IPVA e CNH</p>
+</div>
+</div>
+<button id="btnInstalar" class="btn btn-secundario oculto">Instalar app</button>
+</header>
+<main class="container">
+<section class="cards-grid">
+<button class="card-menu ativo" data-target="painelInicio">Início</button>
+<button class="card-menu" data-target="painelVeiculos">Veículos</button>
+<button class="card-menu" data-target="painelMotoristas">Motoristas</button>
+<button class="card-menu" data-target="painelAbastecimentos">Abastecimentos</button>
+<button class="card-menu" data-target="painelCamera">Ler Nota Fiscal</button>
+<button class="card-menu" data-target="painelAlertas">Alertas</button>
+<button class="card-menu" data-target="painelRelatorios">Relatórios</button>
+</section>
+<section id="painelInicio" class="painel ativo">
+<div class="hero">
+<h2>Painel inicial</h2>
+<p>Cadastre veículos, motoristas e abastecimentos. A leitura da nota fiscal por câmera já fica preparada para a fase seguinte.</p>
+</div>
+<div class="kpis">
+<div class="kpi-card">
+<span>Veículos</span>
+<strong id="kpiVeiculos">0</strong>
+</div>
+<div class="kpi-card">
+<span>Motoristas</span>
+<strong id="kpiMotoristas">0</strong>
+</div>
+<div class="kpi-card">
+<span>Abastecimentos</span>
+<strong id="kpiAbastecimentos">0</strong>
+</div>
+<div class="kpi-card">
+<span>Alertas</span>
+<strong id="kpiAlertas">0</strong>
+</div>
+</div>
+<div class="bloco">
+<h3>Resumo rápido</h3>
+<div id="resumoRapido" class="lista-vazia">Nenhum dado cadastrado ainda.</div>
+</div>
+</section>
+<section id="painelVeiculos" class="painel">
+<div class="bloco">
+<h2>Cadastro de veículo</h2>
+<form id="formVeiculo" class="form-grid">
+<div>
+<label for="placa">Placa</label>
+<input type="text" id="placa" placeholder="ABC1D23" required>
+</div>
+<div>
+<label for="marca">Marca</label>
+<input type="text" id="marca" placeholder="Fiat">
+</div>
+<div>
+<label for="modelo">Modelo</label>
+<input type="text" id="modelo" placeholder="Argo">
+</div>
+<div>
+<label for="ano">Ano</label>
+<input type="number" id="ano" placeholder="2024">
+</div>
+<div>
+<label for="cor">Cor</label>
+<input type="text" id="cor" placeholder="Branco">
+</div>
+<div>
+<label for="renavam">Renavam</label>
+<input type="text" id="renavam" placeholder="00000000000">
+</div>
+<div>
+<label for="combustivelPrincipal">Combustível principal</label>
+<select id="combustivelPrincipal">
+<option value="">Selecione</option>
+<option>Gasolina</option>
+<option>Etanol</option>
+<option>Diesel</option>
+<option>Flex</option>
+<option>GNV</option>
+<option>Elétrico</option>
+<option>Híbrido</option>
+</select>
+</div>
+<div>
+<label for="kmAtual">KM atual</label>
+<input type="number" id="kmAtual" placeholder="15230">
+</div>
+<div>
+<label for="vencimentoIpva">Vencimento do IPVA</label>
+<input type="date" id="vencimentoIpva">
+</div>
+<div>
+<label for="vencimentoLicenciamento">Vencimento do licenciamento</label>
+<input type="date" id="vencimentoLicenciamento">
+</div>
+<div class="full">
+<label for="observacoesVeiculo">Observações</label>
+<textarea id="observacoesVeiculo" rows="3" placeholder="Informações adicionais do veículo"></textarea>
+</div>
+<div class="full actions">
+<button type="submit" class="btn">Salvar veículo</button>
+<button type="reset" class="btn btn-secundario">Limpar</button>
+</div>
+</form>
+</div>
+<div class="bloco">
+<div class="bloco-topo">
+<h3>Veículos cadastrados</h3>
+<input type="search" id="buscaVeiculo" placeholder="Buscar por placa, marca ou modelo">
+</div>
+<div id="listaVeiculos" class="lista-vazia">Nenhum veículo cadastrado.</div>
+</div>
+</section>
+<section id="painelMotoristas" class="painel">
+<div class="bloco">
+<h2>Cadastro de motorista</h2>
+<form id="formMotorista" class="form-grid">
+<div>
+<label for="nomeMotorista">Nome completo</label>
+<input type="text" id="nomeMotorista" placeholder="Nome do motorista" required>
+</div>
+<div>
+<label for="cpfMotorista">CPF</label>
+<input type="text" id="cpfMotorista" placeholder="000.000.000-00">
+</div>
+<div>
+<label for="numeroCnh">Número da CNH</label>
+<input type="text" id="numeroCnh" placeholder="Número da CNH">
+</div>
+<div>
+<label for="categoriaCnh">Categoria</label>
+<select id="categoriaCnh">
+<option value="">Selecione</option>
+<option>A</option>
+<option>B</option>
+<option>AB</option>
+<option>C</option>
+<option>D</option>
+<option>E</option>
+<option>ACC</option>
+</select>
+</div>
+<div>
+<label for="validadeCnh">Validade da CNH</label>
+<input type="date" id="validadeCnh">
+</div>
+<div>
+<label for="telefoneMotorista">Telefone</label>
+<input type="text" id="telefoneMotorista" placeholder="(00) 00000-0000">
+</div>
+<div>
+<label for="emailMotorista">E-mail</label>
+<input type="email" id="emailMotorista" placeholder="email@exemplo.com">
+</div>
+<div>
+<label for="veiculoPrincipalMotorista">Veículo principal</label>
+<select id="veiculoPrincipalMotorista">
+<option value="">Selecione</option>
+</select>
+</div>
+<div class="full">
+<label for="observacoesMotorista">Observações</label>
+<textarea id="observacoesMotorista" rows="3" placeholder="Informações adicionais do motorista"></textarea>
+</div>
+<div class="full actions">
+<button type="submit" class="btn">Salvar motorista</button>
+<button type="reset" class="btn btn-secundario">Limpar</button>
+</div>
+</form>
+</div>
+<div class="bloco">
+<div class="bloco-topo">
+<h3>Motoristas cadastrados</h3>
+<input type="search" id="buscaMotorista" placeholder="Buscar por nome, CPF ou CNH">
+</div>
+<div id="listaMotoristas" class="lista-vazia">Nenhum motorista cadastrado.</div>
+</div>
+</section>
+<section id="painelAbastecimentos" class="painel">
+<div class="bloco">
+<h2>Lançamento de abastecimento</h2>
+<form id="formAbastecimento" class="form-grid">
+<div>
+<label for="veiculoAbastecimento">Veículo</label>
+<select id="veiculoAbastecimento" required>
+<option value="">Selecione</option>
+</select>
+</div>
+<div>
+<label for="motoristaAbastecimento">Motorista</label>
+<select id="motoristaAbastecimento">
+<option value="">Selecione</option>
+</select>
+</div>
+<div>
+<label for="dataAbastecimento">Data</label>
+<input type="datetime-local" id="dataAbastecimento" required>
+</div>
+<div>
+<label for="postoAbastecimento">Posto</label>
+<input type="text" id="postoAbastecimento" placeholder="Nome do posto">
+</div>
+<div>
+<label for="cnpjPosto">CNPJ do posto</label>
+<input type="text" id="cnpjPosto" placeholder="00.000.000/0000-00">
+</div>
+<div>
+<label for="tipoCombustivelAbastecimento">Tipo de combustível</label>
+<select id="tipoCombustivelAbastecimento">
+<option value="">Selecione</option>
+<option>Gasolina</option>
+<option>Etanol</option>
+<option>Diesel</option>
+<option>GNV</option>
+</select>
+</div>
+<div>
+<label for="litrosAbastecimento">Litros</label>
+<input type="number" step="0.001" id="litrosAbastecimento" placeholder="35.200">
+</div>
+<div>
+<label for="valorTotalAbastecimento">Valor total</label>
+<input type="number" step="0.01" id="valorTotalAbastecimento" placeholder="200.00">
+</div>
+<div>
+<label for="valorLitroAbastecimento">Valor por litro</label>
+<input type="number" step="0.001" id="valorLitroAbastecimento" placeholder="5.69">
+</div>
+<div>
+<label for="quilometragemAbastecimento">Quilometragem</label>
+<input type="number" id="quilometragemAbastecimento" placeholder="15420">
+</div>
+<div class="full">
+<label for="observacoesAbastecimento">Observações</label>
+<textarea id="observacoesAbastecimento" rows="3" placeholder="Observações do abastecimento"></textarea>
+</div>
+<div class="full actions">
+<button type="submit" class="btn">Salvar abastecimento</button>
+<button type="button" id="btnCalcularValorLitro" class="btn btn-secundario">Calcular valor/litro</button>
+</div>
+</form>
+</div>
+<div class="bloco">
+<div class="bloco-topo">
+<h3>Histórico de abastecimentos</h3>
+<input type="search" id="buscaAbastecimento" placeholder="Buscar por posto, veículo ou motorista">
+</div>
+<div id="listaAbastecimentos" class="lista-vazia">Nenhum abastecimento cadastrado.</div>
+</div>
+</section>
+<section id="painelCamera" class="painel">
+<div class="bloco">
+<h2>Leitura da nota fiscal</h2>
+<p class="aviso">Nesta fase, o módulo fica preparado para captura e preenchimento assistido. A leitura OCR/QR Code será conectada no próximo pacote.</p>
+<div class="camera-box">
+<video id="cameraPreview" autoplay playsinline muted></video>
+<div class="camera-actions">
+<button id="btnAbrirCamera" class="btn" type="button">Abrir câmera</button>
+<button id="btnCapturarNota" class="btn btn-secundario" type="button">Capturar nota</button>
+<button id="btnFecharCamera" class="btn btn-secundario" type="button">Fechar câmera</button>
+</div>
+<canvas id="canvasNota" class="oculto"></canvas>
+</div>
+</div>
+<div class="bloco">
+<h3>Pré-preenchimento da nota</h3>
+<form id="formNotaLida" class="form-grid">
+<div>
+<label for="notaPosto">Posto</label>
+<input type="text" id="notaPosto" placeholder="Preenchido pela leitura">
+</div>
+<div>
+<label for="notaCnpj">CNPJ</label>
+<input type="text" id="notaCnpj" placeholder="Preenchido pela leitura">
+</div>
+<div>
+<label for="notaData">Data</label>
+<input type="text" id="notaData" placeholder="Preenchido pela leitura">
+</div>
+<div>
+<label for="notaLitros">Litros</label>
+<input type="text" id="notaLitros" placeholder="Preenchido pela leitura">
+</div>
+<div>
+<label for="notaValorTotal">Valor total</label>
+<input type="text" id="notaValorTotal" placeholder="Preenchido pela leitura">
+</div>
+<div>
+<label for="notaValorLitro">Valor/litro</label>
+<input type="text" id="notaValorLitro" placeholder="Preenchido pela leitura">
+</div>
+<div class="full">
+<label for="textoOCR">Texto bruto da leitura</label>
+<textarea id="textoOCR" rows="7" placeholder="Aqui aparecerá o texto extraído da nota"></textarea>
+</div>
+<div class="full actions">
+<button type="button" id="btnEnviarParaAbastecimento" class="btn">Enviar para abastecimento</button>
+</div>
+</form>
+</div>
+</section>
+<section id="painelAlertas" class="painel">
+<div class="bloco">
+<h2>Alertas</h2>
+<div id="listaAlertas" class="lista-vazia">Nenhum alerta encontrado.</div>
+</div>
+</section>
+<section id="painelRelatorios" class="painel">
+<div class="bloco">
+<h2>Relatórios</h2>
+<div class="relatorio-filtros form-grid">
+<div>
+<label for="filtroRelatorioVeiculo">Veículo</label>
+<select id="filtroRelatorioVeiculo">
+<option value="todos">Todos</option>
+</select>
+</div>
+<div>
+<label for="filtroRelatorioPeriodo">Período</label>
+<select id="filtroRelatorioPeriodo">
+<option value="todos">Todo o período</option>
+<option value="30">Últimos 30 dias</option>
+<option value="90">Últimos 90 dias</option>
+<option value="365">Últimos 365 dias</option>
+</select>
+</div>
+</div>
+<div id="painelRelatorioResumo" class="kpis"></div>
+<div id="tabelaRelatorio" class="lista-vazia">Nenhum dado para relatório.</div>
+</div>
+</section>
+</main>
+<div id="toast" class="toast"></div>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/veiculos.js"></script>
+<script src="js/motoristas.js"></script>
+<script src="js/abastecimentos.js"></script>
+<script src="js/camera.js"></script>
+<script src="js/alertas.js"></script>
+<script src="js/relatorios.js"></script>
+</body>
+</html>
