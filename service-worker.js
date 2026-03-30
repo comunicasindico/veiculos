@@ -1,4 +1,4 @@
-const CACHE_NAME="veiculo-familiar-v1"
+const CACHE_NAME="veiculo-familiar-v2"
 const URLS=[
 "./",
 "./index.html",
