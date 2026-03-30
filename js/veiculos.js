@@ -69,7 +69,7 @@ return `
 <div class="item-lista-topo">
 <h4>${v.placa} • ${v.marca||"Sem marca"} ${v.modelo||""}</h4>
 <div>
-<button class="btn btn-secundario" onclick="removerVeiculo('${v.id}')">Excluir</button>
+<button class="btn btn-primario" onclick="editarVeiculo('${v.id}')">Editar</
 </div>
 </div>
 <div>
