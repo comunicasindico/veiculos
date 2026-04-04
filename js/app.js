@@ -12,6 +12,7 @@ window.renderizarAbastecimentos?.()
 window.renderizarAlertas?.()
 window.renderizarRelatorios?.()
 atualizarDashboard()
+window.atualizarDashboardInteligente?.()
 }
 
 async function carregarDados(){
