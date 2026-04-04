@@ -17,14 +17,24 @@ atualizarDashboard()
 async function carregarDados(){
 if(window.db){
 try{
+const usuarioId=localStorage.getItem("usuario_id")
+const tipo=localStorage.getItem("tipo_usuario")
 const[{data:veiculos},{data:motoristas},{data:abastecimentos}]=await Promise.all([
 window.db.from("veiculos").select("*").order("created_at",{ascending:false}),
 window.db.from("motoristas").select("*").order("created_at",{ascending:false}),
 window.db.from("abastecimentos").select("*").order("data_abastecimento",{ascending:false})
 ])
-window.APP_STATE.veiculos=veiculos||[]
-window.APP_STATE.motoristas=motoristas||[]
-window.APP_STATE.abastecimentos=abastecimentos||[]
+let v=veiculos||[]
+let m=motoristas||[]
+let a=abastecimentos||[]
+if(tipo!=="admin"){
+v=v.filter(x=>String(x.usuario_id)===String(usuarioId))
+m=m.filter(x=>String(x.usuario_id)===String(usuarioId))
+a=a.filter(x=>String(x.usuario_id)===String(usuarioId))
+}
+window.APP_STATE.veiculos=v
+window.APP_STATE.motoristas=m
+window.APP_STATE.abastecimentos=a
 return
 }catch(e){
 console.error("Erro ao carregar Supabase",e)
@@ -35,9 +45,19 @@ carregarDadosLocal()
 
 function carregarDadosLocal(){
 const keys=window.APP_STORAGE_KEYS
-window.APP_STATE.veiculos=JSON.parse(localStorage.getItem(keys.veiculos)||"[]")
-window.APP_STATE.motoristas=JSON.parse(localStorage.getItem(keys.motoristas)||"[]")
-window.APP_STATE.abastecimentos=JSON.parse(localStorage.getItem(keys.abastecimentos)||"[]")
+const usuarioId=localStorage.getItem("usuario_id")
+const tipo=localStorage.getItem("tipo_usuario")
+let v=JSON.parse(localStorage.getItem(keys.veiculos)||"[]")
+let m=JSON.parse(localStorage.getItem(keys.motoristas)||"[]")
+let a=JSON.parse(localStorage.getItem(keys.abastecimentos)||"[]")
+if(tipo!=="admin"){
+v=v.filter(x=>String(x.usuario_id)===String(usuarioId))
+m=m.filter(x=>String(x.usuario_id)===String(usuarioId))
+a=a.filter(x=>String(x.usuario_id)===String(usuarioId))
+}
+window.APP_STATE.veiculos=v
+window.APP_STATE.motoristas=m
+window.APP_STATE.abastecimentos=a
 }
 
 function salvarDadosLocal(){
