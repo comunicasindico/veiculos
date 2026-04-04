@@ -1,4 +1,9 @@
 /* ====================================================
+060 – RENDER DASHBOARD (GRÁFICO)
+==================================================== */
+// (sua função renderizarDashboard aqui)
+
+/* ====================================================
 070 – DASHBOARD INTELIGENTE (REAL)
 ==================================================== */
 function calcularMetricas(){
@@ -24,6 +29,7 @@ anterior=k
 const consumo=litros?km/litros:0
 return{total,litros,km,consumo}
 }
+
 /* ====================================================
 071 – ATUALIZAR KPIs
 ==================================================== */
@@ -34,10 +40,12 @@ const elConsumo=document.getElementById("kpiConsumo")
 if(elTotal)elTotal.textContent=window.Utils.moeda(m.total)
 if(elConsumo)elConsumo.textContent=m.consumo?m.consumo.toFixed(2)+" km/l":"0 km/l"
 }
+
 /* ====================================================
 072 – INTEGRAÇÃO GLOBAL
 ==================================================== */
 function atualizarDashboardInteligente(){
 atualizarKPIsFinanceiros()
 }
+
 window.atualizarDashboardInteligente=atualizarDashboardInteligente
