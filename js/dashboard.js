@@ -3,7 +3,7 @@
 ==================================================== */
 function calcularMetricas(){
 const lista=(window.APP_STATE.abastecimentos||[]).slice()
-const listaFiltrada=lista.filter(a=>a.litros_numero>0&&a.valor_total_numero>0)
+const listaFiltrada=lista.filter(a=>a.valor_total_numero>0)
 if(!lista.length)return{total:0,litros:0,km:0,consumo:0}
 let total=0
 let litros=0
