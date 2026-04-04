@@ -71,13 +71,32 @@ localStorage.setItem(keys.abastecimentos,JSON.stringify(window.APP_STATE.abastec
 window.salvarDadosLocal=salvarDadosLocal
 
 function configurarMenus(){
-document.querySelectorAll(".card-menu").forEach(btn=>{
+const botoes=document.querySelectorAll(".card-menu")
+const paineis=document.querySelectorAll(".painel")
+botoes.forEach(btn=>{
 btn.addEventListener("click",()=>{
-document.querySelectorAll(".card-menu").forEach(x=>x.classList.remove("ativo"))
-document.querySelectorAll(".painel").forEach(x=>x.classList.remove("ativo"))
-btn.classList.add("ativo")
-document.getElementById(btn.dataset.target)?.classList.add("ativo")
+botoes.forEach(b=>b.classList.remove("ativo"))
+paineis.forEach(p=>{
+p.classList.remove("ativo")
+p.style.display="none"
 })
+btn.classList.add("ativo")
+const alvo=document.getElementById(btn.dataset.target)
+if(alvo){
+alvo.classList.add("ativo")
+alvo.style.display="block"
+}
+})
+})
+/* 🔥 GARANTE APENAS UM INÍCIO */
+paineis.forEach((p,i)=>{
+if(i===0){
+p.classList.add("ativo")
+p.style.display="block"
+}else{
+p.classList.remove("ativo")
+p.style.display="none"
+}
 })
 }
 
