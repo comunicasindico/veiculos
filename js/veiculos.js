@@ -12,6 +12,13 @@ busca?.addEventListener("input",renderizarVeiculos)
 
 function obterPayloadVeiculo(){
 return{
+usuario_id:(()=>{
+const tipo=localStorage.getItem("tipo_usuario")
+if(tipo==="admin"){
+return document.getElementById("usuarioSelecionadoAdmin")?.value||null
+}
+return localStorage.getItem("usuario_id")
+})(),
 placa:(document.getElementById("placa")?.value||"").toUpperCase().trim(),
 marca:document.getElementById("marca")?.value?.trim()||"",
 modelo:document.getElementById("modelo")?.value?.trim()||"",
@@ -107,27 +114,54 @@ window.toast("Veículo atualizado com sucesso")
 function renderizarVeiculos(){
 const box=document.getElementById("listaVeiculos")
 if(!box)return
+
 const termo=window.Utils.normalizar(document.getElementById("buscaVeiculo")?.value||"")
-const lista=window.APP_STATE.veiculos.filter(v=>{
+const usuarioId=localStorage.getItem("usuario_id")||""
+const tipo=localStorage.getItem("tipo_usuario")||"motorista"
+
+/* 🔥 FILTRO + SEGURANÇA */
+const lista=(window.APP_STATE.veiculos||[]).filter(v=>{
+if(!v)return false
+
+const base=`${v.placa||""} ${v.marca||""} ${v.modelo||""}`
+
+/* 🔐 ACESSO */
+if(tipo!=="admin" && String(v.usuario_id||"")!==String(usuarioId)){
+return false
+}
+
+/* 🔍 BUSCA */
 if(!termo)return true
-const base=`${v.placa} ${v.marca} ${v.modelo}`
+
 return window.Utils.normalizar(base).includes(termo)
 })
+
+/* 🔥 SEM DADOS */
 if(!lista.length){
 box.className="lista-vazia"
 box.textContent="Nenhum veículo cadastrado."
 atualizarSelectsVeiculos()
 atualizarTextoBotaoVeiculo()
+carregarUsuariosAdmin()
 return
 }
+
+/* 🔥 RENDER */
 box.className=""
 box.innerHTML=lista.map(v=>{
-const ipva=v.vencimento_ipva?`IPVA: ${window.Utils.formatarData(v.vencimento_ipva)}`:"IPVA: não informado"
-const lic=v.vencimento_licenciamento?`Licenciamento: ${window.Utils.formatarData(v.vencimento_licenciamento)}`:"Licenciamento: não informado"
+
+const ipva=v.vencimento_ipva
+?`IPVA: ${window.Utils.formatarData(v.vencimento_ipva)}`
+:"IPVA: não informado"
+
+const lic=v.vencimento_licenciamento
+?`Licenciamento: ${window.Utils.formatarData(v.vencimento_licenciamento)}`
+:"Licenciamento: não informado"
+
 return `
 <div class="item-lista">
 <div class="item-lista-topo">
-<h4>${v.placa} • ${v.marca||"Sem marca"} ${v.modelo||""}</h4>
+<h4>${v.placa||"-"} • ${v.marca||"Sem marca"} ${v.modelo||""}</h4>
 <div style="display:flex;gap:8px;flex-wrap:wrap;">
 <button class="btn" type="button" onclick="editarVeiculo('${v.id}')">Editar</button>
 <button class="btn btn-secundario" type="button" onclick="removerVeiculo('${v.id}')">Excluir</button>
@@ -144,8 +178,11 @@ ${v.observacoes?`<div class="mini">Obs.: ${v.observacoes}</div>`:""}
 </div>
 `
 }).join("")
+
+/* 🔥 FINAL */
 atualizarSelectsVeiculos()
 atualizarTextoBotaoVeiculo()
+carregarUsuariosAdmin()
 }
 
 function atualizarSelectsVeiculos(){
@@ -201,6 +238,18 @@ function cancelarEdicaoVeiculo(){
 window.VEICULO_EDITANDO_ID=null
 form?.reset()
 atualizarTextoBotaoVeiculo()
+}
+
+function carregarUsuariosAdmin(){
+const select=document.getElementById("usuarioSelecionadoAdmin")
+if(!select)return
+const tipo=localStorage.getItem("tipo_usuario")
+if(tipo!=="admin")return
+const usuarios=window.APP_STATE.motoristas||[]
+select.innerHTML=usuarios
+.sort((a,b)=>a.nome.localeCompare(b.nome))
+.map(u=>`<option value="${u.id}">${u.nome}</option>`)
+.join("")
 }
 
 window.editarVeiculo=function(id){
