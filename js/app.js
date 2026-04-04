@@ -11,6 +11,10 @@ window.renderizarMotoristas?.()
 window.renderizarAbastecimentos?.()
 window.renderizarAlertas?.()
 window.renderizarRelatorios?.()
+
+/* 🔥 DASHBOARD COMPLETO */
+window.renderizarDashboard?.()
+
 atualizarDashboard()
 window.atualizarDashboardInteligente?.()
 }
