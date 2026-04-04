@@ -57,7 +57,7 @@ window.atualizarDashboard()
 
 async function inserirVeiculo(item){
 if(window.db){
-const payload={...item}
+const payload={...item,usuario_id:localStorage.getItem("usuario_id")}
 const {data,error}=await window.db.from("veiculos").insert(payload).select().single()
 if(error){
 console.error(error)
@@ -77,7 +77,13 @@ window.toast("Veículo salvo com sucesso")
 
 async function atualizarVeiculo(item){
 if(window.db){
-const {data,error}=await window.db.from("veiculos").update(item).eq("id",window.VEICULO_EDITANDO_ID).select().single()
+const usuarioId=localStorage.getItem("usuario_id")
+const tipo=localStorage.getItem("tipo_usuario")
+let query=window.db.from("veiculos").update(item).eq("id",window.VEICULO_EDITANDO_ID)
+if(tipo!=="admin"){
+query=query.eq("usuario_id",usuarioId)
+}
+const {data,error}=await query.select().single()
 if(error){
 console.error(error)
 window.toast("Erro ao atualizar veículo")
@@ -213,7 +219,13 @@ window.scrollTo({top:0,behavior:"smooth"})
 window.removerVeiculo=async function(id){
 if(!confirm("Deseja excluir este veículo?"))return
 if(window.db){
-const {error}=await window.db.from("veiculos").delete().eq("id",id)
+const usuarioId=localStorage.getItem("usuario_id")
+const tipo=localStorage.getItem("tipo_usuario")
+let query=window.db.from("veiculos").delete().eq("id",id)
+if(tipo!=="admin"){
+query=query.eq("usuario_id",usuarioId)
+}
+const {error}=await query
 if(error){
 console.error(error)
 window.toast("Erro ao excluir veículo")
