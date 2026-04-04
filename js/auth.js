@@ -23,6 +23,11 @@ alert("Senha atualizada com sucesso")
 021 – LOGOUT
 ==================================================== */
 function logout(){
-localStorage.clear()
+localStorage.removeItem("usuario_id")
+localStorage.removeItem("usuario_nome")
+localStorage.removeItem("tipo_usuario")
 location.reload()
 }
+document.addEventListener("DOMContentLoaded",()=>{
+document.getElementById("btnLogout")?.addEventListener("click",logout)
+})
