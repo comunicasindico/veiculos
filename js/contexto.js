@@ -1,5 +1,10 @@
 /* ====================================================030 – CONTEXTO GLOBAL==================================================== */
-window.CONTEXTO={usuario_id:localStorage.getItem("usuario_id"),tipo:localStorage.getItem("tipo_usuario")||"motorista",isAdmin:localStorage.getItem("tipo_usuario")==="admin"}
+window.CONTEXTO={
+usuario_id:localStorage.getItem("usuario_id"),
+empresa_id:localStorage.getItem("empresa_id"),
+tipo:localStorage.getItem("tipo_usuario"),
+isAdmin:localStorage.getItem("tipo_usuario")==="admin"
+}
 /* ====================================================031 – APLICAR CONTEXTO VISUAL==================================================== */
 function aplicarContextoUsuario(){
 const tipoEl=document.getElementById("tipoUsuario")
