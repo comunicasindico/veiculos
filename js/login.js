@@ -43,7 +43,7 @@ function verificarLogin(){
 const user=localStorage.getItem("usuario_id")
 if(user){
 document.getElementById("telaLogin").style.display="none"
-document.getElementById("app").style.display="block"
+setTimeout(()=>location.reload(),200)
 }
 }
 document.addEventListener("DOMContentLoaded",verificarLogin)
