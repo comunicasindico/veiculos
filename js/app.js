@@ -146,9 +146,6 @@ if("serviceWorker"in navigator){navigator.serviceWorker.register("./service-work
 /* ====================================================999 – LOGOUT==================================================== */
 function logout(){
 localStorage.clear()
-document.getElementById("app").style.display="none"
-document.getElementById("telaLogin").style.display="flex"
-document.getElementById("usuario").value=""
-document.getElementById("senha").value=""
-window.CONTEXTO=null
+sessionStorage.clear()
+window.location.href=window.location.pathname
 }
