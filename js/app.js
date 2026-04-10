@@ -55,9 +55,13 @@ let v=veiculos||[]
 let m=motoristas||[]
 let a=abastecimentos||[]
 if(window.CONTEXTO && !window.CONTEXTO.isAdmin){
-v=v.filter(x=>String(x.empresa_id)===String(window.CONTEXTO.empresa_id))
-m=m.filter(x=>String(x.empresa_id)===String(window.CONTEXTO.empresa_id))
-a=a.filter(x=>String(x.empresa_id)===String(window.CONTEXTO.empresa_id))
+/* 🔒 VEÍCULOS → só do usuário */
+v=v.filter(x=>String(x.usuario_id)===String(window.CONTEXTO.usuario_id))
+/* 🔒 MOTORISTAS → só ele */
+m=m.filter(x=>String(x.id)===String(window.CONTEXTO.usuario_id))
+/* 🔒 ABASTECIMENTOS → só dos veículos dele */
+const idsVeiculos=v.map(x=>String(x.id))
+a=a.filter(x=>idsVeiculos.includes(String(x.veiculo_id)))
 }
 window.APP_STATE.veiculos=v
 window.APP_STATE.motoristas=m
