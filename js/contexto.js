@@ -1,13 +1,12 @@
-/* ====================================================
-030 – CONTEXTO DE USUÁRIO (ADMIN X MOTORISTA)
-==================================================== */
+/* ====================================================030 – CONTEXTO GLOBAL==================================================== */
+window.CONTEXTO={usuario_id:localStorage.getItem("usuario_id"),tipo:localStorage.getItem("tipo_usuario")||"motorista",isAdmin:localStorage.getItem("tipo_usuario")==="admin"}
+/* ====================================================031 – APLICAR CONTEXTO VISUAL==================================================== */
 function aplicarContextoUsuario(){
-const tipo=localStorage.getItem("tipo_usuario")||"motorista"
 const tipoEl=document.getElementById("tipoUsuario")
 const escopoEl=document.getElementById("escopoUsuario")
 const titulo=document.getElementById("tituloPainel")
 const desc=document.getElementById("descricaoPainel")
-if(tipo==="admin"){
+if(window.CONTEXTO.isAdmin){
 if(tipoEl)tipoEl.innerText="Administrador"
 if(escopoEl)escopoEl.innerText="Todos os clientes"
 if(titulo)titulo.innerText="Central de Clientes"
