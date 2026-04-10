@@ -23,8 +23,8 @@ if(msg)msg.innerText="Senha incorreta"
 return
 }
 /* LOGIN OK */
-localStorage.setItem("empresa_id",data.empresa_id)
 localStorage.setItem("usuario_id",data.id)
+localStorage.setItem("empresa_id",data.empresa_id)
 localStorage.setItem("usuario_nome",data.nome||"")
 localStorage.setItem("tipo_usuario",data.perfil==="admin"?"admin":"motorista")
 localStorage.setItem("primeiro_login",data.primeiro_login?"1":"0")
