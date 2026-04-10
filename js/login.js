@@ -26,10 +26,11 @@ return
 localStorage.setItem("usuario_id",data.id)
 localStorage.setItem("empresa_id",data.empresa_id)
 localStorage.setItem("usuario_nome",data.nome||"")
-localStorage.setItem("tipo_usuario",data.perfil==="admin"?"admin":"motorista")
+localStorage.setItem("tipo_usuario","admin")
 localStorage.setItem("primeiro_login",data.primeiro_login?"1":"0")
 document.getElementById("telaLogin").style.display="none"
-document.getElementById("app").style.display="block"
+/* 🔥 NÃO força app aqui */
+setTimeout(()=>{location.reload()},200)
 /* PRIMEIRO LOGIN */
 if(data.primeiro_login){
 abrirTrocaSenha()
