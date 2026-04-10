@@ -1,15 +1,13 @@
 document.addEventListener("DOMContentLoaded",iniciarApp)
 async function iniciarApp(){
-/* 🔐 CONTROLE DE TELA */
-const logado=localStorage.getItem("usuario_id")
-if(logado){
-document.getElementById("telaLogin").style.display="none"
-document.getElementById("app").style.display="block"
-}else{
-document.getElementById("telaLogin").style.display="flex"
+const usuarioId=localStorage.getItem("usuario_id")
+if(!usuarioId){
 document.getElementById("app").style.display="none"
+document.getElementById("telaLogin").style.display="flex"
 return
 }
+document.getElementById("telaLogin").style.display="none"
+document.getElementById("app").style.display="block"
 /* 🔥 CARREGAMENTO NORMAL */
 await carregarDados()
 configurarMenus()
