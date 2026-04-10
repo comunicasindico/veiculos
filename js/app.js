@@ -1,5 +1,16 @@
 document.addEventListener("DOMContentLoaded",iniciarApp)
 async function iniciarApp(){
+/* 🔐 CONTROLE DE TELA */
+const logado=localStorage.getItem("usuario_id")
+if(logado){
+document.getElementById("telaLogin").style.display="none"
+document.getElementById("app").style.display="block"
+}else{
+document.getElementById("telaLogin").style.display="flex"
+document.getElementById("app").style.display="none"
+return
+}
+/* 🔥 CARREGAMENTO NORMAL */
 await carregarDados()
 configurarMenus()
 configurarInstalacaoPWA()
@@ -13,6 +24,12 @@ window.renderizarRelatorios?.()
 window.renderizarDashboard?.()
 atualizarDashboard()
 window.atualizarDashboardInteligente?.()
+/* 🎯 DIRECIONAMENTO POR PERFIL */
+if(window.CONTEXTO?.isAdmin){
+document.querySelector('[data-target="painelVeiculos"]')?.click()
+}else{
+document.querySelector('[data-target="painelAbastecimentos"]')?.click()
+}
 }
 /* ====================================================LOAD DADOS==================================================== */
 async function carregarDados(){
