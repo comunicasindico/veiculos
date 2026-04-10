@@ -42,6 +42,7 @@ const btn=[...botoes].find(b=>b.dataset.target==="painelAbastecimentos")
 if(btn)btn.classList.add("ativo")
 if(alvo){alvo.classList.add("ativo");alvo.style.display="block"}
 }
+document.getElementById("btnLogout")?.addEventListener("click",logout)
 }
 /* ====================================================LOAD DADOS==================================================== */
 async function carregarDados(){
@@ -141,4 +142,13 @@ document.getElementById("btnInstalar")?.classList.remove("oculto")
 }
 function registrarServiceWorker(){
 if("serviceWorker"in navigator){navigator.serviceWorker.register("./service-worker.js").catch(()=>{})}
+}
+/* ====================================================999 – LOGOUT==================================================== */
+function logout(){
+localStorage.clear()
+document.getElementById("app").style.display="none"
+document.getElementById("telaLogin").style.display="flex"
+document.getElementById("usuario").value=""
+document.getElementById("senha").value=""
+window.CONTEXTO=null
 }
