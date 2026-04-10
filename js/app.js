@@ -28,10 +28,9 @@ let m=motoristas||[]
 let a=abastecimentos||[]
 /* 🔥 FILTRO CENTRAL */
 if(!window.CONTEXTO.isAdmin){
-v=v.filter(x=>String(x.usuario_id)===String(window.CONTEXTO.usuario_id))
-m=m.filter(x=>String(x.usuario_id)===String(window.CONTEXTO.usuario_id))
-const ids=v.map(x=>String(x.id))
-a=a.filter(x=>ids.includes(String(x.veiculo_id)))
+v=v.filter(x=>String(x.empresa_id)===String(window.CONTEXTO.empresa_id))
+m=m.filter(x=>String(x.empresa_id)===String(window.CONTEXTO.empresa_id))
+a=a.filter(x=>String(x.empresa_id)===String(window.CONTEXTO.empresa_id))
 }
 window.APP_STATE.veiculos=v
 window.APP_STATE.motoristas=m
