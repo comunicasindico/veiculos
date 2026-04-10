@@ -4,7 +4,8 @@ usuario_id:localStorage.getItem("usuario_id"),
 empresa_id:localStorage.getItem("empresa_id"),
 tipo:localStorage.getItem("tipo_usuario"),
 isAdmin:localStorage.getItem("tipo_usuario")==="admin"
-}
+};
+console.log("CONTEXTO CARREGADO:",window.CONTEXTO);
 /* ====================================================031 – APLICAR CONTEXTO VISUAL==================================================== */
 function aplicarContextoUsuario(){
 const tipoEl=document.getElementById("tipoUsuario")
