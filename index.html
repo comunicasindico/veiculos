@@ -13,6 +13,7 @@
 </head>
 <body>
 
+<!-- 🔐 LOGIN -->
 <div id="telaLogin" class="login-container">
 <div class="login-box">
 <h2>Meu Veículo</h2>
@@ -23,6 +24,9 @@
 <p id="msgLogin" class="erro"></p>
 </div>
 </div>
+
+<!-- 🔥 APP (TUDO DENTRO AQUI) -->
+<div id="app" style="display:none">
 
 <header class="topbar">
 <div class="brand">
@@ -35,7 +39,9 @@
 <button id="btnInstalar" class="btn btn-secundario oculto">Instalar app</button>
 <button id="btnLogout" class="btn btn-secundario">Sair</button>
 </header>
-<main class="container" id="app" style="display:none">
+
+<main class="container">
+
 <section class="cards-grid">
 <button class="card-menu ativo" data-target="painelInicio">Início</button>
 <button class="card-menu" data-target="painelVeiculos">Meu Veículo</button>
@@ -45,6 +51,7 @@
 <button class="card-menu" data-target="painelAlertas">Alertas</button>
 <button class="card-menu" data-target="painelRelatorios">Relatórios</button>
 </section>
+
 <section id="painelInicio" class="painel ativo">
 <div class="hero">
 <h2 id="tituloPainel">Meu Veículo</h2>
@@ -54,174 +61,118 @@
 <strong>Acesso:</strong> <span id="escopoUsuario">Apenas seu veículo</span>
 </div>
 </div>
+
 <div class="kpis">
-<div class="kpi-card">
-<span>Meu Veículo</span>
-<strong id="kpiVeiculos">1</strong>
-<small>Controle individual</small>
+<div class="kpi-card"><span>Meu Veículo</span><strong id="kpiVeiculos">1</strong></div>
+<div class="kpi-card"><span>Abastecimentos</span><strong id="kpiAbastecimentos">0</strong></div>
+<div class="kpi-card"><span>Gasto Total</span><strong id="kpiCustoTotal">R$ 0,00</strong></div>
+<div class="kpi-card"><span>Consumo Médio</span><strong id="kpiConsumo">0 km/l</strong></div>
+<div class="kpi-card"><span>Alertas</span><strong id="kpiAlertas">0</strong></div>
 </div>
-<div class="kpi-card">
-<span>Abastecimentos</span>
-<strong id="kpiAbastecimentos">0</strong>
-<small>Mês atual</small>
-</div>
-<div class="kpi-card">
-<span>Gasto Total</span>
-<strong id="kpiCustoTotal">R$ 0,00</strong>
-<small>Combustível</small>
-</div>
-<div class="kpi-card">
-<span>Consumo Médio</span>
-<strong id="kpiConsumo">0 km/l</strong>
-<small>Eficiência</small>
-</div>
-<div class="kpi-card">
-<span>Alertas</span>
-<strong id="kpiAlertas">0</strong>
-<small>IPVA / CNH</small>
-</div>
-</div>
+
 <div class="bloco">
 <h3>Resumo rápido</h3>
-<div id="resumoRapido" class="lista-vazia">Nenhum dado cadastrado ainda.</div>
+<div id="resumoRapido" class="lista-vazia"></div>
 </div>
+
 <div class="bloco">
 <h3>Consumo e gastos</h3>
 <canvas id="graficoConsumo" height="120"></canvas>
 </div>
 </section>
+
 <section id="painelVeiculos" class="painel">
 <div class="bloco">
 <h2>Meu veículo</h2>
 <form id="formVeiculo" class="form-grid">
+
 <div class="admin-only">
 <label>Cliente</label>
 <select id="usuarioSelecionadoAdmin"></select>
 </div>
 
-<div>
-<label for="placa">Placa</label>
-<input type="text" id="placa" required>
-</div>
-<div>
-<label for="marca">Marca</label>
-<input type="text" id="marca">
-</div>
-<div>
-<label for="modelo">Modelo</label>
-<input type="text" id="modelo">
-</div>
-<div>
-<label for="ano">Ano</label>
-<input type="number" id="ano">
-</div>
-<div>
-<label for="kmAtual">KM atual</label>
-<input type="number" id="kmAtual">
-</div>
-<div>
-<label for="vencimentoIpva">IPVA</label>
+<input type="text" id="placa" placeholder="Placa" required>
+<input type="text" id="marca" placeholder="Marca">
+<input type="text" id="modelo" placeholder="Modelo">
+<input type="number" id="ano" placeholder="Ano">
+<input type="number" id="kmAtual" placeholder="KM atual">
 <input type="date" id="vencimentoIpva">
-</div>
-<div>
-<label for="vencimentoLicenciamento">Licenciamento</label>
 <input type="date" id="vencimentoLicenciamento">
-</div>
+
 <div class="full actions">
 <button type="submit" class="btn">Salvar</button>
 </div>
+
 </form>
 </div>
+
 <div class="bloco">
 <h3>Dados do veículo</h3>
-<div id="listaVeiculos" class="lista-vazia">Nenhum veículo cadastrado.</div>
+<div id="listaVeiculos" class="lista-vazia"></div>
 </div>
 </section>
+
 <section id="painelMotoristas" class="painel admin-only">
 <div class="bloco">
 <h2>Gestão de clientes</h2>
 <form id="formMotorista" class="form-grid">
-<div>
-<label>Nome</label>
-<input type="text" id="nomeMotorista" required>
-</div>
-<div>
-<label>Email</label>
-<input type="email" id="emailMotorista">
-</div>
+<input type="text" id="nomeMotorista" placeholder="Nome" required>
+<input type="email" id="emailMotorista" placeholder="Email">
 <div class="full actions">
 <button type="submit" class="btn">Salvar</button>
 </div>
 </form>
 </div>
+
 <div class="bloco">
-<h3>Clientes cadastrados</h3>
-<div id="listaMotoristas" class="lista-vazia"></div>
+<div id="listaMotoristas"></div>
 </div>
 </section>
+
 <section id="painelAbastecimentos" class="painel">
 <div class="bloco">
 <h2>Abastecimento</h2>
 <form id="formAbastecimento" class="form-grid">
-<div>
-<label>Data</label>
 <input type="datetime-local" id="dataAbastecimento" required>
-</div>
-<div>
-<label>Posto</label>
-<input type="text" id="postoAbastecimento">
-</div>
-<div>
-<label>Litros</label>
-<input type="number" id="litrosAbastecimento">
-</div>
-<div>
-<label>Valor</label>
-<input type="number" id="valorTotalAbastecimento">
-</div>
-<div>
-<label>KM</label>
-<input type="number" id="quilometragemAbastecimento">
-</div>
+<input type="text" id="postoAbastecimento" placeholder="Posto">
+<input type="number" id="litrosAbastecimento" placeholder="Litros">
+<input type="number" id="valorTotalAbastecimento" placeholder="Valor">
+<input type="number" id="quilometragemAbastecimento" placeholder="KM">
 <div class="full actions">
 <button type="submit" class="btn">Salvar</button>
 </div>
 </form>
 </div>
+
 <div class="bloco">
-<h3>Histórico</h3>
-<div id="listaAbastecimentos" class="lista-vazia"></div>
+<div id="listaAbastecimentos"></div>
 </div>
 </section>
+
 <section id="painelCamera" class="painel">
 <div class="bloco">
-<h2>Nota Fiscal</h2>
 <video id="cameraPreview" autoplay playsinline muted></video>
 <button id="btnAbrirCamera" class="btn">Abrir câmera</button>
 </div>
 </section>
+
 <section id="painelAlertas" class="painel">
-<div class="bloco">
-<h2>Alertas</h2>
-<div id="listaAlertas" class="lista-vazia"></div>
-</div>
+<div id="listaAlertas"></div>
 </section>
+
 <section id="painelRelatorios" class="painel">
-<div class="bloco">
-<h2>Relatórios</h2>
-<div id="painelRelatorioResumo" class="kpis"></div>
-<div id="tabelaRelatorio" class="lista-vazia"></div>
-</div>
+<div id="painelRelatorioResumo"></div>
+<div id="tabelaRelatorio"></div>
 </section>
+
 </main>
+</div>
+
 <div id="toast" class="toast"></div>
 
-<div id="modalSenha" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000000cc;z-index:999;align-items:center;justify-content:center">
-<div style="background:#fff;padding:20px;border-radius:10px;max-width:300px;width:90%">
-<h3>Trocar senha</h3>
-<input type="password" id="novaSenha" placeholder="Nova senha">
-<button onclick="salvarNovaSenha()" class="btn">Salvar</button>
-</div>
+<div id="modalSenha" style="display:none">
+<input type="password" id="novaSenha">
+<button onclick="salvarNovaSenha()">Salvar</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
