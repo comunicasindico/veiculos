@@ -8,6 +8,8 @@ return
 }
 document.getElementById("telaLogin").style.display="none"
 document.getElementById("app").style.display="block"
+/* 🔥 GARANTE CONTEXTO */
+window.CONTEXTO=window.CONTEXTO||{usuario_id:usuarioId,empresa_id:localStorage.getItem("empresa_id"),isAdmin:localStorage.getItem("tipo_usuario")==="admin"}
 /* 🔥 CARREGAMENTO NORMAL */
 await carregarDados()
 configurarMenus()
@@ -25,11 +27,9 @@ window.atualizarDashboardInteligente?.()
 /* 🔥 FORÇAR PAINEL CORRETO */
 const paineis=document.querySelectorAll(".painel")
 const botoes=document.querySelectorAll(".card-menu")
-
 botoes.forEach(b=>b.classList.remove("ativo"))
 paineis.forEach(p=>{p.classList.remove("ativo");p.style.display="none"})
-
-if(window.CONTEXTO?.isAdmin){
+if(window.CONTEXTO.isAdmin){
 const alvo=document.getElementById("painelVeiculos")
 const btn=[...botoes].find(b=>b.dataset.target==="painelVeiculos")
 if(btn)btn.classList.add("ativo")
@@ -54,8 +54,7 @@ window.db.from("abastecimentos").select("*").order("data_abastecimento",{ascendi
 let v=veiculos||[]
 let m=motoristas||[]
 let a=abastecimentos||[]
-/* 🔥 FILTRO CENTRAL */
-if(!window.CONTEXTO.isAdmin){
+if(window.CONTEXTO && !window.CONTEXTO.isAdmin){
 v=v.filter(x=>String(x.empresa_id)===String(window.CONTEXTO.empresa_id))
 m=m.filter(x=>String(x.empresa_id)===String(window.CONTEXTO.empresa_id))
 a=a.filter(x=>String(x.empresa_id)===String(window.CONTEXTO.empresa_id))
@@ -74,7 +73,7 @@ const keys=window.APP_STORAGE_KEYS
 let v=JSON.parse(localStorage.getItem(keys.veiculos)||"[]")
 let m=JSON.parse(localStorage.getItem(keys.motoristas)||"[]")
 let a=JSON.parse(localStorage.getItem(keys.abastecimentos)||"[]")
-if(!window.CONTEXTO.isAdmin){
+if(window.CONTEXTO && !window.CONTEXTO.isAdmin){
 v=v.filter(x=>String(x.usuario_id)===String(window.CONTEXTO.usuario_id))
 m=m.filter(x=>String(x.usuario_id)===String(window.CONTEXTO.usuario_id))
 const ids=v.map(x=>String(x.id))
