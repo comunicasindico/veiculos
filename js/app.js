@@ -24,11 +24,23 @@ window.renderizarRelatorios?.()
 window.renderizarDashboard?.()
 atualizarDashboard()
 window.atualizarDashboardInteligente?.()
-/* 🎯 DIRECIONAMENTO POR PERFIL */
+/* 🔥 FORÇAR PAINEL CORRETO */
+const paineis=document.querySelectorAll(".painel")
+const botoes=document.querySelectorAll(".card-menu")
+
+botoes.forEach(b=>b.classList.remove("ativo"))
+paineis.forEach(p=>{p.classList.remove("ativo");p.style.display="none"})
+
 if(window.CONTEXTO?.isAdmin){
-document.querySelector('[data-target="painelVeiculos"]')?.click()
+const alvo=document.getElementById("painelVeiculos")
+const btn=[...botoes].find(b=>b.dataset.target==="painelVeiculos")
+if(btn)btn.classList.add("ativo")
+if(alvo){alvo.classList.add("ativo");alvo.style.display="block"}
 }else{
-document.querySelector('[data-target="painelAbastecimentos"]')?.click()
+const alvo=document.getElementById("painelAbastecimentos")
+const btn=[...botoes].find(b=>b.dataset.target==="painelAbastecimentos")
+if(btn)btn.classList.add("ativo")
+if(alvo){alvo.classList.add("ativo");alvo.style.display="block"}
 }
 }
 /* ====================================================LOAD DADOS==================================================== */
