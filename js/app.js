@@ -222,7 +222,7 @@ if(app)app.style.display="none"
 if(login)login.style.display="flex"
 
 }
-/* =================================================012 FUNCTION RENDER RESUMO================================================= */
+/* ====================================================012 FUNCTION RENDER RESUMO==================================================== */
 function renderResumo(){
 
 const v=window.APP_STATE.veiculos||[]
@@ -232,15 +232,26 @@ const a=window.APP_STATE.abastecimentos||[]
 const el=document.getElementById("resumoRapido")
 if(!el)return
 
-let ultimo=a[0]
+/* 🔥 SEGURANÇA */
+let ultimo=null
+if(a.length){
+a.sort((x,y)=>new Date(y.data_abastecimento)-new Date(x.data_abastecimento))
+ultimo=a[0]
+}
 
 el.innerHTML=`
 Total de veículos: ${v.length}<br>
-Total de motoristas: ${window.CONTEXTO.isAdmin?m.length:1}<br>
+Total de motoristas: ${window.CONTEXTO?.isAdmin?m.length:1}<br>
 Total de abastecimentos: ${a.length}<br>
 Último abastecimento: ${ultimo?new Date(ultimo.data_abastecimento).toLocaleString():"-"}
 `
+
 }
 /* ====================================================012 – LOADER==================================================== */
-function mostrarLoader(){document.getElementById("loaderGlobal").style.display="flex"}
-function esconderLoader(){document.getElementById("loaderGlobal").style.display="none"}
+function mostrarLoader(){
+document.getElementById("loaderGlobal").style.display="flex"
+}
+function esconderLoader(){
+document.getElementById("loaderGlobal").style.display="none"
+}
+  
