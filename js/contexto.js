@@ -1,3 +1,20 @@
+/* ====================================================001 – CONTEXTO GLOBAL==================================================== */
+function carregarContexto(){
+const usuario_id=localStorage.getItem("usuario_id")
+const empresa_id=localStorage.getItem("empresa_id")
+const tipo=localStorage.getItem("tipo_usuario")
+
+if(!usuario_id)return
+
+window.CONTEXTO={
+usuario_id:usuario_id,
+empresa_id:empresa_id,
+tipo:tipo,
+isAdmin:tipo==="admin"
+}
+
+console.log("CONTEXTO RESTAURADO:",window.CONTEXTO)
+}
 /* ====================================================030 – CONTEXTO GLOBAL==================================================== */
 window.CONTEXTO={
 usuario_id:localStorage.getItem("usuario_id"),
