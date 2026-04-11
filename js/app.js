@@ -232,20 +232,20 @@ const a=window.APP_STATE.abastecimentos||[]
 const el=document.getElementById("resumoRapido")
 if(!el)return
 
-/* 🔥 SEGURANÇA */
 let ultimo=null
-if(a.length){
+
+if(a.length>0){
 a.sort((x,y)=>new Date(y.data_abastecimento)-new Date(x.data_abastecimento))
 ultimo=a[0]
 }
+/* 🔥 STRING SEGURA */
+let texto=""
+texto+="Total de veículos: "+v.length+"<br>"
+texto+="Total de motoristas: "+(window.CONTEXTO?.isAdmin?m.length:1)+"<br>"
+texto+="Total de abastecimentos: "+a.length+"<br>"
+texto+="Último abastecimento: "+(ultimo?new Date(ultimo.data_abastecimento).toLocaleString():"-")
 
-el.innerHTML=`
-Total de veículos: ${v.length}<br>
-Total de motoristas: ${window.CONTEXTO?.isAdmin?m.length:1}<br>
-Total de abastecimentos: ${a.length}<br>
-Último abastecimento: ${ultimo?new Date(ultimo.data_abastecimento).toLocaleString():"-"}
-`
-
+el.innerHTML=texto
 }
 /* ====================================================012 – LOADER==================================================== */
 function mostrarLoader(){
