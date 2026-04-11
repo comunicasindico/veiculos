@@ -307,3 +307,13 @@ localStorage.clear()
 location.reload()
 }
 }
+/* ====================================================950 – UX GLOBAL==================================================== */
+function mostrarLoader(){document.getElementById("loaderGlobal").style.display="flex"}
+function esconderLoader(){document.getElementById("loaderGlobal").style.display="none"}
+function toast(msg,erro=false){
+const t=document.getElementById("toast")
+t.innerText=msg
+t.style.background=erro?"#ef4444":"#22c55e"
+t.style.display="block"
+setTimeout(()=>t.style.display="none",3000)
+}
