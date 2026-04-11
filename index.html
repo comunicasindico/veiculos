@@ -34,7 +34,32 @@ transition:0.2s
 button:hover{
 transform:scale(1.03)
 }
+.collapsible-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+cursor:pointer;
+font-weight:bold;
+padding:5px 0;
+}
 
+.collapsible-content{
+max-height:500px;
+overflow:hidden;
+transition:all 0.35s ease;
+}
+
+.collapsed .collapsible-content{
+max-height:0;
+opacity:0;
+padding:0;
+}
+
+.toggle{
+font-size:18px;
+color:#22c55e;
+transition:0.2s;
+}
   
 </style>
 
@@ -418,19 +443,70 @@ d.style.display=d.style.display==="none"?"block":"none"
 function exportarPDF(){
 const {jsPDF}=window.jspdf
 const doc=new jsPDF()
-
 doc.text("Relatório de Consumo",10,10)
-
 let y=20
 document.querySelectorAll("#lista .card").forEach(el=>{
 doc.text(el.innerText,10,y)
 y+=10
 })
-
 doc.save("relatorio.pdf")
 }
+/* ====================================================210 – ACCORDION iPHONE==================================================== */
+document.addEventListener("DOMContentLoaded",()=>{
 
+const cards=document.querySelectorAll(".card")
+let activeIndex=localStorage.getItem("accordion")||0
 
+cards.forEach((card,index)=>{
+
+const title=card.querySelector("h3")
+if(!title)return
+
+const header=document.createElement("div")
+header.className="collapsible-header"
+
+const toggle=document.createElement("span")
+toggle.className="toggle"
+toggle.innerText="−"
+
+const titleClone=title.cloneNode(true)
+
+header.appendChild(titleClone)
+header.appendChild(toggle)
+
+const content=document.createElement("div")
+content.className="collapsible-content"
+/* mover conteúdo */
+Array.from(card.children).forEach(el=>{
+if(el.tagName==="H3")return
+content.appendChild(el)
+})
+
+card.innerHTML=""
+card.appendChild(header)
+card.appendChild(content)
+/* estado inicial */
+if(index!=activeIndex){
+card.classList.add("collapsed")
+toggle.innerText="+"
+}
+/* clique estilo iPhone */
+header.onclick=()=>{
+/* fecha todos */
+cards.forEach((c,i)=>{
+c.classList.add("collapsed")
+c.querySelector(".toggle").innerText="+"
+})
+/* abre o atual */
+card.classList.remove("collapsed")
+toggle.innerText="−"
+/* salva estado */
+localStorage.setItem("accordion",index)
+}
+})
+})
+
+  
 </script>
 </div>
 </body>
