@@ -89,7 +89,10 @@ function getEmpresaId(){return localStorage.getItem("empresa_id")}
 
 /* ====================================================005 – LOAD DADOS==================================================== */
 async function carregarDados(){
-if(!window.db){carregarDadosLocal();return}
+if(!window.db){
+console.error("❌ SUPABASE NÃO INICIALIZADO")
+return
+}
 try{
 const[{data:veiculos},{data:motoristas},{data:abastecimentos}]=await Promise.all([
 window.db.from("veiculos").select("*").order("created_at",{ascending:false}),
@@ -115,43 +118,26 @@ window.APP_STATE.veiculos=v
 window.APP_STATE.motoristas=m
 window.APP_STATE.abastecimentos=a
 
+/* 🔥 DEBUG */
+console.log("🔥 VEICULOS DO BANCO:",veiculos)
+console.log("🔥 MOTORISTAS DO BANCO:",motoristas)
+console.log("🔥 ABASTECIMENTOS DO BANCO:",abastecimentos)
 console.log("USER:",window.CONTEXTO?.usuario_id)
-console.log("VEICULOS:",v.length)
-console.log("ABAST:",a.length)
+console.log("VEICULOS FILTRADOS:",v.length)
+console.log("ABAST FILTRADOS:",a.length)
+
 return
+
 }catch(e){
-console.error("Erro Supabase:",e)
-}
-carregarDadosLocal()
-}
-/* ====================================================006 – LOCAL STORAGE==================================================== */
-function carregarDadosLocal(){
-const keys=window.APP_STORAGE_KEYS
-let v=JSON.parse(localStorage.getItem(keys.veiculos)||"[]")
-let m=JSON.parse(localStorage.getItem(keys.motoristas)||"[]")
-let a=JSON.parse(localStorage.getItem(keys.abastecimentos)||"[]")
 
-if(window.CONTEXTO&&!window.CONTEXTO.isAdmin){
-const uid=String(window.CONTEXTO.usuario_id)
-v=v.filter(x=>String(x.usuario_id)===uid)
-m=m.filter(x=>String(x.usuario_id)===uid)
-const ids=v.map(x=>String(x.id))
-a=a.filter(x=>ids.includes(String(x.veiculo_id)))
-}
+console.error("❌ ERRO SUPABASE:",e)
 
-window.APP_STATE.veiculos=v
-window.APP_STATE.motoristas=m
-window.APP_STATE.abastecimentos=a
-}
+/* 🔥 NÃO USAR LOCAL STORAGE */
+window.APP_STATE.veiculos=[]
+window.APP_STATE.motoristas=[]
+window.APP_STATE.abastecimentos=[]
 
-function salvarDadosLocal(){
-const keys=window.APP_STORAGE_KEYS
-localStorage.setItem(keys.veiculos,JSON.stringify(window.APP_STATE.veiculos))
-localStorage.setItem(keys.motoristas,JSON.stringify(window.APP_STATE.motoristas))
-localStorage.setItem(keys.abastecimentos,JSON.stringify(window.APP_STATE.abastecimentos))
 }
-window.salvarDadosLocal=salvarDadosLocal
-
 /* ====================================================007 – MENU==================================================== */
 function configurarMenus(){
 const botoes=document.querySelectorAll(".card-menu")
