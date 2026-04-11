@@ -114,8 +114,8 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 <div id="lista"></div>
 </div>
 
-<div class="card" style="margin-top:20px">
-<h3>📊 Gráfico Mensal</h3>
+<div class="card no-accordion" style="margin-top:20px">
+<h3 style="font-weight:bold">📊 Gráfico Mensal</h3>
 <canvas id="graficoMensal" style="height:260px"></canvas>
 </div>
 
@@ -659,7 +659,7 @@ doc.save("relatorio_consumo.pdf")
 }
 /* ====================================================210 – ACCORDION iPHONE FIX==================================================== */
 document.addEventListener("DOMContentLoaded",()=>{
-const cards=document.querySelectorAll(".card")
+const cards=document.querySelectorAll(".card:not(.no-accordion)")
 let activeIndex=localStorage.getItem("accordion")||0
 cards.forEach((card,index)=>{
 const title=card.querySelector("h3")
