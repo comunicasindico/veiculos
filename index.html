@@ -2,11 +2,12 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Veículos SaaS</title>
+<title>Veículos SaaS PRO</title>
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{font-family:Arial;background:#020617;color:#fff;padding:20px}
 .box{max-width:420px;margin:80px auto;background:#111827;padding:20px;border-radius:10px}
@@ -14,6 +15,8 @@ input,select,button{width:100%;padding:10px;margin:5px 0;border-radius:6px;borde
 button{background:#22c55e;font-weight:bold;cursor:pointer}
 .card{background:#111827;padding:15px;border-radius:10px;margin-top:10px}
 .kpi{font-size:14px;margin-top:5px;color:#22c55e}
+.alerta{color:#ef4444;font-weight:bold;margin-top:5px}
+canvas{max-width:100%;margin-top:10px}
 </style>
 </head>
 <body>
@@ -26,7 +29,7 @@ button{background:#22c55e;font-weight:bold;cursor:pointer}
 </div>
 
 <div id="app" style="display:none">
-<h2>Painel Veículos</h2>
+<h2>Painel Veículos PRO</h2>
 
 <div class="card">
 <h3>Selecionar Veículo</h3>
@@ -34,9 +37,10 @@ button{background:#22c55e;font-weight:bold;cursor:pointer}
 </div>
 
 <div class="card">
-<h3>Dados do Veículo</h3>
+<h3>Resumo</h3>
 <div id="veiculo"></div>
 <div id="kpi"></div>
+<div id="alerta"></div>
 </div>
 
 <div class="card">
@@ -48,7 +52,12 @@ button{background:#22c55e;font-weight:bold;cursor:pointer}
 </div>
 
 <div class="card">
-<h3>Abastecimentos</h3>
+<h3>Gráfico Consumo</h3>
+<canvas id="grafico"></canvas>
+</div>
+
+<div class="card">
+<h3>Histórico</h3>
 <div id="lista"></div>
 </div>
 
@@ -57,106 +66,100 @@ button{background:#22c55e;font-weight:bold;cursor:pointer}
 
 <script>
 
-/* ====================================================000 – HARD RESET==================================================== */
+/* 000 RESET */
 if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()))}
 if('caches'in window){caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)))}
 
-/* ====================================================001 – INIT==================================================== */
+/* 001 INIT */
 document.addEventListener("DOMContentLoaded",()=>{
 window.db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
-window.user=document.getElementById("user")
-window.pass=document.getElementById("pass")
-window.loginDiv=document.getElementById("login")
-window.appDiv=document.getElementById("app")
+window.user=user=document.getElementById("user")
+window.pass=pass=document.getElementById("pass")
+window.loginDiv=login=document.getElementById("login")
+window.appDiv=app=document.getElementById("app")
+window.selectVeiculo=document.getElementById("selectVeiculo")
 window.veiculoDiv=document.getElementById("veiculo")
 window.listaDiv=document.getElementById("lista")
-window.selectVeiculo=document.getElementById("selectVeiculo")
 window.kpiDiv=document.getElementById("kpi")
+window.alertaDiv=document.getElementById("alerta")
 window.litros=document.getElementById("litros")
 window.valor=document.getElementById("valor")
 window.km=document.getElementById("km")
-document.getElementById("btnLogin").onclick=login
-document.getElementById("btnSalvar").onclick=salvarAbastecimento
+document.getElementById("btnLogin").onclick=loginSistema
+document.getElementById("btnSalvar").onclick=salvar
 document.getElementById("btnLogout").onclick=logout
-selectVeiculo.onchange=trocarVeiculo
+selectVeiculo.onchange=trocar
 init()
 })
 
-/* ====================================================010 – LOGIN==================================================== */
-async function login(){
+/* 010 LOGIN */
+async function loginSistema(){
 const u=user.value.trim().toLowerCase()
 const p=pass.value
-const {data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",u).single()
-if(error||!data||data.senha_hash!==p){alert("Login inválido");return}
+const {data}=await db.from("usuarios").select("*").eq("usuario_apelido",u).single()
+if(!data||data.senha_hash!==p){alert("Login inválido");return}
 localStorage.setItem("uid",data.id)
 localStorage.setItem("tipo",data.perfil)
 init()
 }
 
-/* ====================================================020 – LOGOUT==================================================== */
+/* 020 LOGOUT */
 function logout(){localStorage.clear();location.reload()}
 
-/* ====================================================030 – INIT==================================================== */
+/* 030 INIT */
 async function init(){
 const uid=localStorage.getItem("uid")
-if(!uid){loginDiv.style.display="block";appDiv.style.display="none";return}
-loginDiv.style.display="none"
-appDiv.style.display="block"
-const tipo=localStorage.getItem("tipo")
+if(!uid){login.style.display="block";app.style.display="none";return}
+login.style.display="none";app.style.display="block"
 let {data:veiculos}=await db.from("veiculos").select("*")
-if(tipo!=="admin"){veiculos=veiculos.filter(v=>String(v.usuario_id)===String(uid))}
-if(!veiculos.length){veiculoDiv.innerHTML="Nenhum veículo";return}
+if(localStorage.getItem("tipo")!=="admin"){veiculos=veiculos.filter(v=>String(v.usuario_id)===String(uid))}
 window.VEICULOS=veiculos
 selectVeiculo.innerHTML=veiculos.map(v=>`<option value="${v.id}">${v.modelo} - ${v.placa}</option>`).join("")
-window.VEICULO_ID=veiculos[0].id
-renderVeiculo()
+window.VID=veiculos[0]?.id
+render()
 }
 
-/* ====================================================040 – TROCAR VEÍCULO==================================================== */
-function trocarVeiculo(){
-window.VEICULO_ID=selectVeiculo.value
-renderVeiculo()
-}
+/* 040 TROCAR */
+function trocar(){window.VID=selectVeiculo.value;render()}
 
-/* ====================================================050 – RENDER VEÍCULO==================================================== */
-async function renderVeiculo(){
-const v=window.VEICULOS.find(x=>String(x.id)===String(window.VEICULO_ID))
-veiculoDiv.innerHTML=`Placa: ${v.placa}<br>Modelo: ${v.modelo}<br>KM Atual: ${v.km_atual||0}`
-await carregarAbastecimentos(v.id)
-}
-
-/* ====================================================060 – SALVAR ABAST==================================================== */
-async function salvarAbastecimento(){
-const litrosVal=parseFloat(litros.value||0)
-const valorVal=parseFloat(valor.value||0)
-const kmVal=parseFloat(km.value||0)
-if(!window.VEICULO_ID){alert("Veículo não encontrado");return}
-await db.from("abastecimentos").insert({veiculo_id:window.VEICULO_ID,litros:litrosVal,valor_total:valorVal,quilometragem:kmVal,data_abastecimento:new Date().toISOString()})
-await db.from("veiculos").update({km_atual:kmVal}).eq("id",window.VEICULO_ID)
-litros.value="";valor.value="";km.value=""
-renderVeiculo()
-}
-
-/* ====================================================070 – LISTAR ABAST==================================================== */
-async function carregarAbastecimentos(vid){
-let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",vid).order("data_abastecimento",{ascending:true})
-if(!data||!data.length){listaDiv.innerHTML="Nenhum abastecimento";kpiDiv.innerHTML="";return}
-let html=""
-let consumoTotal=0
-let count=0
+/* 050 RENDER */
+async function render(){
+const v=VEICULOS.find(x=>String(x.id)===String(VID))
+veiculoDiv.innerHTML=`${v.modelo} | ${v.placa} | KM ${v.km_atual||0}`
+let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+if(!data||data.length<2){listaDiv.innerHTML="Poucos dados";return}
+let consumo=[],labels=[],totalCons=0,count=0,totalValor=0,totalKm=0
 for(let i=1;i<data.length;i++){
-const kmAnterior=data[i-1].quilometragem
-const kmAtual=data[i].quilometragem
-const litros=data[i].litros
-const consumo=(kmAtual-kmAnterior)/litros
-if(consumo>0){consumoTotal+=consumo;count++}
-html+=`<div>${new Date(data[i].data_abastecimento).toLocaleString()}<br>KM: ${kmAtual} | Litros: ${litros} | Consumo: ${consumo.toFixed(2)} km/l<hr></div>`
+let kmDiff=data[i].quilometragem-data[i-1].quilometragem
+let cons=kmDiff/data[i].litros
+consumo.push(cons)
+labels.push(i)
+if(cons>0){totalCons+=cons;count++}
+totalValor+=data[i].valor_total
+totalKm+=kmDiff
 }
-listaDiv.innerHTML=html
-if(count>0){
-const media=(consumoTotal/count).toFixed(2)
-kpiDiv.innerHTML=`<div class="kpi">Consumo médio: ${media} km/l</div>`
-}else{kpiDiv.innerHTML=""}
+let media=(totalCons/count).toFixed(2)
+let custoKm=(totalValor/totalKm).toFixed(2)
+kpiDiv.innerHTML=`<div class="kpi">Média: ${media} km/l</div><div class="kpi">Custo por KM: R$ ${custoKm}</div>`
+if(v.km_atual%5000<300){alertaDiv.innerHTML='<div class="alerta">⚠ Revisão próxima</div>'}else{alertaDiv.innerHTML=""}
+renderGrafico(labels,consumo)
+listaDiv.innerHTML=data.map(a=>`<div>${a.quilometragem} km | ${a.litros}L | R$${a.valor_total}<hr></div>`).join("")
+}
+
+/* 060 SALVAR */
+async function salvar(){
+await db.from("abastecimentos").insert({veiculo_id:VID,litros:parseFloat(litros.value),valor_total:parseFloat(valor.value),quilometragem:parseFloat(km.value),data_abastecimento:new Date().toISOString()})
+await db.from("veiculos").update({km_atual:parseFloat(km.value)}).eq("id",VID)
+litros.value="";valor.value="";km.value=""
+render()
+}
+
+/* 070 GRÁFICO */
+let chart
+function renderGrafico(labels,data){
+const ctx=document.getElementById("grafico")
+if(chart){chart.destroy()}
+chart=new Chart(ctx,{type:"line",data:{labels:labels,datasets:[{label:"KM/L",data:data}]},options:{plugins:{legend:{labels:{color:"#fff"}}},scales:{x:{ticks:{color:"#fff"}},y:{ticks:{color:"#fff"}}}}})
 }
 
 </script>
