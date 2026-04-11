@@ -220,12 +220,33 @@ window.toast=toast
 
 /* ====================================================011 – LOGOUT==================================================== */
 function logoutConfirm(){
-if(confirm("Deseja realmente sair do sistema?")){
-localStorage.clear()
-location.reload()
-}
-}
+if(!confirm("Deseja realmente sair do sistema?"))return
 
+/* 🔥 LIMPA SESSÃO */
+localStorage.clear()
+
+/* 🔒 REMOVE ESTADOS */
+document.body.classList.remove("logado")
+
+/* 🔒 ESCONDE APP */
+const app=document.getElementById("app")
+if(app)app.style.display="none"
+
+/* 🔓 MOSTRA LOGIN */
+const login=document.getElementById("telaLogin")
+if(login)login.style.display="flex"
+
+/* 🔥 LIMPA CAMPOS */
+const u=document.getElementById("loginUsuario")
+const s=document.getElementById("loginSenha")
+if(u)u.value=""
+if(s)s.value=""
+
+/* 🔥 FORÇA RESET TOTAL (ANTI CACHE) */
+setTimeout(()=>{
+location.href=location.pathname+"?logout="+Date.now()
+},100)
+}
 /* ====================================================012 – LOADER==================================================== */
 function mostrarLoader(){document.getElementById("loaderGlobal").style.display="flex"}
 function esconderLoader(){document.getElementById("loaderGlobal").style.display="none"}
