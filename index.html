@@ -314,22 +314,21 @@ data=data.filter(a=>a.data_abastecimento.startsWith(mesAtual))
 if(!data||data.length<2){
 if(lista){
 lista.innerHTML=data.map(a=>`
-<div class="card" id="row_${a.id}" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-
-<div id="view_${a.id}">
+<div class="card" style="display:flex;justify-content:space-between;align-items:center">
+<div id="view_${a.id}" style="flex:1">
 📅 ${formatarData(a.data_abastecimento)} - ⛽ ${a.litros}L - 💰 R$ ${Number(a.valor_total).toFixed(2)} - 📍 ${a.quilometragem} km
 </div>
-
-<div id="edit_${a.id}" style="display:none;gap:5px">
-<input id="lit_${a.id}" value="${a.litros}" style="width:70px">
-<input id="val_${a.id}" value="${a.valor_total}" style="width:90px">
-<input id="km_${a.id}" value="${a.quilometragem}" style="width:90px">
-<button onclick="salvarInline('${a.id}')">💾</button>
-<button onclick="cancelarInline('${a.id}')">❌</button>
+<div id="edit_${a.id}" style="display:none;flex:1;gap:5px;align-items:center">
+<input id="lit_${a.id}" value="${a.litros}" style="width:60px">
+<input id="val_${a.id}" value="${a.valor_total}" style="width:80px">
+<input id="km_${a.id}" value="${a.quilometragem}" style="width:80px">
 </div>
-
+<div style="display:flex;gap:5px">
 <button onclick="editarInline('${a.id}')">✏️</button>
-
+<button onclick="salvarInline('${a.id}')" id="btnSave_${a.id}" style="display:none">💾</button>
+<button onclick="cancelarInline('${a.id}')" id="btnCancel_${a.id}" style="display:none">❌</button>
+<button onclick="excluir('${a.id}')">🗑️</button>
+</div>
 </div>
 `).join("")
 }
@@ -458,10 +457,14 @@ d.style.display=d.style.display==="none"?"block":"none"
 function editarInline(id){
 document.getElementById("view_"+id).style.display="none"
 document.getElementById("edit_"+id).style.display="flex"
+document.getElementById("btnSave_"+id).style.display="inline-block"
+document.getElementById("btnCancel_"+id).style.display="inline-block"
 }
 function cancelarInline(id){
 document.getElementById("view_"+id).style.display="block"
 document.getElementById("edit_"+id).style.display="none"
+document.getElementById("btnSave_"+id).style.display="none"
+document.getElementById("btnCancel_"+id).style.display="none"
 }
 async function salvarInline(id){
 const litrosVal=parseFloat(document.getElementById("lit_"+id).value)
@@ -473,7 +476,13 @@ litros:litrosVal,
 valor_total:valorVal,
 quilometragem:kmVal
 }).eq("id",id)
+
 await db.from("veiculos").update({km_atual:kmVal}).eq("id",VID)
+render()
+}
+async function excluir(id){
+if(!confirm("Excluir abastecimento?"))return
+await db.from("abastecimentos").delete().eq("id",id)
 render()
 }
 /* =============FORMATAR DATA================================================== */
