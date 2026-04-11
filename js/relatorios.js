@@ -16,7 +16,9 @@ return Number(v||0).toFixed(casas)
 }
 
 function dataBR(d){
-return d?new Date(d).toLocaleDateString():"-"
+if(!d)return "-"
+const dt=new Date(d.length<=10?d+"T00:00:00":d)
+return isNaN(dt)?"-":dt.toLocaleDateString()
 }
 
 /* ====================================================RENDER==================================================== */
@@ -27,10 +29,18 @@ const boxTabela=document.getElementById("tabelaRelatorio")
 
 if(!boxResumo||!boxTabela)return
 
+const ctx=window.CONTEXTO
 const veiculoId=filtroVeiculo?.value||"todos"
 const periodo=filtroPeriodo?.value||"todos"
 
 let lista=(window.APP_STATE?.abastecimentos||[]).slice()
+
+/* 🔐 FILTRO USUÁRIO (SaaS) */
+if(!ctx?.isAdmin){
+const ids=(window.APP_STATE.veiculos||[])
+.map(v=>String(v.id))
+lista=lista.filter(a=>ids.includes(String(a.veiculo_id)))
+}
 
 /* 🔥 FILTRO VEÍCULO */
 if(veiculoId!=="todos"){
@@ -43,7 +53,7 @@ const dias=Number(periodo)
 const agora=new Date()
 
 lista=lista.filter(a=>{
-const dt=new Date(a.data_abastecimento)
+const dt=new Date(a.data_abastecimento?.length<=10?a.data_abastecimento+"T00:00:00":a.data_abastecimento)
 if(isNaN(dt))return false
 return ((agora-dt)/86400000)<=dias
 })
@@ -51,6 +61,12 @@ return ((agora-dt)/86400000)<=dias
 
 /* 🔥 ORDENA */
 lista.sort((a,b)=>new Date(b.data_abastecimento)-new Date(a.data_abastecimento))
+
+/* 🔥 MAP VEÍCULOS (performance) */
+const mapaVeiculos={}
+(window.APP_STATE.veiculos||[]).forEach(v=>{
+mapaVeiculos[String(v.id)]=v
+})
 
 /* 🔥 KPIs */
 const totalGasto=lista.reduce((s,a)=>s+Number(a.valor_total||0),0)
@@ -60,11 +76,11 @@ const totalRegistros=lista.length
 const ticketMedio=totalRegistros?totalGasto/totalRegistros:0
 const valorMedioLitro=totalLitros?totalGasto/totalLitros:0
 
-const kmList=lista.map(a=>Number(a.quilometragem||0)).filter(v=>v>0)
-const kmRodados=kmList.length?(Math.max(...kmList)-Math.min(...kmList)):0
+const kms=lista.map(a=>Number(a.quilometragem||0)).filter(v=>v>0)
+const kmRodados=kms.length?(Math.max(...kms)-Math.min(...kms)):0
 
 const custoPorKm=kmRodados?totalGasto/kmRodados:0
-const consumoMedio=kmRodados&&totalLitros?kmRodados/totalLitros:0
+const consumoMedio=(kmRodados&&totalLitros)?kmRodados/totalLitros:0
 
 /* 🔥 RESUMO */
 boxResumo.innerHTML=`
@@ -85,7 +101,7 @@ boxTabela.textContent="Nenhum dado para relatório."
 return
 }
 
-/* 🔥 AGRUPADO POR VEÍCULO */
+/* 🔥 AGRUPADO */
 const mapa={}
 
 lista.forEach(a=>{
@@ -96,7 +112,7 @@ mapa[id].push(a)
 
 const cards=Object.keys(mapa).map(id=>{
 const grupo=mapa[id]
-const v=window.APP_STATE.veiculos.find(x=>String(x.id)===id)
+const v=mapaVeiculos[id]
 
 const gasto=grupo.reduce((s,a)=>s+Number(a.valor_total||0),0)
 const litros=grupo.reduce((s,a)=>s+Number(a.litros||0),0)
@@ -105,7 +121,7 @@ return `
 <div class="item-lista">
 <div class="item-lista-topo">
 <h4>${v?`${v.placa} • ${v.marca||""} ${v.modelo||""}`:"Veículo"}</h4>
-<span class="tag ok">${grupo.length} abastecimento(s)</span>
+<span class="tag ok">${grupo.length}</span>
 </div>
 <div class="mini">Gasto: ${moeda(gasto)} • Litros: ${numero(litros,2)}</div>
 </div>
@@ -114,8 +130,7 @@ return `
 
 /* 🔥 TABELA */
 const linhas=lista.map(a=>{
-const v=window.APP_STATE.veiculos.find(x=>String(x.id)===String(a.veiculo_id))
-
+const v=mapaVeiculos[String(a.veiculo_id)]
 return `
 <tr>
 <td>${dataBR(a.data_abastecimento)}</td>
@@ -150,14 +165,17 @@ ${cards}
 <th>KM</th>
 </tr>
 </thead>
-<tbody>
-${linhas}
-</tbody>
+<tbody>${linhas}</tbody>
 </table>
 </div>
 </div>
 `
 }
+
+/* ====================================================AUTO==================================================== */
+document.addEventListener("DOMContentLoaded",()=>{
+setTimeout(()=>renderizarRelatorios(),200)
+})
 
 window.renderizarRelatorios=renderizarRelatorios
 
