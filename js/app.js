@@ -1,32 +1,35 @@
 document.addEventListener("DOMContentLoaded",iniciarApp)
 
-/* ====================================================001 – INICIAR APP==================================================== */
+/* ====================================================001 – INICIAR APP (LIMPO)==================================================== */
 async function iniciarApp(){
 carregarContexto()
 
 const app=document.getElementById("app")
 const login=document.getElementById("telaLogin")
 
-app.style.display="none"
-login.style.display="none"
-
 let usuarioId=localStorage.getItem("usuario_id")
 const tempoLogin=localStorage.getItem("login_time")
 
+/* 🔒 EXPIRAÇÃO AUTOMÁTICA */
 if(tempoLogin&&Date.now()-parseInt(tempoLogin)>1000*60*60*8){
 localStorage.clear()
 usuarioId=null
 }
 
+/* 🔐 SEM LOGIN */
 if(!usuarioId){
-login.style.display="flex"
+document.body.classList.remove("logado")
+if(app)app.style.display="none"
+if(login)login.style.display="flex"
 return
 }
 
-login.style.display="none"
-app.style.display="block"
+/* 🔓 COM LOGIN */
 document.body.classList.add("logado")
+if(login)login.style.display="none"
+if(app)app.style.display="block"
 
+/* 🔥 CONTEXTO */
 window.CONTEXTO={
 usuario_id:usuarioId,
 empresa_id:localStorage.getItem("empresa_id"),
@@ -34,6 +37,7 @@ tipo:localStorage.getItem("tipo_usuario")||"motorista",
 isAdmin:String(localStorage.getItem("tipo_usuario")).toLowerCase()==="admin"
 }
 
+/* 🔥 DADOS */
 await carregarDados()
 
 if(!window.APP_STATE||!window.APP_STATE.veiculos){
@@ -41,6 +45,7 @@ console.warn("Dados não carregados")
 return
 }
 
+/* 🔥 UI */
 configurarMenus()
 renderTudo()
 atualizarTopo()
@@ -222,30 +227,19 @@ window.toast=toast
 function logoutConfirm(){
 if(!confirm("Deseja realmente sair do sistema?"))return
 
-/* 🔥 LIMPA SESSÃO */
+/* 🔥 LIMPA TUDO */
 localStorage.clear()
+sessionStorage.clear()
 
-/* 🔒 REMOVE ESTADOS */
+/* 🔒 LIMPA MEMÓRIA GLOBAL */
+window.CONTEXTO=null
+window.APP_STATE={}
+
+/* 🔒 REMOVE ESTADO VISUAL */
 document.body.classList.remove("logado")
 
-/* 🔒 ESCONDE APP */
-const app=document.getElementById("app")
-if(app)app.style.display="none"
-
-/* 🔓 MOSTRA LOGIN */
-const login=document.getElementById("telaLogin")
-if(login)login.style.display="flex"
-
-/* 🔥 LIMPA CAMPOS */
-const u=document.getElementById("loginUsuario")
-const s=document.getElementById("loginSenha")
-if(u)u.value=""
-if(s)s.value=""
-
-/* 🔥 FORÇA RESET TOTAL (ANTI CACHE) */
-setTimeout(()=>{
-location.href=location.pathname+"?logout="+Date.now()
-},100)
+/* 🔥 REDIRECIONA SEM CACHE */
+window.location.replace(window.location.pathname+"?v="+Date.now())
 }
 /* ====================================================012 – LOADER==================================================== */
 function mostrarLoader(){document.getElementById("loaderGlobal").style.display="flex"}
