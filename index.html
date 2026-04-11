@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-/* ====================================================001 HEAD==================================================== */
+<!-- ====================================================001 HEAD====================================================  -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Meu Veículo</title>
@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" type="image/png" href="img/icone-192.png">
 <link rel="icon" href="img/favicon.ico">
-/* ====================================================002 STYLE==================================================== */
+<!-- ====================================================002 STYLE====================================================  -->
 <style>
 body{margin:0;font-family:Arial;background:#020617;color:#fff}
 #telaLogin{position:fixed;top:0;left:0;width:100%;height:100%;background:#020617;display:flex;align-items:center;justify-content:center;z-index:9999}
@@ -37,7 +37,7 @@ body{margin:0;font-family:Arial;background:#020617;color:#fff}
 </style>
 </head>
 <body>
-/* ====================================================003 LOGIN==================================================== */
+<!-- ====================================================003 LOGIN====================================================  -->
 <div id="telaLogin">
 <div class="login-box">
 <h2>Meu Veículo</h2>
@@ -48,7 +48,7 @@ body{margin:0;font-family:Arial;background:#020617;color:#fff}
 <p id="msgLogin"></p>
 </div>
 </div>
-/* ====================================================004 APP==================================================== */
+<!-- ====================================================004 APP====================================================  -->
 <div id="app">
 <header class="topbar">
 <div class="brand">
@@ -64,7 +64,7 @@ body{margin:0;font-family:Arial;background:#020617;color:#fff}
 </div>
 </header>
 <main class="container">
-/* ====================================================005 MENU==================================================== */
+<!-- ====================================================005 MENU====================================================  -->
 <section class="cards-grid">
 <button class="card-menu ativo" data-target="painelInicio">Início</button>
 <button class="card-menu" data-target="painelVeiculos">Meu Veículo</button>
@@ -74,14 +74,14 @@ body{margin:0;font-family:Arial;background:#020617;color:#fff}
 <button class="card-menu" data-target="painelAlertas">Alertas</button>
 <button class="card-menu" data-target="painelRelatorios">Relatórios</button>
 </section>
-/* ====================================================006 INICIO==================================================== */
+<!-- ====================================================006 INICIO====================================================  -->
 <section id="painelInicio" class="painel ativo">
 <div class="bloco">
 <h2>Resumo</h2>
 <div id="resumoRapido"></div>
 </div>
 </section>
-/* ====================================================007 VEICULOS==================================================== */
+<!-- ====================================================007 VEICULOS====================================================  -->
 <section id="painelVeiculos" class="painel">
 <div class="bloco">
 <h2>Meu veículo</h2>
@@ -106,7 +106,7 @@ body{margin:0;font-family:Arial;background:#020617;color:#fff}
 <div id="listaVeiculos"></div>
 </div>
 </section>
-/* ====================================================008 MOTORISTAS==================================================== */
+<!-- ====================================================008 MOTORISTAS====================================================  -->
 <section id="painelMotoristas" class="painel admin-only">
 <div class="bloco">
 <form id="formMotorista" class="form-grid">
@@ -121,7 +121,7 @@ body{margin:0;font-family:Arial;background:#020617;color:#fff}
 <div id="listaMotoristas"></div>
 </div>
 </section>
-/* ====================================================009 ABASTECIMENTOS==================================================== */
+<!-- ====================================================009 ABASTECIMENTOS====================================================  -->
 <section id="painelAbastecimentos" class="painel">
 <div class="bloco">
 <form id="formAbastecimento" class="form-grid">
@@ -139,25 +139,25 @@ body{margin:0;font-family:Arial;background:#020617;color:#fff}
 <div id="listaAbastecimentos"></div>
 </div>
 </section>
-/* ====================================================010 CAMERA==================================================== */
+<!-- ====================================================010 CAMERA====================================================  -->
 <section id="painelCamera" class="painel">
 <div class="bloco">
 <video id="cameraPreview" autoplay playsinline muted></video>
 <button id="btnAbrirCamera" class="btn">Abrir câmera</button>
 </div>
 </section>
-/* ====================================================011 ALERTAS==================================================== */
+<!-- ====================================================011 ALERTAS====================================================  -->
 <section id="painelAlertas" class="painel">
 <div id="listaAlertas"></div>
 </section>
-/* ====================================================012 RELATORIOS==================================================== */
+<!-- ====================================================012 RELATORIOS====================================================  -->
 <section id="painelRelatorios" class="painel">
 <div id="painelRelatorioResumo"></div>
 <div id="tabelaRelatorio"></div>
 </section>
 </main>
 </div>
-/* ====================================================013 SCRIPTS==================================================== */
+<!-- ====================================================013 SCRIPTS====================================================  -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -174,7 +174,7 @@ body{margin:0;font-family:Arial;background:#020617;color:#fff}
 <script src="js/camera.js"></script>
 <script src="js/alertas.js"></script>
 <script src="js/relatorios.js"></script>
-/* ====================================================014 LOGOUT==================================================== */
+<!-- ====================================================014 LOGOUT====================================================  -->
 <script>
 function logout(){
 localStorage.clear()
