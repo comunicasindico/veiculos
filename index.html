@@ -195,9 +195,12 @@ veiculoSel.onchange=()=>{
 window.VID=veiculoSel.value
 render()
 }
-aplicarAnoAtual()
 /* 🚀 RENDER */
 render()
+
+document.getElementById("filtroPeriodo").value="all"
+document.getElementById("dataInicio").value=""
+document.getElementById("dataFim").value=""
 }
 /* ============================aplicar filtro=================================================== */
 
@@ -341,7 +344,7 @@ const di=document.getElementById("dataInicio")?.value
 const df=document.getElementById("dataFim")?.value
 
 if(!filtro || filtro==="all"){
-// 🔥 NÃO FILTRA → mostra tudo (2025 + 2026)
+// 🔥 MOSTRA TUDO (2025 + 2026)
 }
 else if(filtro==="mes"){
 const hoje=new Date()
@@ -542,7 +545,10 @@ function logout(){localStorage.clear();location.reload()}
 /* ================= SCROLL HISTÓRICO ================= */
 function abrirHistorico(){
 window.scrollTo({top:0,behavior:"smooth"})
-aplicarAnoAtual()
+document.getElementById("filtroPeriodo").value="all"
+document.getElementById("dataInicio").value=""
+document.getElementById("dataFim").value=""
+render()
 }
 /* ================= FILTRO ANO COMPLETO ================= */
 function aplicarAnoAtual(){
