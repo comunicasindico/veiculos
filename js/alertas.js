@@ -3,9 +3,14 @@
 /* ====================================================001 – CALCULAR DIAS==================================================== */
 function diasPara(data){
 if(!data)return null
+
 const hoje=new Date()
-const dt=new Date(data)
+
+/* 🔥 GARANTE FORMATO ISO */
+const dt=new Date(data.length<=10 ? data+"T00:00:00" : data)
+
 if(isNaN(dt))return null
+
 const diff=(dt-hoje)/86400000
 return Math.floor(diff)
 }
@@ -15,13 +20,14 @@ function gerarAlertas(){
 
 const alertas=[]
 
-/* 🚗 VEÍCULOS */
-(window.APP_STATE.veiculos||[]).forEach(v=>{
+const veiculos=window.APP_STATE?.veiculos||[]
+
+veiculos.forEach(v=>{
 
 const diasIpva=diasPara(v.vencimentoIpva)
 const diasLic=diasPara(v.vencimentoLicenciamento)
 
-/* IPVA */
+/* 🚗 IPVA */
 if(diasIpva!==null&&diasIpva<=30){
 alertas.push({
 tipo:diasIpva<0?"danger":"warn",
@@ -32,7 +38,7 @@ detalhe:diasIpva<0
 })
 }
 
-/* LICENCIAMENTO */
+/* 🚗 LICENCIAMENTO */
 if(diasLic!==null&&diasLic<=30){
 alertas.push({
 tipo:diasLic<0?"danger":"warn",
@@ -60,6 +66,10 @@ const box=document.getElementById("listaAlertas")
 if(!box)return
 
 const lista=gerarAlertas()
+
+/* 🔥 KPI */
+const elKpi=document.getElementById("kpiAlertas")
+if(elKpi)elKpi.textContent=lista.length
 
 if(!lista.length){
 box.className="lista-vazia"
