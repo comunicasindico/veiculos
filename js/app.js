@@ -103,15 +103,18 @@ window.db.from("abastecimentos").select("*").order("data_abastecimento",{ascendi
 let v=veiculos||[]
 let m=motoristas||[]
 let a=abastecimentos||[]
-
-if(window.CONTEXTO&&!window.CONTEXTO.isAdmin){
-const uid=String(window.CONTEXTO.usuario_id||"")
+/* ====================================================FILTRO CORRETO==================================================== */
+if(window.CONTEXTO && !window.CONTEXTO.isAdmin){
+const uid=String(window.CONTEXTO.usuario_id)
+/* 🚗 VEÍCULOS → FILTRA PELO DONO */
 v=v.filter(x=>String(x.usuario_id)===uid)
+/* ⛽ ABASTECIMENTOS → SOMENTE DOS VEÍCULOS DO USUÁRIO */
 const ids=v.map(x=>String(x.id))
 a=a.filter(x=>ids.includes(String(x.veiculo_id)))
+/* 👤 MOTORISTA → PELO ID DO USUÁRIO */
 m=m.filter(x=>String(x.id)===uid)
 }
-
+/* ====================================================SALVA ESTADO==================================================== */
 window.APP_STATE.veiculos=v
 window.APP_STATE.motoristas=m
 window.APP_STATE.abastecimentos=a
@@ -119,13 +122,12 @@ window.APP_STATE.abastecimentos=a
 console.log("USER:",window.CONTEXTO?.usuario_id)
 console.log("VEICULOS:",v.length)
 console.log("ABAST:",a.length)
-
+return
 }catch(e){
 console.error("Erro Supabase:",e)
+}
 carregarDadosLocal()
 }
-}
-
 /* ====================================================006 – LOCAL STORAGE==================================================== */
 function carregarDadosLocal(){
 const keys=window.APP_STORAGE_KEYS
