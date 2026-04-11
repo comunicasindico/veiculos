@@ -38,6 +38,7 @@ await carregarDados()
 if(!window.APP_STATE || !window.APP_STATE.veiculos){
 console.warn("Dados ainda não carregados")
 return
+atualizarTopo()
 }
 
 /* ====================================================USUARIO LOGADO==================================================== */
@@ -188,16 +189,19 @@ function configurarMenus(){
 const botoes=document.querySelectorAll(".card-menu")
 const paineis=document.querySelectorAll(".painel")
 botoes.forEach(btn=>{
-btn.addEventListener("click",()=>{
+btn.onclick=()=>{
 botoes.forEach(b=>b.classList.remove("ativo"))
-paineis.forEach(p=>{p.classList.remove("ativo");p.style.display="none"})
 btn.classList.add("ativo")
-const alvo=document.getElementById(btn.dataset.target)
-if(alvo){alvo.classList.add("ativo");alvo.style.display="block"}
-})
-})
-paineis.forEach((p,i)=>{p.style.display=i===0?"block":"none"})
+const alvo=btn.dataset.target
+paineis.forEach(p=>p.classList.remove("ativo"))
+setTimeout(()=>{
+const el=document.getElementById(alvo)
+if(el)el.classList.add("ativo")
+},100)
 }
+})
+}
+/* ===================================================campos iniciais=================================================== */
 function definirCamposIniciais(){
 const input=document.getElementById("dataAbastecimento")
 if(input&&!input.value)input.value=window.Utils.agoraInputDateTime()
@@ -279,9 +283,20 @@ document.getElementById("btnInstalar")?.classList.remove("oculto")
 function registrarServiceWorker(){
 if("serviceWorker"in navigator){navigator.serviceWorker.register("./service-worker.js").catch(()=>{})}
 }
+/* ====================================================900 – INFO USUARIO==================================================== */
+function atualizarTopo(){
+const nome=localStorage.getItem("usuario_nome")||""
+const tipo=localStorage.getItem("tipo_usuario")||"motorista"
+const el=document.getElementById("infoUsuario")
+if(el){
+el.innerText=nome+" • "+(tipo==="admin"?"Administrador":"Motorista")
+}
+if(tipo==="admin")document.body.classList.add("admin")
+}
 /* ====================================================999 – LOGOUT==================================================== */
-function logout(){
+function logoutConfirm(){
+if(confirm("Deseja realmente sair do sistema?")){
 localStorage.clear()
-sessionStorage.clear()
-setTimeout(()=>{window.location.href=window.location.pathname},50)
+location.reload()
+}
 }
