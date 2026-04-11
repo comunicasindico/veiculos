@@ -1,6 +1,9 @@
 (function(){
 
-/* ====================================================001 – ELEMENTOS==================================================== */
+/* ====================================================001 – SAFE STATE==================================================== */
+if(!window.APP_STATE)window.APP_STATE={}
+
+/* ====================================================002 – ELEMENTOS==================================================== */
 const btnAbrir=document.getElementById("btnAbrirCamera")
 const btnCapturar=document.getElementById("btnCapturarNota")
 const btnFechar=document.getElementById("btnFecharCamera")
@@ -11,17 +14,22 @@ btnCapturar?.addEventListener("click",capturarNota)
 btnFechar?.addEventListener("click",fecharCamera)
 btnEnviar?.addEventListener("click",enviarParaAbastecimento)
 
-/* ====================================================002 – DATA AGORA==================================================== */
+/* ====================================================003 – DATA AGORA==================================================== */
 function agoraInput(){
 const agora=new Date()
 return new Date(agora.getTime()-agora.getTimezoneOffset()*60000)
 .toISOString().slice(0,16)
 }
 
-/* ====================================================003 – ABRIR CAMERA==================================================== */
+/* ====================================================004 – ABRIR CAMERA==================================================== */
 async function abrirCamera(){
 
 const video=document.getElementById("cameraPreview")
+
+if(!video){
+window.toast("Elemento de vídeo não encontrado")
+return
+}
 
 if(!navigator.mediaDevices?.getUserMedia){
 window.toast("Câmera não suportada")
@@ -42,16 +50,17 @@ video.srcObject=stream
 
 window.toast("Câmera aberta")
 
-}catch{
+}catch(e){
+console.error(e)
 window.toast("Erro ao abrir câmera")
 }
 
 }
 
-/* ====================================================004 – FECHAR CAMERA==================================================== */
+/* ====================================================005 – FECHAR CAMERA==================================================== */
 function fecharCamera(){
 
-const stream=window.APP_STATE.streamCamera
+const stream=window.APP_STATE?.streamCamera
 
 if(stream){
 stream.getTracks().forEach(t=>t.stop())
@@ -63,7 +72,7 @@ if(video)video.srcObject=null
 
 }
 
-/* ====================================================005 – CAPTURAR==================================================== */
+/* ====================================================006 – CAPTURAR==================================================== */
 function capturarNota(){
 
 const video=document.getElementById("cameraPreview")
@@ -90,19 +99,25 @@ TOTAL R$ 200,39`
 
 const dados=extrairCampos(textoDemo)
 
-/* 🔥 PREENCHER CAMPOS */
-document.getElementById("notaPosto").value=dados.posto
-document.getElementById("notaCnpj").value=dados.cnpj
-document.getElementById("notaData").value=dados.data||agoraInput()
-document.getElementById("notaLitros").value=dados.litros
-document.getElementById("notaValorTotal").value=dados.valorTotal
-document.getElementById("notaValorLitro").value=dados.valorLitro
+/* 🔥 SAFE SET */
+setValor("notaPosto",dados.posto)
+setValor("notaCnpj",dados.cnpj)
+setValor("notaData",dados.data||agoraInput())
+setValor("notaLitros",dados.litros)
+setValor("notaValorTotal",dados.valorTotal)
+setValor("notaValorLitro",dados.valorLitro)
 
 window.toast("Nota capturada")
 
 }
 
-/* ====================================================006 – EXTRAIR DADOS==================================================== */
+/* ====================================================007 – SET SAFE==================================================== */
+function setValor(id,valor){
+const el=document.getElementById(id)
+if(el)el.value=valor||""
+}
+
+/* ====================================================008 – EXTRAIR DADOS==================================================== */
 function extrairCampos(texto){
 
 const dados={
@@ -142,16 +157,16 @@ return dados
 
 }
 
-/* ====================================================007 – ENVIAR==================================================== */
+/* ====================================================009 – ENVIAR==================================================== */
 function enviarParaAbastecimento(){
 
 const dados={
-posto:document.getElementById("notaPosto")?.value||"",
-cnpj:document.getElementById("notaCnpj")?.value||"",
-data:document.getElementById("notaData")?.value||agoraInput(),
-litros:document.getElementById("notaLitros")?.value?.replace(",",".")||"",
-valorTotal:document.getElementById("notaValorTotal")?.value?.replace(",",".")||"",
-valorLitro:document.getElementById("notaValorLitro")?.value?.replace(",",".")||""
+posto:getValor("notaPosto"),
+cnpj:getValor("notaCnpj"),
+data:getValor("notaData")||agoraInput(),
+litros:getValor("notaLitros").replace(",","."),
+valorTotal:getValor("notaValorTotal").replace(",","."),
+valorLitro:getValor("notaValorLitro").replace(",",".")
 }
 
 window.preencherAbastecimentoPorNota?.(dados)
@@ -160,7 +175,16 @@ window.toast("Dados enviados")
 
 }
 
-/* ====================================================008 – LIMPAR CAMERA==================================================== */
+/* ====================================================010 – GET SAFE==================================================== */
+function getValor(id){
+return document.getElementById(id)?.value||""
+}
+
+/* ====================================================011 – AUTO CLEAN==================================================== */
+document.addEventListener("visibilitychange",()=>{
+if(document.hidden)fecharCamera()
+})
+
 window.addEventListener("beforeunload",fecharCamera)
 
 })()
