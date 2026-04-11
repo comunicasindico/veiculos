@@ -16,12 +16,9 @@ body{font-family:Arial;background:#020617;color:#fff;padding:15px}
 .card{background:#111827;padding:15px;border-radius:12px;margin-top:10px}
 button{padding:12px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold;width:100%;margin-top:5px}
 input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:none}
-<input type="file" id="csvFile" accept=".csv">
 .kpi{color:#22c55e}
 .alerta{color:#ef4444;font-weight:bold}
 video,canvas{width:100%;border-radius:10px;margin-top:10px}
-<canvas id="grafico"></canvas>
-<canvas id="graficoMensal"></canvas>
 </style>
 </head>
 <body>
@@ -36,7 +33,7 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 
 <div class="card">
 <h3>📷 Ler Nota</h3>
-<video id="video" autoplay></video>
+<video id="video" autoplay style="display:none"></video>
 <button onclick="capturar()">Capturar Nota</button>
 <canvas id="canvas"></canvas>
 <div id="ocr"></div>
@@ -61,6 +58,16 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 <canvas id="grafico"></canvas>
 </div>
 
+<div class="card">
+<h3>📊 Gráfico Mensal</h3>
+<canvas id="graficoMensal"></canvas>
+</div>
+
+<div class="card">
+<h3>📋 Histórico</h3>
+<div id="lista"></div>
+</div>
+
 <script>
 /* ====================================================000 – VAR GLOBAL==================================================== */
 let chart=null
@@ -68,24 +75,16 @@ let chartMensal=null
 /* ====================================================000 RESET==================================================== */
 if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()))}
 if('caches'in window){caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)))}
-
 /* ====================================================001 INIT==================================================== */
 document.addEventListener("DOMContentLoaded",()=>{
 window.db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
-window.veiculoSel=document.getElementById("veiculoSel")
+window.lista=document.getElementById("lista")
 window.kpi=document.getElementById("kpi")
 window.alerta=document.getElementById("alerta")
-window.video=document.getElementById("video")
-window.canvas=document.getElementById("canvas")
-window.ocr=document.getElementById("ocr")
-window.litros=document.getElementById("litros")
-window.valor=document.getElementById("valor")
-window.km=document.getElementById("km")
-window.lista=document.getElementById("lista")
 window.grafico=document.getElementById("grafico")
+window.veiculoSel=document.getElementById("veiculoSel")
 init()
 })
-
 /* ====================================================010 INIT==================================================== */
 async function init(){
 let {data:v}=await db.from("veiculos").select("*")
@@ -94,7 +93,6 @@ veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo}</option>`).jo
 window.VID=v[0]?.id
 render()
 }
-
 /* ====================================================020 CAMERA CONTROL==================================================== */
 let stream=null
 async function abrirCamera(){
@@ -107,7 +105,6 @@ function fecharCamera(){
 if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
 video.style.display="none"
 }
-
 /* ====================================================030 OCR==================================================== */
 async function capturar(){
 if(!stream)await abrirCamera()
@@ -122,7 +119,6 @@ ocr.innerHTML=`Valor: ${dados.valor||"-"} | CNPJ: ${dados.cnpj||"-"}`
 if(dados.valor)valor.value=dados.valor
 fecharCamera()
 }
-
 /* ====================================================031 INTERPRETAR==================================================== */
 function interpretar(txt){
 txt=txt.toUpperCase()
@@ -133,7 +129,6 @@ let c=txt.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/)
 if(c)cnpj=c[0]
 return{valor,cnpj}
 }
-
 /* ====================================================040 SALVAR==================================================== */
 async function salvar(){
 await db.from("abastecimentos").insert({
@@ -190,11 +185,19 @@ render()
 document.addEventListener("change",e=>{
 if(e.target.id==="csvFile")importarCSV(e.target.files[0])
 })
-/* ====================================================100 – DASHBOARD PROFISSIONAL==================================================== */
+/* ====================================================100 – RENDER DASHBOARD PROFISSIONAL==================================================== */
 async function render(){
 let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
 if(!data||data.length<2){
-lista.innerHTML="Sem dados suficientes"
+if(lista){
+lista.innerHTML=data.map(a=>`
+<div>
+${a.data_abastecimento.slice(0,10)} | ${a.quilometragem} km<br>
+${a.litros}L | R$${a.valor_total}
+<hr>
+</div>
+`).join("")
+}
 kpi.innerHTML=""
 return
 }
