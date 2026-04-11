@@ -89,6 +89,9 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 <option value="all">📊 Todo período</option>
 <option value="mes">📅 Mês atual</option>
 </select>
+<input type="date" id="dataInicio">
+<input type="date" id="dataFim">
+<button onclick="render()">Filtrar</button>
 </div>
 
 <div class="card">
@@ -145,6 +148,13 @@ init()
 }
 /* ====================================================010 INIT==================================================== */
 async function init(){
+const hoje=new Date()
+const inicio=new Date(hoje.getFullYear(),hoje.getMonth(),1)
+const fim=new Date()
+
+dataInicio.value=inicio.toISOString().slice(0,10)
+dataFim.value=fim.toISOString().slice(0,10)
+  
 const uid=localStorage.getItem("uid")
 const tipo=localStorage.getItem("tipo")
 /* 🔐 CONTROLE LOGIN */
@@ -186,6 +196,8 @@ render()
 /* 🚀 RENDER */
 render()
 }
+/* ============================aplicar filtro=================================================== */
+
 /* ====================================================020 CAMERA CONTROL==================================================== */
 let stream=null
 async function abrirCamera(){
@@ -281,6 +293,21 @@ scales:{x:{ticks:{color:"#fff"}},y:{ticks:{color:"#fff"}}}
 }
 })
 }
+/* ====================================================045 – GPS==================================================== */
+function iniciarGPS(){
+if(!navigator.geolocation){
+gps.innerText="GPS não suportado"
+return
+}
+gps.innerText="Localizando..."
+navigator.geolocation.watchPosition(pos=>{
+const lat=pos.coords.latitude.toFixed(6)
+const lon=pos.coords.longitude.toFixed(6)
+gps.innerHTML=`📍 ${lat}, ${lon}`
+},err=>{
+gps.innerText="Erro GPS"
+})
+}
 /* ====================================================070 CSV IMPORT==================================================== */
 async function importarCSV(file){
 const text=await file.text()
@@ -305,6 +332,15 @@ if(e.target.id==="csvFile")importarCSV(e.target.files[0])
 /* ====================================================100 – RENDER DASHBOARD PROFISSIONAL==================================================== */
 async function render(){
 let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+const di=document.getElementById("dataInicio")?.value
+const df=document.getElementById("dataFim")?.value
+
+if(di && df){
+data=data.filter(a=>{
+const d=a.data_abastecimento?.slice(0,10)
+return d>=di && d<=df
+})
+}
 if(!data)data=[]
 const filtro=document.getElementById("filtroPeriodo")?.value
 if(filtro==="mes"){
@@ -337,7 +373,7 @@ kpi.innerHTML=""
 alerta.innerHTML=""
 return
 }
-let consumo=[],labels=[],totalCons=0,count=0,totalValor=0,totalKm=0
+let consumo=[],labels=[],totalCons=0,count=0,totalValor=0,totalKm=data[0]?.quilometragem||0
 let melhor=0,pior=999
 for(let i=1;i<data.length;i++){
 let kmDiff=(data[i].quilometragem||0)-(data[i-1].quilometragem||0)
