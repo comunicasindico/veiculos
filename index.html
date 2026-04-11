@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5"></script>
+
 <style>
 body{font-family:Arial;background:#020617;color:#fff;padding:15px}
 .card{background:#111827;padding:15px;border-radius:12px;margin-top:10px}
@@ -19,10 +20,19 @@ input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:non
 .kpi{color:#22c55e}
 .alerta{color:#ef4444;font-weight:bold}
 video,canvas{width:100%;border-radius:10px;margin-top:10px}
+
 </style>
+
 </head>
 <body>
+<div id="loginBox" class="card" style="max-width:300px;margin:auto">
+<h3>Login</h3>
+<input id="user" placeholder="Usuário">
+<input id="pass" type="password" placeholder="Senha">
+<button onclick="login()">Entrar</button>
+</div>
 
+<div id="app" style="display:none">
 <h2>🚗 Veículos PRO</h2>
 
 <div class="card">
@@ -85,12 +95,64 @@ window.grafico=document.getElementById("grafico")
 window.veiculoSel=document.getElementById("veiculoSel")
 init()
 })
+/* ========LOGIN================================================== */
+async function login(){
+const u=user.value.toLowerCase()
+const p=pass.value
+const {data}=await db.from("usuarios")
+.select("*")
+.eq("usuario_apelido",u)
+.single()
+if(!data||data.senha_hash!==p){
+alert("Login inválido")
+return
+}
+localStorage.setItem("uid",data.id)
+localStorage.setItem("tipo",data.perfil)
+document.getElementById("loginBox").style.display="none"
+document.getElementById("app").style.display="block"
+init()
+}
 /* ====================================================010 INIT==================================================== */
 async function init(){
-let {data:v}=await db.from("veiculos").select("*")
-window.VEICULOS=v||[]
-veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo}</option>`).join("")
-window.VID=v[0]?.id
+const uid=localStorage.getItem("uid")
+const tipo=localStorage.getItem("tipo")
+/* 🔐 CONTROLE LOGIN */
+if(!uid){
+document.getElementById("loginBox").style.display="block"
+document.getElementById("app").style.display="none"
+return
+}else{
+document.getElementById("loginBox").style.display="none"
+document.getElementById("app").style.display="block"
+}
+/* 🚗 BUSCAR VEÍCULOS */
+let {data:v,error}=await db.from("veiculos").select("*")
+if(error){alert("Erro ao carregar veículos");return}
+/* 🔥 FILTRO POR PERFIL */
+if(tipo!=="admin"){
+v=v.filter(x=>String(x.usuario_id)===String(uid))
+}
+/* 🧠 GARANTIA */
+if(!v||!v.length){
+veiculoSel.innerHTML="<option>Nenhum veículo</option>"
+return
+}
+/* 🚘 LISTA */
+window.VEICULOS=v
+veiculoSel.innerHTML=v.map(x=>`
+<option value="${x.id}">
+${x.modelo} - ${x.placa||""}
+</option>
+`).join("")
+/* 🎯 VEÍCULO ATUAL */
+window.VID=v[0].id
+/* 🔁 TROCA VEÍCULO */
+veiculoSel.onchange=()=>{
+window.VID=veiculoSel.value
+render()
+}
+/* 🚀 RENDER */
 render()
 }
 /* ====================================================020 CAMERA CONTROL==================================================== */
@@ -224,10 +286,12 @@ let media=(totalCons/count).toFixed(2)
 let custoKm=(totalValor/totalKm).toFixed(2)
 /* ================= KPI UI ================= */
 kpi.innerHTML=`
-<div>🚗 <b>Média:</b> ${media} km/l</div>
-<div>💰 <b>Custo/KM:</b> R$ ${custoKm}</div>
-<div>📈 <b>Melhor:</b> ${melhor.toFixed(2)} km/l</div>
-<div>📉 <b>Pior:</b> ${pior.toFixed(2)} km/l</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="card"><b>Média</b><br>${media} km/l</div>
+<div class="card"><b>Custo/KM</b><br>R$ ${custoKm}</div>
+<div class="card"><b>Melhor</b><br>${melhor.toFixed(2)}</div>
+<div class="card"><b>Pior</b><br>${pior.toFixed(2)}</div>
+</div>
 `
 /* ================= ALERTA ================= */
 if(media<6){
@@ -256,11 +320,16 @@ consumoMes.push(c)
 renderGraficoMensal(labelsMes,consumoMes)
 
 /* ================= LISTA ================= */
+if(lista){
 lista.innerHTML=data.map(a=>`
+<div class="card" style="display:flex;justify-content:space-between;align-items:center">
 <div>
-${a.data_abastecimento.slice(0,10)} | ${a.quilometragem} km<br>
-${a.litros}L | R$${a.valor_total}
-<hr>
+<b>${a.data_abastecimento.slice(0,10)}</b><br>
+${a.litros}L • R$ ${a.valor_total}
+</div>
+<div>
+<b>${a.quilometragem} km</b>
+</div>
 </div>
 `).join("")
 }
@@ -275,19 +344,31 @@ type:"bar",
 data:{
 labels:labels,
 datasets:[{
-label:"KM/L Mensal",
-data:data
+label:"KM/L",
+data:data,
+borderRadius:8,
+backgroundColor:"rgba(34,197,94,0.7)"
 }]
 },
 options:{
-plugins:{legend:{labels:{color:"#fff"}}},
-scales:{x:{ticks:{color:"#fff"}},y:{ticks:{color:"#fff"}}}
+plugins:{
+legend:{display:false},
+tooltip:{
+backgroundColor:"#000",
+titleColor:"#fff",
+bodyColor:"#fff"
+}
+},
+scales:{
+x:{ticks:{color:"#ccc"}},
+y:{ticks:{color:"#ccc"}}
+}
 }
 })
 }
 
 
 </script>
-
+</div>
 </body>
 </html>
