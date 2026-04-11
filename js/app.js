@@ -3,19 +3,15 @@ document.addEventListener("DOMContentLoaded",iniciarApp)
 /* ====================================================001 – INICIAR APP (LIMPO)==================================================== */
 async function iniciarApp(){
 carregarContexto()
-
 const app=document.getElementById("app")
 const login=document.getElementById("telaLogin")
-
 let usuarioId=localStorage.getItem("usuario_id")
 const tempoLogin=localStorage.getItem("login_time")
-
 /* 🔒 EXPIRAÇÃO AUTOMÁTICA */
 if(tempoLogin&&Date.now()-parseInt(tempoLogin)>1000*60*60*8){
 localStorage.clear()
 usuarioId=null
 }
-
 /* 🔐 SEM LOGIN */
 if(!usuarioId){
 document.body.classList.remove("logado")
@@ -23,12 +19,10 @@ if(app)app.style.display="none"
 if(login)login.style.display="flex"
 return
 }
-
 /* 🔓 COM LOGIN */
 document.body.classList.add("logado")
 if(login)login.style.display="none"
 if(app)app.style.display="block"
-
 /* 🔥 CONTEXTO */
 window.CONTEXTO={
 usuario_id:usuarioId,
@@ -36,7 +30,6 @@ empresa_id:localStorage.getItem("empresa_id"),
 tipo:localStorage.getItem("tipo_usuario")||"motorista",
 isAdmin:String(localStorage.getItem("tipo_usuario")).toLowerCase()==="admin"
 }
-
 /* 🔥 DADOS */
 await carregarDados()
 
@@ -44,14 +37,17 @@ if(!window.APP_STATE||!window.APP_STATE.veiculos){
 console.warn("Dados não carregados")
 return
 }
-
 /* 🔥 UI */
 configurarMenus()
+/* 🔥 FORÇA DASHBOARD + KPIs */
 renderTudo()
+atualizarDashboard()
+window.atualizarDashboardInteligente?.()
+/* 🔥 TOPO */
 atualizarTopo()
+/* 🔥 CAMPOS */
 definirCamposIniciais()
 }
-
 /* ====================================================002 – RENDER GLOBAL==================================================== */
 function renderTudo(){
 if(typeof renderResumo==="function")renderResumo()
