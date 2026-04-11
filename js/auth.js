@@ -1,33 +1,67 @@
-/* ====================================================
-020 – TROCA DE SENHA (PRIMEIRO LOGIN)
-==================================================== */
+/* ====================================================020 – TROCA DE SENHA==================================================== */
 function abrirTrocaSenha(){
 const modal=document.getElementById("modalSenha")
 if(modal)modal.style.display="flex"
 }
+
 async function salvarNovaSenha(){
+
 const senha=document.getElementById("novaSenha")?.value?.trim()
 const usuarioId=localStorage.getItem("usuario_id")
+
 if(!senha||senha.length<4){
 alert("Senha deve ter pelo menos 4 caracteres")
 return
 }
-await db.from("usuarios").update({
+
+const {error}=await db.from("usuarios").update({
 senha_hash:senha,
 primeiro_login:false
 }).eq("id",usuarioId)
-document.getElementById("modalSenha").style.display="none"
+
+if(error){
+console.error(error)
+alert("Erro ao atualizar senha")
+return
+}
+
+const modal=document.getElementById("modalSenha")
+if(modal)modal.style.display="none"
+
 alert("Senha atualizada com sucesso")
+
 }
-/* ====================================================
-021 – LOGOUT
-==================================================== */
+
+/* ====================================================021 – LOGOUT FINAL==================================================== */
 function logout(){
-localStorage.removeItem("usuario_id")
-localStorage.removeItem("usuario_nome")
-localStorage.removeItem("tipo_usuario")
-location.reload()
+
+/* 🔥 LIMPA TUDO */
+localStorage.clear()
+sessionStorage.clear()
+
+/* 🔥 LIMPA ESTADO GLOBAL */
+window.CONTEXTO=null
+window.APP_STATE={}
+
+/* 🔒 RESET VISUAL */
+document.body.classList.remove("logado")
+
+const app=document.getElementById("app")
+const login=document.getElementById("telaLogin")
+
+if(app)app.style.display="none"
+if(login)login.style.display="flex"
+
+/* 🔥 LIMPA CAMPOS */
+const u=document.getElementById("loginUsuario")
+const s=document.getElementById("loginSenha")
+
+if(u)u.value=""
+if(s)s.value=""
+
 }
+
+/* ====================================================022 – INIT==================================================== */
 document.addEventListener("DOMContentLoaded",()=>{
 document.getElementById("btnLogout")?.addEventListener("click",logout)
 })
