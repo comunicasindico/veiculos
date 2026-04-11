@@ -2,17 +2,19 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Veículo Simples</title>
+<title>Veículos SaaS</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <style>
 body{font-family:Arial;background:#020617;color:#fff;padding:20px}
-.box{max-width:400px;margin:80px auto;background:#111827;padding:20px;border-radius:10px}
+.box{max-width:420px;margin:80px auto;background:#111827;padding:20px;border-radius:10px}
 input,button{width:100%;padding:10px;margin:5px 0;border-radius:6px;border:none}
-button{background:#22c55e;font-weight:bold}
+button{background:#22c55e;font-weight:bold;cursor:pointer}
+.card{background:#111827;padding:15px;border-radius:10px;margin-top:10px}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="login" class="box">
 <h2>Login</h2>
 <input id="user" placeholder="Usuário">
@@ -20,25 +22,52 @@ button{background:#22c55e;font-weight:bold}
 <button onclick="login()">Entrar</button>
 </div>
 
+<!-- APP -->
 <div id="app" style="display:none">
 <h2>Painel</h2>
-<div id="dados"></div>
+
+<div id="info"></div>
+
+<div class="card">
+<h3>Veículo</h3>
+<div id="veiculo"></div>
+</div>
+
+<div class="card">
+<h3>Novo Abastecimento</h3>
+<input id="litros" placeholder="Litros">
+<input id="valor" placeholder="Valor Total">
+<input id="km" placeholder="KM">
+<button onclick="salvarAbastecimento()">Salvar</button>
+</div>
+
+<div class="card">
+<h3>Abastecimentos</h3>
+<div id="lista"></div>
+</div>
+
 <button onclick="logout()">Sair</button>
 </div>
 
 <script>
+
+/* ====================================================SUPABASE==================================================== */
 const db=supabase.createClient(
 "https://gspdlrenyrzbkxlvyugc.supabase.co",
 "sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw"
 )
 
+/* ====================================================LOGIN==================================================== */
 async function login(){
 const u=user.value.toLowerCase()
 const p=pass.value
 
 const {data}=await db.from("usuarios").select("*").eq("usuario_apelido",u).single()
 
-if(!data||data.senha_hash!==p){alert("Erro login");return}
+if(!data||data.senha_hash!==p){
+alert("Login inválido")
+return
+}
 
 localStorage.setItem("uid",data.id)
 localStorage.setItem("tipo",data.perfil)
@@ -46,12 +75,15 @@ localStorage.setItem("tipo",data.perfil)
 init()
 }
 
+/* ====================================================LOGOUT==================================================== */
 function logout(){
 localStorage.clear()
 location.reload()
 }
 
+/* ====================================================INIT==================================================== */
 async function init(){
+
 const uid=localStorage.getItem("uid")
 if(!uid)return
 
@@ -60,25 +92,85 @@ app.style.display="block"
 
 const tipo=localStorage.getItem("tipo")
 
-let v=await db.from("veiculos").select("*")
-let a=await db.from("abastecimentos").select("*")
-
-let veiculos=v.data
-let abastecimentos=a.data
+/* 🔥 VEÍCULOS */
+let {data:veiculos}=await db.from("veiculos").select("*")
 
 if(tipo!=="admin"){
-veiculos=veiculos.filter(x=>x.usuario_id===uid)
-const ids=veiculos.map(x=>x.id)
-abastecimentos=abastecimentos.filter(x=>ids.includes(x.veiculo_id))
+veiculos=veiculos.filter(v=>v.usuario_id===uid)
 }
 
-dados.innerHTML=`
-Veículos: ${veiculos.length}<br>
-Abastecimentos: ${abastecimentos.length}<br>
+if(!veiculos.length){
+veiculo.innerHTML="Nenhum veículo"
+return
+}
+
+const v=veiculos[0]
+
+veiculo.innerHTML=`
+Placa: ${v.placa}<br>
+Modelo: ${v.modelo}<br>
+KM: ${v.km_atual||0}
 `
+
+/* 🔥 ABASTECIMENTOS */
+carregarAbastecimentos(v.id)
+
+window.VEICULO_ID=v.id
+
 }
 
+/* ====================================================SALVAR ABAST==================================================== */
+async function salvarAbastecimento(){
+
+const litrosVal=parseFloat(litros.value||0)
+const valorVal=parseFloat(valor.value||0)
+const kmVal=parseFloat(km.value||0)
+
+if(!window.VEICULO_ID){
+alert("Veículo não encontrado")
+return
+}
+
+await db.from("abastecimentos").insert({
+veiculo_id:window.VEICULO_ID,
+litros:litrosVal,
+valor_total:valorVal,
+quilometragem:kmVal,
+data_abastecimento:new Date().toISOString()
+})
+
+litros.value=""
+valor.value=""
+km.value=""
+
+carregarAbastecimentos(window.VEICULO_ID)
+
+}
+
+/* ====================================================LISTAR ABAST==================================================== */
+async function carregarAbastecimentos(vid){
+
+let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",vid).order("data_abastecimento",{ascending:false})
+
+if(!data.length){
+lista.innerHTML="Nenhum abastecimento"
+return
+}
+
+lista.innerHTML=data.map(a=>`
+<div>
+${new Date(a.data_abastecimento).toLocaleString()}<br>
+Litros: ${a.litros} | Valor: R$ ${a.valor_total}<br>
+KM: ${a.quilometragem}
+<hr>
+</div>
+`).join("")
+
+}
+
+/* ====================================================AUTO==================================================== */
 init()
+
 </script>
 
 </body>
