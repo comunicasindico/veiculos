@@ -15,6 +15,7 @@ body{font-family:Arial;background:#020617;color:#fff;padding:15px}
 .card{background:#111827;padding:15px;border-radius:12px;margin-top:10px}
 button{padding:12px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold;width:100%;margin-top:5px}
 input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:none}
+<input type="file" id="csvFile" accept=".csv">
 .kpi{color:#22c55e}
 .alerta{color:#ef4444;font-weight:bold}
 video,canvas{width:100%;border-radius:10px;margin-top:10px}
@@ -58,53 +59,76 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 </div>
 
 <script>
-
-/* RESET TOTAL */
+/* ====================================================000 RESET==================================================== */
 if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()))}
 if('caches'in window){caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)))}
 
-/* SUPABASE */
-const db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
+/* ====================================================001 INIT==================================================== */
+document.addEventListener("DOMContentLoaded",()=>{
+window.db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
+window.veiculoSel=document.getElementById("veiculoSel")
+window.kpi=document.getElementById("kpi")
+window.alerta=document.getElementById("alerta")
+window.video=document.getElementById("video")
+window.canvas=document.getElementById("canvas")
+window.ocr=document.getElementById("ocr")
+window.litros=document.getElementById("litros")
+window.valor=document.getElementById("valor")
+window.km=document.getElementById("km")
+window.lista=document.getElementById("lista")
+window.grafico=document.getElementById("grafico")
+init()
+})
 
-/* INIT */
-document.addEventListener("DOMContentLoaded",init)
-
-/* INIT */
+/* ====================================================010 INIT==================================================== */
 async function init(){
 let {data:v}=await db.from("veiculos").select("*")
 window.VEICULOS=v||[]
-veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo}</option>`)
+veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo}</option>`).join("")
 window.VID=v[0]?.id
-iniciarCamera()
 render()
 }
 
-/* CAMERA */
-async function iniciarCamera(){
-const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
+/* ====================================================020 CAMERA CONTROL==================================================== */
+let stream=null
+async function abrirCamera(){
+if(stream)return
+stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
 video.srcObject=stream
+video.style.display="block"
+}
+function fecharCamera(){
+if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+video.style.display="none"
 }
 
-/* OCR */
+/* ====================================================030 OCR==================================================== */
 async function capturar(){
+if(!stream)await abrirCamera()
 const ctx=canvas.getContext("2d")
 canvas.width=video.videoWidth
 canvas.height=video.videoHeight
 ctx.drawImage(video,0,0)
+ocr.innerText="Lendo..."
 const {data:{text}}=await Tesseract.recognize(canvas,"por")
-ocr.innerText=text
+const dados=interpretar(text)
+ocr.innerHTML=`Valor: ${dados.valor||"-"} | CNPJ: ${dados.cnpj||"-"}`
+if(dados.valor)valor.value=dados.valor
+fecharCamera()
 }
 
-/* GPS */
-let watchId
-function iniciarGPS(){
-if(watchId)return
-watchId=navigator.geolocation.watchPosition(pos=>{
-gps.innerHTML=`Lat:${pos.coords.latitude}<br>Lng:${pos.coords.longitude}`
-})
+/* ====================================================031 INTERPRETAR==================================================== */
+function interpretar(txt){
+txt=txt.toUpperCase()
+let valor=null,cnpj=null
+let v=txt.match(/\d{1,3}(\.\d{3})*,\d{2}/g)
+if(v){valor=Math.max(...v.map(x=>parseFloat(x.replace(/\./g,"").replace(",","."))))}
+let c=txt.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/)
+if(c)cnpj=c[0]
+return{valor,cnpj}
 }
 
-/* SALVAR */
+/* ====================================================040 SALVAR==================================================== */
 async function salvar(){
 await db.from("abastecimentos").insert({
 veiculo_id:VID,
@@ -117,34 +141,56 @@ await db.from("veiculos").update({km_atual:parseFloat(km.value)}).eq("id",VID)
 render()
 }
 
-/* RENDER */
+/* ====================================================050 RENDER==================================================== */
 let chart
 async function render(){
 let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
-if(!data||data.length<2)return
+if(!data||data.length<2){lista.innerHTML="Sem dados";return}
 let consumo=[],labels=[],total=0,count=0
 for(let i=1;i<data.length;i++){
-let c=(data[i].quilometragem-data[i-1].quilometragem)/data[i].litros
+let kmDiff=data[i].quilometragem-data[i-1].quilometragem
+let c=kmDiff/data[i].litros
 consumo.push(c);labels.push(i)
 total+=c;count++
 }
 let media=(total/count).toFixed(2)
-kpi.innerHTML=`<div class="kpi">KM/L: ${media}</div>`
+kpi.innerHTML=`KM/L: ${media}`
 renderGrafico(labels,consumo)
+lista.innerHTML=data.map(a=>`<div>${a.quilometragem} km | ${a.litros}L<hr></div>`).join("")
 }
 
-/* GRÁFICO */
+/* ====================================================060 GRAFICO==================================================== */
 function renderGrafico(labels,data){
+if(!grafico)return
 if(chart)chart.destroy()
-chart=new Chart(grafico,{type:"line",data:{labels:labels,datasets:[{label:"Consumo",data:data}]}})
+chart=new Chart(grafico.getContext("2d"),{
+type:"line",
+data:{labels:labels,datasets:[{label:"KM/L",data:data,borderWidth:2}]},
+options:{responsive:true,plugins:{legend:{labels:{color:"#fff"}}},scales:{x:{ticks:{color:"#fff"}},y:{ticks:{color:"#fff"}}}}
+})
 }
 
-/* PWA INSTALL */
-let deferredPrompt
-window.addEventListener('beforeinstallprompt',e=>{
-e.preventDefault()
-deferredPrompt=e
-setTimeout(()=>{if(confirm("Instalar app?"))deferredPrompt.prompt()},3000)
+/* ====================================================070 CSV IMPORT==================================================== */
+async function importarCSV(file){
+const text=await file.text()
+const linhas=text.split("\n").slice(1)
+for(const l of linhas){
+if(!l.trim())continue
+const c=l.split(",")
+await db.from("abastecimentos").insert({
+veiculo_id:VID,
+litros:parseFloat(c[1]),
+valor_total:parseFloat(c[2]),
+quilometragem:parseFloat(c[3]),
+data_abastecimento:c[0]
+})
+}
+render()
+}
+
+/* ====================================================071 INPUT CSV==================================================== */
+document.addEventListener("change",e=>{
+if(e.target.id==="csvFile")importarCSV(e.target.files[0])
 })
 
 </script>
