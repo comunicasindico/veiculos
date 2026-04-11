@@ -54,7 +54,11 @@ const btn=[...botoes].find(b=>b.dataset.target==="painelAbastecimentos")
 if(btn)btn.classList.add("ativo")
 if(alvo){alvo.classList.add("ativo");alvo.style.display="block"}
 }
-document.getElementById("btnLogout")?.addEventListener("click",logout)
+const btnLogout=document.getElementById("btnLogout")
+if(btnLogout){
+btnLogout.onclick=logout
+btnLogout.style.display="inline-block"
+}
 }
 /* ====================================================LOAD DADOS==================================================== */
 async function carregarDados(){
@@ -162,5 +166,7 @@ if("serviceWorker"in navigator){navigator.serviceWorker.register("./service-work
 function logout(){
 localStorage.clear()
 sessionStorage.clear()
+location.reload()
+}
 window.location.href=window.location.pathname
 }
