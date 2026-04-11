@@ -59,7 +59,6 @@ if(typeof renderRelatorios==="function")renderRelatorios()
 if(typeof atualizarDashboard==="function")atualizarDashboard()
 if(typeof atualizarDashboardInteligente==="function")atualizarDashboardInteligente()
 }
-
 /* ====================================================003 – TOPO USUARIO==================================================== */
 function atualizarTopo(){
 const nome=localStorage.getItem("usuario_nome")||""
@@ -81,12 +80,10 @@ document.body.classList.add("admin")
 document.body.classList.remove("admin")
 }
 }
-
 /* ====================================================004 – CONTEXTO==================================================== */
 function isAdmin(){return localStorage.getItem("tipo_usuario")==="admin"}
 function getUsuarioId(){return localStorage.getItem("usuario_id")}
 function getEmpresaId(){return localStorage.getItem("empresa_id")}
-
 /* ====================================================005 – LOAD DADOS==================================================== */
 async function carregarDados(){
 if(!window.db){
@@ -136,7 +133,7 @@ console.error("❌ ERRO SUPABASE:",e)
 window.APP_STATE.veiculos=[]
 window.APP_STATE.motoristas=[]
 window.APP_STATE.abastecimentos=[]
-
+}
 }
 /* ====================================================007 – MENU==================================================== */
 function configurarMenus(){
