@@ -335,38 +335,33 @@ render()
 document.addEventListener("change",e=>{
 if(e.target.id==="csvFile")importarCSV(e.target.files[0])
 })
-/* ====================================================100 – RENDER DASHBOARD PROFISSIONAL==================================================== */
+/* ====================================================100 – RENDER PROFISSIONAL COMPLETO==================================================== */
 async function render(){
 let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
 if(!data)data=[]
 const filtro=document.getElementById("filtroPeriodo")?.value
 const di=document.getElementById("dataInicio")?.value
 const df=document.getElementById("dataFim")?.value
-
-if(!filtro || filtro==="all"){
-// 🔥 MOSTRA TUDO (2025 + 2026)
-}
-else if(filtro==="mes"){
-const hoje=new Date()
-const mesAtual=hoje.toISOString().slice(0,7)
+if(filtro==="mes"){
+const mesAtual=new Date().toISOString().slice(0,7)
 data=data.filter(a=>a.data_abastecimento?.startsWith(mesAtual))
 }
-else if(filtro==="periodo" && di && df){
+else if(filtro==="periodo"&&di&&df){
 data=data.filter(a=>{
 const d=a.data_abastecimento?.slice(0,10)
-return d>=di && d<=df
+return d>=di&&d<=df
 })
 }
-if(lista){
+/* LISTA COM EDIT */
 lista.innerHTML=data.map(a=>`
-<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-<div id="view_${a.id}" style="flex:1;font-size:14px">
-📅 ${formatarData(a.data_abastecimento)} - ⛽ ${a.litros||0}L - 💰 R$ ${Number(a.valor_total||0).toFixed(2)} - 📍 ${a.quilometragem||0} km
+<div class="card">
+<div id="view_${a.id}" style="flex:1">
+📅 ${formatarData(a.data_abastecimento)} - ⛽ ${a.litros||0}L - 💰 R$ ${(a.valor_total||0).toFixed(2)} - 📍 ${a.quilometragem||0}
 </div>
-<div id="edit_${a.id}" style="display:none;flex:1;gap:5px">
-<input id="lit_${a.id}" value="${a.litros||0}" style="width:60px">
-<input id="val_${a.id}" value="${a.valor_total||0}" style="width:80px">
-<input id="km_${a.id}" value="${a.quilometragem||0}" style="width:80px">
+<div id="edit_${a.id}" style="display:none;flex:1">
+<input id="lit_${a.id}" value="${a.litros||0}">
+<input id="val_${a.id}" value="${a.valor_total||0}">
+<input id="km_${a.id}" value="${a.quilometragem||0}">
 </div>
 <div style="display:flex;gap:5px">
 <button onclick="editarInline('${a.id}')">✏️</button>
@@ -376,70 +371,65 @@ lista.innerHTML=data.map(a=>`
 </div>
 </div>
 `).join("")
-}
-if(data.length<2){
-kpi.innerHTML=""
-alerta.innerHTML=""
-return
-}
-let consumo=[],labels=[],totalCons=0,count=0,totalValor=0,totalKm=0
-let melhor=0,pior=999
+/* KPI COMPLETO */
+if(data.length<2){kpi.innerHTML="";alerta.innerHTML="";return}
+let consumo=[],totalCons=0,count=0,totalValor=0,totalKm=0,melhor=0,pior=999
 for(let i=1;i<data.length;i++){
-let kmDiff=(data[i].quilometragem||0)-(data[i-1].quilometragem||0)
+let km=(data[i].quilometragem||0)-(data[i-1].quilometragem||0)
 let litros=data[i].litros||0
-if(litros<=0||kmDiff<=0)continue
-let cons=kmDiff/litros
+if(km<=0||litros<=0)continue
+let cons=km/litros
 consumo.push(cons)
-labels.push(i)
 totalCons+=cons
 count++
 if(cons>melhor)melhor=cons
 if(cons<pior)pior=cons
 totalValor+=(data[i].valor_total||0)
-totalKm+=kmDiff
+totalKm+=km
 }
-if(count===0){kpi.innerHTML="";return}
+if(count===0)return
 let media=(totalCons/count).toFixed(2)
-let custoKm=(totalKm>0?(totalValor/totalKm):0).toFixed(2)
+let custoKm=(totalValor/totalKm||0).toFixed(2)
 kpi.innerHTML=`
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div class="card"><b>Média</b><br>${media} km/l</div>
-<div class="card"><b>Custo/KM</b><br>R$ ${custoKm}</div>
-<div class="card"><b>Melhor</b><br>${melhor.toFixed(2)}</div>
-<div class="card"><b>Pior</b><br>${pior.toFixed(2)}</div>
-</div>
-`
-if(media<6){alerta.innerHTML='⚠ Consumo elevado'}else if(media>9){alerta.innerHTML='🚀 Excelente consumo'}else{alerta.innerHTML=''}
-renderGrafico(labels,consumo)
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="card">Média<br>${media}</div>
+<div class="card">Custo/km<br>${custoKm}</div>
+<div class="card">Melhor<br>${melhor.toFixed(2)}</div>
+<div class="card">Pior<br>${pior.toFixed(2)}</div>
+</div>`
+alerta.innerHTML=media<6?"⚠ Consumo alto":media>9?"🚀 Excelente":""
+/* GRÁFICO */
+renderGrafico(consumo.map((_,i)=>i+1),consumo)
+/* MENSAL */
 let meses={}
 data.forEach((a,i)=>{
-let mes=a.data_abastecimento?.slice(0,7)
-if(!mes)return
-if(!meses[mes])meses[mes]={km:0,litros:0}
+let m=a.data_abastecimento?.slice(0,7)
+if(!m)return
+if(!meses[m])meses[m]={km:0,litros:0}
 if(i>0){
-let kmDiff=(a.quilometragem||0)-(data[i-1].quilometragem||0)
+let km=(a.quilometragem||0)-(data[i-1].quilometragem||0)
 let litros=a.litros||0
-if(kmDiff>0&&litros>0){
-meses[mes].km+=kmDiff
-meses[mes].litros+=litros
+if(km>0&&litros>0){
+meses[m].km+=km
+meses[m].litros+=litros
 }
 }
 })
-let labelsMes=[],consumoMes=[]
-Object.keys(meses).sort((a,b)=>new Date(a)-new Date(b)).forEach(m=>{
+let labels=[],valores=[]
+Object.keys(meses).sort().forEach(m=>{
 if(meses[m].litros>0){
-labelsMes.push(formatarMes(m))
-consumoMes.push(meses[m].km/meses[m].litros)
+labels.push(formatarMes(m))
+valores.push(meses[m].km/meses[m].litros)
 }
 })
-renderGraficoMensal(labelsMes,consumoMes)
+renderGraficoMensal(labels,valores)
+/* DETALHE */
 detalheBox.innerHTML=`
 <div class="card">
-<b>Total gasto:</b> R$ ${totalValor.toFixed(2)}<br>
-<b>Total KM:</b> ${totalKm}<br>
-<b>Consumo médio:</b> ${media} km/l
-</div>
-`
+Total gasto: R$ ${totalValor.toFixed(2)}<br>
+Total KM: ${totalKm}<br>
+Média: ${media}
+</div>`
 }
 /* ====================================================101 – GRAFICO MENSAL==================================================== */
 function renderGraficoMensal(labels,data){
@@ -512,21 +502,19 @@ document.getElementById("btnSave_"+id).style.display="none"
 document.getElementById("btnCancel_"+id).style.display="none"
 }
 async function salvarInline(id){
-const litrosVal=parseFloat(document.getElementById("lit_"+id).value)
-const valorVal=parseFloat(document.getElementById("val_"+id).value)
-const kmVal=parseFloat(document.getElementById("km_"+id).value)
-
+const litros=parseFloat(document.getElementById("lit_"+id).value)||0
+const valor=parseFloat(document.getElementById("val_"+id).value)||0
+const km=parseFloat(document.getElementById("km_"+id).value)||0
 await db.from("abastecimentos").update({
-litros:litrosVal,
-valor_total:valorVal,
-quilometragem:kmVal
+litros:litros,
+valor_total:valor,
+quilometragem:km
 }).eq("id",id)
-
-await db.from("veiculos").update({km_atual:kmVal}).eq("id",VID)
+await db.from("veiculos").update({km_atual:km}).eq("id",VID)
 render()
 }
 async function excluir(id){
-if(!confirm("Excluir abastecimento?"))return
+if(!confirm("Excluir?"))return
 await db.from("abastecimentos").delete().eq("id",id)
 render()
 }
