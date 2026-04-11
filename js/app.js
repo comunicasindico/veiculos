@@ -4,7 +4,7 @@ async function iniciarApp(){
 const app=document.getElementById("app")
 const login=document.getElementById("telaLogin")
 /* 🔒 RESET VISUAL TOTAL */
-app.classList.remove("ativo")
+app.style.display="none"
 login.style.display="none"
 /* 🔐 CONTROLE DE SESSÃO */
 let usuarioId=localStorage.getItem("usuario_id")
@@ -21,7 +21,7 @@ return
 }
 /* 🔓 LIBERA APP */
 login.style.display="none"
-app.classList.add("ativo")
+app.style.display="block"
 /* 🔥 GARANTE CONTEXTO */
 window.CONTEXTO=window.CONTEXTO||{usuario_id:usuarioId,empresa_id:localStorage.getItem("empresa_id"),isAdmin:localStorage.getItem("tipo_usuario")==="admin"}
 /* 🔥 CARREGAMENTO NORMAL */
