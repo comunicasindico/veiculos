@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+<link rel="icon" href="data:,">
 <meta charset="UTF-8">
 <title>Veículos App PRO</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -19,6 +20,7 @@ input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:non
 .kpi{color:#22c55e}
 .alerta{color:#ef4444;font-weight:bold}
 video,canvas{width:100%;border-radius:10px;margin-top:10px}
+<canvas id="grafico"></canvas>
 <canvas id="graficoMensal"></canvas>
 </style>
 </head>
@@ -60,6 +62,9 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 </div>
 
 <script>
+/* ====================================================000 – VAR GLOBAL==================================================== */
+let chart=null
+let chartMensal=null
 /* ====================================================000 RESET==================================================== */
 if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()))}
 if('caches'in window){caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)))}
@@ -141,7 +146,50 @@ data_abastecimento:new Date().toISOString()
 await db.from("veiculos").update({km_atual:parseFloat(km.value)}).eq("id",VID)
 render()
 }
-
+/* ====================================================060 – GRAFICO==================================================== */
+function renderGrafico(labels,data){
+const el=document.getElementById("grafico")
+if(!el)return
+const ctx=el.getContext("2d")
+if(chart){chart.destroy()}
+chart=new Chart(ctx,{
+type:"line",
+data:{
+labels:labels,
+datasets:[{
+label:"KM/L",
+data:data,
+borderWidth:2
+}]
+},
+options:{
+responsive:true,
+plugins:{legend:{labels:{color:"#fff"}}},
+scales:{x:{ticks:{color:"#fff"}},y:{ticks:{color:"#fff"}}}
+}
+})
+}
+/* ====================================================070 CSV IMPORT==================================================== */
+async function importarCSV(file){
+const text=await file.text()
+const linhas=text.split("\n").slice(1)
+for(const l of linhas){
+if(!l.trim())continue
+const c=l.split(",")
+await db.from("abastecimentos").insert({
+veiculo_id:VID,
+litros:parseFloat(c[1]),
+valor_total:parseFloat(c[2]),
+quilometragem:parseFloat(c[3]),
+data_abastecimento:c[0]
+})
+}
+render()
+}
+/* ====================================================071 INPUT CSV==================================================== */
+document.addEventListener("change",e=>{
+if(e.target.id==="csvFile")importarCSV(e.target.files[0])
+})
 /* ====================================================100 – DASHBOARD PROFISSIONAL==================================================== */
 async function render(){
 let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
@@ -214,51 +262,27 @@ ${a.litros}L | R$${a.valor_total}
 `).join("")
 }
 /* ====================================================101 – GRAFICO MENSAL==================================================== */
-let chartMensal
 function renderGraficoMensal(labels,data){
 const el=document.getElementById("graficoMensal")
 if(!el)return
-if(chartMensal)chartMensal.destroy()
-chartMensal=new Chart(el.getContext("2d"),{
+const ctx=el.getContext("2d")
+if(chartMensal){chartMensal.destroy()}
+chartMensal=new Chart(ctx,{
 type:"bar",
-data:{labels:labels,datasets:[{label:"KM/L Mensal",data:data}]},
+data:{
+labels:labels,
+datasets:[{
+label:"KM/L Mensal",
+data:data
+}]
+},
 options:{
 plugins:{legend:{labels:{color:"#fff"}}},
 scales:{x:{ticks:{color:"#fff"}},y:{ticks:{color:"#fff"}}}
 }
 })
 }
-/* ====================================================060 GRAFICO==================================================== */
-function renderGrafico(labels,data){
-if(!grafico)return
-if(chart)chart.destroy()
-chart=new Chart(grafico.getContext("2d"),{
-type:"line",
-data:{labels:labels,datasets:[{label:"KM/L",data:data,borderWidth:2}]},
-options:{responsive:true,plugins:{legend:{labels:{color:"#fff"}}},scales:{x:{ticks:{color:"#fff"}},y:{ticks:{color:"#fff"}}}}
-})
-}
-/* ====================================================070 CSV IMPORT==================================================== */
-async function importarCSV(file){
-const text=await file.text()
-const linhas=text.split("\n").slice(1)
-for(const l of linhas){
-if(!l.trim())continue
-const c=l.split(",")
-await db.from("abastecimentos").insert({
-veiculo_id:VID,
-litros:parseFloat(c[1]),
-valor_total:parseFloat(c[2]),
-quilometragem:parseFloat(c[3]),
-data_abastecimento:c[0]
-})
-}
-render()
-}
-/* ====================================================071 INPUT CSV==================================================== */
-document.addEventListener("change",e=>{
-if(e.target.id==="csvFile")importarCSV(e.target.files[0])
-})
+
 
 </script>
 
