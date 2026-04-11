@@ -224,21 +224,17 @@ window.toast=toast
 
 /* ====================================================011 – LOGOUT==================================================== */
 function logoutConfirm(){
-if(!confirm("Deseja realmente sair do sistema?"))return
 
-/* 🔥 LIMPA TUDO */
 localStorage.clear()
-sessionStorage.clear()
 
-/* 🔒 LIMPA MEMÓRIA GLOBAL */
-window.CONTEXTO=null
-window.APP_STATE={}
-
-/* 🔒 REMOVE ESTADO VISUAL */
 document.body.classList.remove("logado")
 
-/* 🔥 REDIRECIONA SEM CACHE */
-window.location.replace(window.location.pathname+"?v="+Date.now())
+const app=document.getElementById("app")
+const login=document.getElementById("telaLogin")
+
+if(app)app.style.display="none"
+if(login)login.style.display="flex"
+
 }
 /* =================================================012 FUNCTION RENDER RESUMO================================================= */
 function renderResumo(){
