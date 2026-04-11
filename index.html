@@ -221,6 +221,14 @@ return{valor,cnpj}
 }
 /* ====================================================040 SALVAR==================================================== */
 async function salvar(){
+if(window.EDIT_ID){
+await db.from("abastecimentos").update({
+litros:parseFloat(litros.value),
+valor_total:parseFloat(valor.value),
+quilometragem:parseFloat(km.value)
+}).eq("id",window.EDIT_ID)
+window.EDIT_ID=null
+}else{
 await db.from("abastecimentos").insert({
 veiculo_id:VID,
 litros:parseFloat(litros.value),
@@ -228,8 +236,25 @@ valor_total:parseFloat(valor.value),
 quilometragem:parseFloat(km.value),
 data_abastecimento:new Date().toISOString()
 })
+}
 await db.from("veiculos").update({km_atual:parseFloat(km.value)}).eq("id",VID)
+litros.value=""
+valor.value=""
+km.value=""
 render()
+}
+/* =============FORMATAR DATA================================================== */
+function formatarData(d){
+const dt=new Date(d)
+return dt.toLocaleDateString("pt-BR")
+}
+/* =============FUNÇÃO EDITAR================================================== */
+function editar(id,litrosVal,valorVal,kmVal){
+litros.value=litrosVal
+valor.value=valorVal
+km.value=kmVal
+window.EDIT_ID=id
+window.scrollTo({top:0,behavior:"smooth"})
 }
 /* ====================================================060 – GRAFICO==================================================== */
 function renderGrafico(labels,data){
@@ -291,10 +316,13 @@ data=data.filter(a=>a.data_abastecimento.startsWith(mesAtual))
 if(!data||data.length<2){
 if(lista){
 lista.innerHTML=data.map(a=>`
+<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
 <div>
-${a.data_abastecimento.slice(0,10)} | ${a.quilometragem} km<br>
-${a.litros}L | R$${a.valor_total}
-<hr>
+📅 ${formatarData(a.data_abastecimento)} • ⛽ ${a.litros}L • 💰 R$ ${a.valor_total} • 📍 ${a.quilometragem} km
+</div>
+<div style="display:flex;gap:5px">
+<button onclick="editar('${a.id}','${a.litros}','${a.valor_total}','${a.quilometragem}')">✏️</button>
+</div>
 </div>
 `).join("")
 }
