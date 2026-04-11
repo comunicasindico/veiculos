@@ -86,50 +86,48 @@ function getUsuarioId(){return localStorage.getItem("usuario_id")}
 function getEmpresaId(){return localStorage.getItem("empresa_id")}
 /* ====================================================005 – LOAD DADOS==================================================== */
 async function carregarDados(){
+
 if(!window.db){
 console.error("❌ SUPABASE NÃO INICIALIZADO")
 return
 }
 try{
+
 const[{data:veiculos},{data:motoristas},{data:abastecimentos}]=await Promise.all([
 window.db.from("veiculos").select("*").order("created_at",{ascending:false}),
 window.db.from("motoristas").select("*").order("created_at",{ascending:false}),
 window.db.from("abastecimentos").select("*").order("data_abastecimento",{ascending:false})
 ])
+
 let v=veiculos||[]
 let m=motoristas||[]
 let a=abastecimentos||[]
-/* ====================================================FILTRO CORRETO==================================================== */
+/* 🔥 FILTRO */
 if(window.CONTEXTO && !window.CONTEXTO.isAdmin){
+
 const uid=String(window.CONTEXTO.usuario_id)
-/* 🚗 VEÍCULOS → FILTRA PELO DONO */
+
 v=v.filter(x=>String(x.usuario_id)===uid)
-/* ⛽ ABASTECIMENTOS → SOMENTE DOS VEÍCULOS DO USUÁRIO */
+
 const ids=v.map(x=>String(x.id))
 a=a.filter(x=>ids.includes(String(x.veiculo_id)))
-/* 👤 MOTORISTA → PELO ID DO USUÁRIO */
-m=m.filter(x=>String(x.id)===uid)
+/* 🔥 CORREÇÃO AQUI */
+m=m.filter(x=>String(x.usuario_id)===uid)
+
 }
-/* ====================================================SALVA ESTADO==================================================== */
+/* 🔥 ESTADO */
 window.APP_STATE.veiculos=v
 window.APP_STATE.motoristas=m
 window.APP_STATE.abastecimentos=a
 
-/* 🔥 DEBUG */
-console.log("🔥 VEICULOS DO BANCO:",veiculos)
-console.log("🔥 MOTORISTAS DO BANCO:",motoristas)
-console.log("🔥 ABASTECIMENTOS DO BANCO:",abastecimentos)
 console.log("USER:",window.CONTEXTO?.usuario_id)
-console.log("VEICULOS FILTRADOS:",v.length)
-console.log("ABAST FILTRADOS:",a.length)
-
-return
+console.log("VEICULOS:",v.length)
+console.log("ABAST:",a.length)
 
 }catch(e){
 
 console.error("❌ ERRO SUPABASE:",e)
 
-/* 🔥 NÃO USAR LOCAL STORAGE */
 window.APP_STATE.veiculos=[]
 window.APP_STATE.motoristas=[]
 window.APP_STATE.abastecimentos=[]
