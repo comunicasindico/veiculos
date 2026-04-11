@@ -136,7 +136,7 @@ window.lista=document.getElementById("lista")
 window.kpi=document.getElementById("kpi")
 window.alerta=document.getElementById("alerta")
 window.grafico=document.getElementById("grafico")
-window.veiculoSel=document.getElementById("veiculoSel")
+const select=document.getElementById("veiculoSel")
 init()
 })
 /* ========LOGIN================================================== */
@@ -175,7 +175,6 @@ return
 }else{
 document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
-document.getElementById("filtroPeriodo").onchange=render
 }
 /* 🚗 BUSCAR VEÍCULOS */
 let {data:v,error}=await db.from("veiculos").select("*")
@@ -186,7 +185,8 @@ v=v.filter(x=>String(x.usuario_id)===String(uid))
 }
 /* 🧠 GARANTIA */
 if(!v||!v.length){
-veiculoSel.innerHTML="<option>Nenhum veículo</option>"
+const select=document.getElementById("veiculoSel")
+if(select){select.innerHTML="<option>Nenhum veículo</option>"}
 return
 }
 /* 🚗 LISTA */
