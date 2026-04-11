@@ -19,32 +19,27 @@ body{margin:0;font-family:Arial;background:#020617;color:#fff}
 .login-box input{width:100%;padding:10px;margin:6px 0;border-radius:6px;border:none}
 .login-box .btn{width:100%;margin-top:10px}
 #app{display:none}
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#0f172a;border-bottom:1px solid rgba(255,255,255,.1)}
+.topbar{position:sticky;top:0;z-index:1000;background:rgba(15,23,42,.9);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-right{display:flex;gap:10px}
 .brand{display:flex;align-items:center;gap:10px}
 .brand-logo{font-size:22px}
 .container{padding:20px}
 .btn{background:#22c55e;color:#000;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:bold}
 .btn-secundario{background:#334155;color:#fff}
-#btnLogout{background:#ef4444;color:#fff}
+.btn-sair,#btnLogout{background:#ef4444;color:#fff}
 .cards-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
-.card-menu{padding:10px;border-radius:8px;border:none;cursor:pointer;background:#1e293b;color:#fff}
-.card-menu.ativo{background:#22c55e;color:#000}
-.painel{display:none}
-.painel.ativo{display:block}
+.card-menu{padding:10px;border-radius:8px;border:none;cursor:pointer;background:#1e293b;color:#fff;transition:all .2s ease}
+.card-menu:hover{transform:translateY(-2px);background:#334155}
+.card-menu.ativo{background:#22c55e;color:#000;font-weight:bold}
+.painel{display:none;opacity:0;transform:translateY(10px);transition:all .25s ease}
+.painel.ativo{display:block;opacity:1;transform:translateY(0)}
 .bloco{background:#111827;padding:15px;border-radius:10px;margin-bottom:15px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .full{grid-column:1/-1}
-.topbar{position:sticky;top:0;z-index:1000;background:rgba(15,23,42,.9);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
-.topbar-left{display:flex;align-items:center;gap:10px}
-.topbar-right{display:flex;gap:10px}
-.btn-sair{background:#ef4444;color:#fff}
-.card-menu{transition:all .2s ease}
-.card-menu:hover{transform:translateY(-2px);background:#334155}
-.card-menu.ativo{background:#22c55e;color:#000;font-weight:bold}
-.painel{opacity:0;transform:translateY(10px);transition:all .25s ease}
-.painel.ativo{opacity:1;transform:translateY(0)}
 .admin-only{display:none}
 body.admin .admin-only{display:block}
+button:active{transform:scale(.96)}
 
 </style>
 </head>
