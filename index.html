@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/jspdf"></script>
 <style>
 body{font-family:Arial;background:#020617;color:#fff;padding:15px}
 .card{background:#111827;padding:15px;border-radius:12px;margin-top:10px}
@@ -20,7 +20,22 @@ input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:non
 .kpi{color:#22c55e}
 .alerta{color:#ef4444;font-weight:bold}
 video,canvas{width:100%;border-radius:10px;margin-top:10px}
+.card{
+background:linear-gradient(145deg,#111827,#0b1220);
+box-shadow:0 4px 20px rgba(0,0,0,0.4);
+transition:0.3s
+}
+.card:hover{
+transform:scale(1.02)
+}
+button{
+transition:0.2s
+}
+button:hover{
+transform:scale(1.03)
+}
 
+  
 </style>
 
 </head>
@@ -31,8 +46,10 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 <input id="pass" type="password" placeholder="Senha">
 <button onclick="login()">Entrar</button>
 </div>
-
+<button onclick="toggleDetalhe()">📈 Ver análise detalhada</button>
+<div id="detalheBox" style="display:none"></div>
 <div id="app" style="display:none">
+<button onclick="exportarPDF()">📄 Exportar PDF</button>
 <h2>🚗 Veículos PRO</h2>
 
 <div class="card">
@@ -62,7 +79,12 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 <input id="km" placeholder="KM">
 <button onclick="salvar()">Salvar</button>
 </div>
-
+<div class="card">
+<select id="filtroPeriodo">
+<option value="all">📊 Todo período</option>
+<option value="mes">📅 Apenas mês atual</option>
+</select>
+</div>
 <div class="card">
 <h3>📊 Gráfico</h3>
 <canvas id="grafico"></canvas>
@@ -125,6 +147,7 @@ return
 }else{
 document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
+document.getElementById("filtroPeriodo").onchange=render
 }
 /* 🚗 BUSCAR VEÍCULOS */
 let {data:v,error}=await db.from("veiculos").select("*")
@@ -295,7 +318,9 @@ kpi.innerHTML=`
 `
 /* ================= ALERTA ================= */
 if(media<6){
-alerta.innerHTML='<div class="alerta">⚠ Consumo alto</div>'
+alerta.innerHTML='⚠ Consumo elevado'
+}else if(media>9){
+alerta.innerHTML='🚀 Excelente consumo'
 }else{
 alerta.innerHTML=''
 }
@@ -333,6 +358,13 @@ ${a.litros}L • R$ ${a.valor_total}
 </div>
 `).join("")
 }
+detalheBox.innerHTML=`
+<div class="card">
+<b>Total gasto:</b> R$ ${totalValor.toFixed(2)}<br>
+<b>Total KM:</b> ${totalKm}<br>
+<b>Consumo médio:</b> ${media} km/l
+</div>
+`
 }
 /* ====================================================101 – GRAFICO MENSAL==================================================== */
 function renderGraficoMensal(labels,data){
@@ -366,6 +398,26 @@ y:{ticks:{color:"#ccc"}}
 }
 }
 })
+}
+/* =============102 TOGGLE DETALHE==================================================== */
+function toggleDetalhe(){
+const d=document.getElementById("detalheBox")
+d.style.display=d.style.display==="none"?"block":"none"
+}
+/* =============103 PDF==================================================== */
+function exportarPDF(){
+const {jsPDF}=window.jspdf
+const doc=new jsPDF()
+
+doc.text("Relatório de Consumo",10,10)
+
+let y=20
+document.querySelectorAll("#lista .card").forEach(el=>{
+doc.text(el.innerText,10,y)
+y+=10
+})
+
+doc.save("relatorio.pdf")
 }
 
 
