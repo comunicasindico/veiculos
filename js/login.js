@@ -1,7 +1,8 @@
 /* ====================================================
-010 – LOGIN SISTEMA (CORRIGIDO)
+010 – LOGIN SISTEMA (FINAL CORRIGIDO)
 ==================================================== */
 async function login(){
+
 const usuario=document.getElementById("loginUsuario")?.value?.trim().toLowerCase()
 const senha=document.getElementById("loginSenha")?.value?.trim()
 const msg=document.getElementById("msgLogin")
@@ -33,10 +34,9 @@ localStorage.setItem("usuario_id",data.id)
 localStorage.setItem("empresa_id",data.empresa_id)
 localStorage.setItem("usuario_nome",data.nome||"")
 localStorage.setItem("tipo_usuario",data.perfil==="admin"?"admin":"motorista")
-localStorage.setItem("primeiro_login",data.primeiro_login?"1":"0")
 localStorage.setItem("login_time",Date.now())
 
-/* 🔥 GARANTE CONTEXTO GLOBAL */
+/* 🔥 CONTEXTO */
 window.CONTEXTO={
 usuario_id:data.id,
 empresa_id:data.empresa_id,
@@ -44,8 +44,6 @@ tipo:data.perfil==="admin"?"admin":"motorista",
 isAdmin:data.perfil==="admin"
 }
 
-/* 🔥 ATIVA APP */
-document.body.classList.add("logado")
-/* 🔥 RELOAD LIMPO */
-window.location.reload()
+/* 🔥 SEM RELOAD → INICIA DIRETO */
+await iniciarApp()
 }
