@@ -28,6 +28,8 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 .collapsed .collapsible-content{max-height:0;opacity:0;padding:0}
 .toggle{font-size:18px;color:#22c55e;transition:0.2s}
 #app>div:first-child button{flex:1}
+#lista input{background:#020617;color:#fff;border:1px solid #22c55e}
+#lista button{padding:6px 8px;font-size:12px}
 
 
 </style>
@@ -316,13 +318,26 @@ data=data.filter(a=>a.data_abastecimento.startsWith(mesAtual))
 if(!data||data.length<2){
 if(lista){
 lista.innerHTML=data.map(a=>`
-<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-<div>
+<div class="card" id="row_${a.id}" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+
+<div id="view_${a.id}">
 📅 ${formatarData(a.data_abastecimento)} • ⛽ ${a.litros}L • 💰 R$ ${a.valor_total} • 📍 ${a.quilometragem} km
 </div>
+
+<div id="edit_${a.id}" style="display:none;flex-direction:column;gap:5px">
+<input id="lit_${a.id}" value="${a.litros}">
+<input id="val_${a.id}" value="${a.valor_total}">
+<input id="km_${a.id}" value="${a.quilometragem}">
 <div style="display:flex;gap:5px">
-<button onclick="editar('${a.id}','${a.litros}','${a.valor_total}','${a.quilometragem}')">✏️</button>
+<button onclick="salvarInline('${a.id}')">💾</button>
+<button onclick="cancelarInline('${a.id}')">❌</button>
 </div>
+</div>
+
+<div style="display:flex;gap:5px">
+<button onclick="editarInline('${a.id}')">✏️</button>
+</div>
+
 </div>
 `).join("")
 }
@@ -446,6 +461,28 @@ y:{ticks:{color:"#ccc"}}
 function toggleDetalhe(){
 const d=document.getElementById("detalheBox")
 d.style.display=d.style.display==="none"?"block":"none"
+}
+/* =============EDITAR CANCELAR SALVAR - INLINE==================================================== */
+function editarInline(id){
+document.getElementById("view_"+id).style.display="none"
+document.getElementById("edit_"+id).style.display="flex"
+}
+function cancelarInline(id){
+document.getElementById("view_"+id).style.display="block"
+document.getElementById("edit_"+id).style.display="none"
+}
+async function salvarInline(id){
+const litrosVal=parseFloat(document.getElementById("lit_"+id).value)
+const valorVal=parseFloat(document.getElementById("val_"+id).value)
+const kmVal=parseFloat(document.getElementById("km_"+id).value)
+
+await db.from("abastecimentos").update({
+litros:litrosVal,
+valor_total:valorVal,
+quilometragem:kmVal
+}).eq("id",id)
+await db.from("veiculos").update({km_atual:kmVal}).eq("id",VID)
+render()
 }
 /* =============103 PDF==================================================== */
 function exportarPDF(){
