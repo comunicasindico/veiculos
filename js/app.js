@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded",iniciarApp)
 /* =============================================INICIAR APP ================================================== */
 async function iniciarApp(){
+carregarContexto()
 const app=document.getElementById("app")
 const login=document.getElementById("telaLogin")
 /* 🔒 RESET VISUAL TOTAL */
