@@ -1,12 +1,33 @@
-/* ====================================================
-060 – DONO DO REGISTRO
-==================================================== */
+/* ====================================================060 – DONO DO REGISTRO==================================================== */
 function getUsuarioDono(){
-const tipo=localStorage.getItem("tipo_usuario")
-const usuarioId=localStorage.getItem("usuario_id")
-if(tipo==="admin"){
-return document.getElementById("usuarioSelecionadoAdmin")?.value||usuarioId
+
+/* 🔒 GARANTE CONTEXTO */
+const ctx=window.CONTEXTO
+
+if(!ctx||!ctx.usuario_id){
+console.warn("Sem contexto de usuário")
+return null
 }
-return usuarioId
+
+/* 👑 ADMIN */
+if(ctx.isAdmin){
+
+const select=document.getElementById("usuarioSelecionadoAdmin")
+
+/* 🔥 SELEÇÃO MANUAL */
+if(select && select.value){
+return select.value
 }
+
+/* 🔥 FALLBACK */
+return ctx.usuario_id
+
+}
+
+/* 👤 MOTORISTA */
+return ctx.usuario_id
+
+}
+
+/* ====================================================061 – EXPORT==================================================== */
 window.getUsuarioDono=getUsuarioDono
