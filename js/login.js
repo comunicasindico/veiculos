@@ -35,6 +35,17 @@ localStorage.setItem("usuario_nome",data.nome||"")
 localStorage.setItem("tipo_usuario",data.perfil==="admin"?"admin":"motorista")
 localStorage.setItem("primeiro_login",data.primeiro_login?"1":"0")
 localStorage.setItem("login_time",Date.now())
+
+/* 🔥 GARANTE CONTEXTO GLOBAL */
+window.CONTEXTO={
+usuario_id:data.id,
+empresa_id:data.empresa_id,
+tipo:data.perfil==="admin"?"admin":"motorista",
+isAdmin:data.perfil==="admin"
+}
+
+/* 🔥 ATIVA APP */
+document.body.classList.add("logado")
 /* 🔥 RELOAD LIMPO */
-window.location.href=window.location.pathname
+window.location.reload()
 }
