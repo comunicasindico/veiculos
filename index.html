@@ -10,9 +10,10 @@
 <style>
 body{font-family:Arial;background:#020617;color:#fff;padding:20px}
 .box{max-width:420px;margin:80px auto;background:#111827;padding:20px;border-radius:10px}
-input,button{width:100%;padding:10px;margin:5px 0;border-radius:6px;border:none}
+input,select,button{width:100%;padding:10px;margin:5px 0;border-radius:6px;border:none}
 button{background:#22c55e;font-weight:bold;cursor:pointer}
 .card{background:#111827;padding:15px;border-radius:10px;margin-top:10px}
+.kpi{font-size:14px;margin-top:5px;color:#22c55e}
 </style>
 </head>
 <body>
@@ -25,34 +26,42 @@ button{background:#22c55e;font-weight:bold;cursor:pointer}
 </div>
 
 <div id="app" style="display:none">
-<h2>Painel</h2>
-<div id="info"></div>
+<h2>Painel Veículos</h2>
+
 <div class="card">
-<h3>Veículo</h3>
-<div id="veiculo"></div>
+<h3>Selecionar Veículo</h3>
+<select id="selectVeiculo"></select>
 </div>
+
+<div class="card">
+<h3>Dados do Veículo</h3>
+<div id="veiculo"></div>
+<div id="kpi"></div>
+</div>
+
 <div class="card">
 <h3>Novo Abastecimento</h3>
 <input id="litros" placeholder="Litros">
 <input id="valor" placeholder="Valor Total">
-<input id="km" placeholder="KM">
+<input id="km" placeholder="KM Atual">
 <button id="btnSalvar">Salvar</button>
 </div>
+
 <div class="card">
 <h3>Abastecimentos</h3>
 <div id="lista"></div>
 </div>
+
 <button id="btnLogout">Sair</button>
 </div>
 
 <script>
 
-/* ====================================================000 – HARD RESET CACHE==================================================== */
+/* ====================================================000 – HARD RESET==================================================== */
 if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()))}
 if('caches'in window){caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)))}
-if(!sessionStorage.getItem("reloadLimpo")){sessionStorage.setItem("reloadLimpo","1");location.reload(true)}
 
-/* ====================================================001 – INIT DOM==================================================== */
+/* ====================================================001 – INIT==================================================== */
 document.addEventListener("DOMContentLoaded",()=>{
 window.db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
 window.user=document.getElementById("user")
@@ -61,12 +70,15 @@ window.loginDiv=document.getElementById("login")
 window.appDiv=document.getElementById("app")
 window.veiculoDiv=document.getElementById("veiculo")
 window.listaDiv=document.getElementById("lista")
+window.selectVeiculo=document.getElementById("selectVeiculo")
+window.kpiDiv=document.getElementById("kpi")
 window.litros=document.getElementById("litros")
 window.valor=document.getElementById("valor")
 window.km=document.getElementById("km")
 document.getElementById("btnLogin").onclick=login
 document.getElementById("btnSalvar").onclick=salvarAbastecimento
 document.getElementById("btnLogout").onclick=logout
+selectVeiculo.onchange=trocarVeiculo
 init()
 })
 
@@ -91,35 +103,60 @@ if(!uid){loginDiv.style.display="block";appDiv.style.display="none";return}
 loginDiv.style.display="none"
 appDiv.style.display="block"
 const tipo=localStorage.getItem("tipo")
-let {data:veiculos,error}=await db.from("veiculos").select("*")
-if(error){alert("Erro veículos");return}
+let {data:veiculos}=await db.from("veiculos").select("*")
 if(tipo!=="admin"){veiculos=veiculos.filter(v=>String(v.usuario_id)===String(uid))}
 if(!veiculos.length){veiculoDiv.innerHTML="Nenhum veículo";return}
-const v=veiculos[0]
-window.VEICULO_ID=v.id
-veiculoDiv.innerHTML=`Placa: ${v.placa}<br>Modelo: ${v.modelo}<br>KM: ${v.km_atual||0}`
-carregarAbastecimentos(v.id)
+window.VEICULOS=veiculos
+selectVeiculo.innerHTML=veiculos.map(v=>`<option value="${v.id}">${v.modelo} - ${v.placa}</option>`).join("")
+window.VEICULO_ID=veiculos[0].id
+renderVeiculo()
 }
 
-/* ====================================================040 – SALVAR ABAST==================================================== */
+/* ====================================================040 – TROCAR VEÍCULO==================================================== */
+function trocarVeiculo(){
+window.VEICULO_ID=selectVeiculo.value
+renderVeiculo()
+}
+
+/* ====================================================050 – RENDER VEÍCULO==================================================== */
+async function renderVeiculo(){
+const v=window.VEICULOS.find(x=>String(x.id)===String(window.VEICULO_ID))
+veiculoDiv.innerHTML=`Placa: ${v.placa}<br>Modelo: ${v.modelo}<br>KM Atual: ${v.km_atual||0}`
+await carregarAbastecimentos(v.id)
+}
+
+/* ====================================================060 – SALVAR ABAST==================================================== */
 async function salvarAbastecimento(){
 const litrosVal=parseFloat(litros.value||0)
 const valorVal=parseFloat(valor.value||0)
 const kmVal=parseFloat(km.value||0)
 if(!window.VEICULO_ID){alert("Veículo não encontrado");return}
 await db.from("abastecimentos").insert({veiculo_id:window.VEICULO_ID,litros:litrosVal,valor_total:valorVal,quilometragem:kmVal,data_abastecimento:new Date().toISOString()})
-litros.value=""
-valor.value=""
-km.value=""
-carregarAbastecimentos(window.VEICULO_ID)
+await db.from("veiculos").update({km_atual:kmVal}).eq("id",window.VEICULO_ID)
+litros.value="";valor.value="";km.value=""
+renderVeiculo()
 }
 
-/* ====================================================050 – LISTAR ABAST==================================================== */
+/* ====================================================070 – LISTAR ABAST==================================================== */
 async function carregarAbastecimentos(vid){
-let {data,error}=await db.from("abastecimentos").select("*").eq("veiculo_id",vid).order("data_abastecimento",{ascending:false})
-if(error){alert("Erro abastecimentos");return}
-if(!data||!data.length){listaDiv.innerHTML="Nenhum abastecimento";return}
-listaDiv.innerHTML=data.map(a=>`<div>${new Date(a.data_abastecimento).toLocaleString()}<br>Litros: ${a.litros} | Valor: R$ ${a.valor_total}<br>KM: ${a.quilometragem}<hr></div>`).join("")
+let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",vid).order("data_abastecimento",{ascending:true})
+if(!data||!data.length){listaDiv.innerHTML="Nenhum abastecimento";kpiDiv.innerHTML="";return}
+let html=""
+let consumoTotal=0
+let count=0
+for(let i=1;i<data.length;i++){
+const kmAnterior=data[i-1].quilometragem
+const kmAtual=data[i].quilometragem
+const litros=data[i].litros
+const consumo=(kmAtual-kmAnterior)/litros
+if(consumo>0){consumoTotal+=consumo;count++}
+html+=`<div>${new Date(data[i].data_abastecimento).toLocaleString()}<br>KM: ${kmAtual} | Litros: ${litros} | Consumo: ${consumo.toFixed(2)} km/l<hr></div>`
+}
+listaDiv.innerHTML=html
+if(count>0){
+const media=(consumoTotal/count).toFixed(2)
+kpiDiv.innerHTML=`<div class="kpi">Consumo médio: ${media} km/l</div>`
+}else{kpiDiv.innerHTML=""}
 }
 
 </script>
