@@ -1,13 +1,29 @@
 document.addEventListener("DOMContentLoaded",iniciarApp)
+/* =============================================INICIAR APP ================================================== */
 async function iniciarApp(){
-const usuarioId=localStorage.getItem("usuario_id")
+const app=document.getElementById("app")
+const login=document.getElementById("telaLogin")
+/* 🔒 BLOQUEIO TOTAL INICIAL (ANTI-FLASH + CACHE) */
+app.style.display="none"
+app.style.visibility="hidden"
+login.style.display="none"
+/* 🔐 CONTROLE DE SESSÃO */
+let usuarioId=localStorage.getItem("usuario_id")
+const tempoLogin=localStorage.getItem("login_time")
+/* 🔒 EXPIRAÇÃO AUTOMÁTICA (8H) */
+if(tempoLogin&&Date.now()-parseInt(tempoLogin)>1000*60*60*8){
+localStorage.clear()
+usuarioId=null
+}
+/* 🔐 SE NÃO LOGADO → MOSTRA LOGIN */
 if(!usuarioId){
-document.getElementById("app").style.display="none"
-document.getElementById("telaLogin").style.display="flex"
+login.style.display="flex"
 return
 }
-document.getElementById("telaLogin").style.display="none"
-document.getElementById("app").style.display="block"
+/* 🔓 LIBERA APP */
+login.style.display="none"
+app.style.display="block"
+app.style.visibility="visible"
 /* 🔥 GARANTE CONTEXTO */
 window.CONTEXTO=window.CONTEXTO||{usuario_id:usuarioId,empresa_id:localStorage.getItem("empresa_id"),isAdmin:localStorage.getItem("tipo_usuario")==="admin"}
 /* 🔥 CARREGAMENTO NORMAL */
