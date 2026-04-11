@@ -189,26 +189,32 @@ if(!v||!v.length){
 veiculoSel.innerHTML="<option>Nenhum veículo</option>"
 return
 }
-/* 🚘 LISTA */
+/* 🚗 LISTA */
 window.VEICULOS=v
-veiculoSel.innerHTML=v.map(x=>`
+
+const select=document.getElementById("veiculoSel")
+if(!select){
+console.error("veiculoSel não encontrado")
+return
+}
+
+select.innerHTML=v.map(x=>`
 <option value="${x.id}">
-${x.modelo} - ${x.placa||""}
+${x.modelo} ${x.placa?'- '+x.placa:''}
 </option>
 `).join("")
+
 /* 🎯 VEÍCULO ATUAL */
 window.VID=v[0].id
-/* 🔁 TROCA VEÍCULO */
-veiculoSel.onchange=()=>{
-window.VID=veiculoSel.value
+
+/* 🔁 TROCA VEÍCULO (CORRETO) */
+select.addEventListener("change",function(){
+window.VID=this.value
 render()
-}
+})
+
 /* 🚀 RENDER */
 render()
-
-document.getElementById("filtroPeriodo").value="all"
-document.getElementById("dataInicio").value=""
-document.getElementById("dataFim").value=""
 }
 /* ============================aplicar filtro=================================================== */
 
