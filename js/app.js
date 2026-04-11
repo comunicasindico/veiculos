@@ -184,20 +184,27 @@ localStorage.setItem(keys.motoristas,JSON.stringify(window.APP_STATE.motoristas)
 localStorage.setItem(keys.abastecimentos,JSON.stringify(window.APP_STATE.abastecimentos))
 }
 window.salvarDadosLocal=salvarDadosLocal
-/* ====================================================MENUS==================================================== */
+/* ====================================================902 – MENU ABSURDO==================================================== */
 function configurarMenus(){
 const botoes=document.querySelectorAll(".card-menu")
 const paineis=document.querySelectorAll(".painel")
+const salvo=localStorage.getItem("painelAtual")
+if(salvo){
+document.querySelectorAll(".card-menu").forEach(b=>b.classList.remove("ativo"))
+document.querySelector(`[data-target="${salvo}"]`)?.classList.add("ativo")
+paineis.forEach(p=>p.classList.remove("ativo"))
+document.getElementById(salvo)?.classList.add("ativo")
+}
 botoes.forEach(btn=>{
 btn.onclick=()=>{
+const alvo=btn.dataset.target
+localStorage.setItem("painelAtual",alvo)
 botoes.forEach(b=>b.classList.remove("ativo"))
 btn.classList.add("ativo")
-const alvo=btn.dataset.target
 paineis.forEach(p=>p.classList.remove("ativo"))
 setTimeout(()=>{
-const el=document.getElementById(alvo)
-if(el)el.classList.add("ativo")
-},100)
+document.getElementById(alvo)?.classList.add("ativo")
+},120)
 }
 })
 }
