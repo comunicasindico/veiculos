@@ -61,6 +61,7 @@ if(typeof renderMotoristas==="function")renderMotoristas()
 if(typeof renderAlertas==="function")renderAlertas()
 if(typeof renderRelatorios==="function")renderRelatorios()
 if(typeof atualizarDashboard==="function")atualizarDashboard()
+if(typeof atualizarDashboardInteligente==="function")atualizarDashboardInteligente()
 }
 
 /* ====================================================003 – TOPO USUARIO==================================================== */
@@ -240,6 +241,25 @@ document.body.classList.remove("logado")
 
 /* 🔥 REDIRECIONA SEM CACHE */
 window.location.replace(window.location.pathname+"?v="+Date.now())
+}
+/* =================================================012 FUNCTION RENDER RESUMO================================================= */
+function renderResumo(){
+
+const v=window.APP_STATE.veiculos||[]
+const m=window.APP_STATE.motoristas||[]
+const a=window.APP_STATE.abastecimentos||[]
+
+const el=document.getElementById("resumoRapido")
+if(!el)return
+
+let ultimo=a[0]
+
+el.innerHTML=`
+Total de veículos: ${v.length}<br>
+Total de motoristas: ${window.CONTEXTO.isAdmin?m.length:1}<br>
+Total de abastecimentos: ${a.length}<br>
+Último abastecimento: ${ultimo?new Date(ultimo.data_abastecimento).toLocaleString():"-"}
+`
 }
 /* ====================================================012 – LOADER==================================================== */
 function mostrarLoader(){document.getElementById("loaderGlobal").style.display="flex"}
