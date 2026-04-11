@@ -23,7 +23,12 @@ return
 login.style.display="none"
 app.style.display="block"
 /* 🔥 GARANTE CONTEXTO */
-window.CONTEXTO=window.CONTEXTO||{usuario_id:usuarioId,empresa_id:localStorage.getItem("empresa_id"),isAdmin:String(localStorage.getItem("tipo_usuario")).toLowerCase()==="admin"}
+window.CONTEXTO={
+usuario_id:usuarioId,
+empresa_id:localStorage.getItem("empresa_id"),
+tipo:localStorage.getItem("tipo_usuario")||"motorista",
+isAdmin:String(localStorage.getItem("tipo_usuario")).toLowerCase()==="admin"
+}
 /* 🔥 CARREGAMENTO NORMAL */
 await carregarDados()
 /* 🔒 GARANTE QUE ESTADO ESTÁ FILTRADO */
@@ -60,6 +65,13 @@ if(btnLogout){
 btnLogout.onclick=logout
 btnLogout.style.display="inline-block"
 }
+if(!window.CONTEXTO.isAdmin){
+
+document.querySelectorAll(".admin-only").forEach(el=>{
+el.style.display="none"
+})
+
+}
 }
 /* ====================================================LOAD DADOS==================================================== */
 async function carregarDados(){
@@ -76,13 +88,13 @@ let a=abastecimentos||[]
 /* 🔒 FILTRO COMPLETO POR USUÁRIO */
 if(window.CONTEXTO && !window.CONTEXTO.isAdmin){
 const uid=String(window.CONTEXTO.usuario_id)
-/* 🚗 VEÍCULOS → só dele */
+/* 🚗 VEÍCULOS */
 v=v.filter(x=>String(x.usuario_id)===uid)
-/* 👤 MOTORISTAS → só ele */
+/* ⛽ ABASTECIMENTOS */
+const ids=v.map(x=>String(x.id))
+a=a.filter(x=>ids.includes(String(x.veiculo_id)))
+/* 👤 MOTORISTA */
 m=m.filter(x=>String(x.id)===uid)
-/* ⛽ ABASTECIMENTOS → só dos veículos dele */
-const idsVeiculos=v.map(x=>String(x.id))
-a=a.filter(x=>idsVeiculos.includes(String(x.veiculo_id)))
 }
 window.APP_STATE.veiculos=v
 window.APP_STATE.motoristas=m
@@ -139,47 +151,59 @@ if(input&&!input.value)input.value=window.Utils.agoraInputDateTime()
 }
 /* ====================================================DASHBOARD CORRIGIDO==================================================== */
 function atualizarDashboard(){
-const elV=document.getElementById("kpiVeiculos")
-const elA=document.getElementById("kpiAbastecimentos")
-const elL=document.getElementById("kpiAlertas")
 
 let v=window.APP_STATE.veiculos||[]
 let m=window.APP_STATE.motoristas||[]
 let a=window.APP_STATE.abastecimentos||[]
 
-/* 🔒 FILTRO POR USUÁRIO */
-if(window.CONTEXTO && !window.CONTEXTO.isAdmin){
-const uid=String(window.CONTEXTO.usuario_id)
-v=v.filter(x=>String(x.usuario_id)===uid)
-const ids=v.map(x=>String(x.id))
-a=a.filter(x=>ids.includes(String(x.veiculo_id)))
-m=m.filter(x=>String(x.id)===uid)
-}
-
-/* 🔢 ATUALIZA KPIs */
-if(elV)elV.textContent=v.length
-if(elA)elA.textContent=a.length
-if(elL)elL.textContent=window.gerarAlertas?window.gerarAlertas().length:0
-
-/* 🔥 CUSTO TOTAL */
-const elCusto=document.getElementById("kpiCustoTotal")
-if(elCusto){
-const total=a.reduce((s,x)=>s+Number(x.valor_total||0),0)
-elCusto.textContent=total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-}
-
-/* 🔥 CONSUMO MÉDIO */
+const elV=document.getElementById("kpiVeiculos")
+const elM=document.getElementById("kpiMotoristas")
+const elA=document.getElementById("kpiAbastecimentos")
+const elL=document.getElementById("kpiAlertas")
+const elC=document.getElementById("kpiCustoTotal")
 const elConsumo=document.getElementById("kpiConsumo")
+
+/* 🔥 ADMIN */
+if(window.CONTEXTO.isAdmin){
+
+if(elV)elV.textContent=v.length
+if(elM)elM.textContent=m.length
+if(elA)elA.textContent=a.length
+
+}
+
+/* 👤 USUÁRIO */
+else{
+
+if(elV)elV.textContent=v.length
+if(elM)elM.textContent=1
+if(elA)elA.textContent=a.length
+
+}
+
+/* 💰 TOTAL */
+if(elC){
+const total=a.reduce((s,x)=>s+Number(x.valor_total||0),0)
+elC.textContent=total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+}
+
+/* ⛽ CONSUMO */
 if(elConsumo){
-let kmTotal=0
-let litrosTotal=0
+let km=0
+let litros=0
 a.forEach(x=>{
-kmTotal+=Number(x.quilometragem||0)
-litrosTotal+=Number(x.litros||0)
+km+=Number(x.quilometragem||0)
+litros+=Number(x.litros||0)
 })
-const media=litrosTotal?kmTotal/litrosTotal:0
+const media=litros?km/litros:0
 elConsumo.textContent=media.toFixed(1)+" km/l"
 }
+
+/* 🚨 ALERTAS */
+if(elL){
+elL.textContent=window.gerarAlertas?window.gerarAlertas().length:0
+}
+
 }
 /* ====================================================TOAST==================================================== */
 function toast(msg){
