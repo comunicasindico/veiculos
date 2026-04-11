@@ -32,7 +32,7 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 #lista input{background:#020617;color:#fff;border:1px solid #22c55e;padding:5px}
 #lista button{padding:5px 8px;font-size:12px}
 .btnSair:hover{opacity:0.8;transform:scale(1.05)}
-  
+.btnSair{all:unset;display:inline-block;background:#ef4444;color:#fff;padding:4px 10px;font-size:11px;border-radius:6px;cursor:pointer;margin-left:10px}  
 </style>
 </head>
 <body>
@@ -46,10 +46,9 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 
 <div id="app" style="display:none">
 
-<div style="display:flex;justify-content:space-between;align-items:center">
-<h2>🚗 Veículos PRO</h2>
+<div style="display:flex;align-items:center;gap:10px">
+<h2 style="margin:0">🚗 Veículos PRO</h2>
 <button onclick="logout()" class="btnSair">Sair</button>
-<div style="display:flex;gap:10px;margin-bottom:10px">
 <button onclick="toggleDetalhe()">📈 Análise</button>
 <button onclick="exportarPDF()">📄 PDF</button>
 </div>
