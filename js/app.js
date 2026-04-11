@@ -166,7 +166,5 @@ if("serviceWorker"in navigator){navigator.serviceWorker.register("./service-work
 function logout(){
 localStorage.clear()
 sessionStorage.clear()
-location.reload()
-}
-window.location.href=window.location.pathname
+setTimeout(()=>{window.location.href=window.location.pathname},50)
 }
