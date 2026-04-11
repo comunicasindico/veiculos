@@ -133,10 +133,26 @@ a=a.filter(x=>ids.includes(String(x.veiculo_id)))
 /* 👤 MOTORISTA */
 m=m.filter(x=>String(x.id)===uid)
 }
+/* 🔒 FORÇA FILTRO FINAL (GARANTE MESMO SE FALHAR ANTES) */
+if(window.CONTEXTO && !window.CONTEXTO.isAdmin){
+
+const uid=String(window.CONTEXTO.usuario_id)
+
+v=v.filter(x=>String(x.usuario_id)===uid)
+
+const ids=v.map(x=>String(x.id))
+a=a.filter(x=>ids.includes(String(x.veiculo_id)))
+
+m=m.filter(x=>String(x.id)===uid)
+
+}
+
+/* 🔥 SALVA ESTADO FINAL */
 window.APP_STATE.veiculos=v
 window.APP_STATE.motoristas=m
 window.APP_STATE.abastecimentos=a
-console.log("USUARIO:",window.CONTEXTO)
+console.log("USUARIO:",window.CONTEXTO.usuario_id)
+console.log("VEICULOS FINAL:",v.length)
 console.log("VEICULOS FILTRADOS:",v.length)
 console.log("ABAST FILTRADOS:",a.length)
 return
