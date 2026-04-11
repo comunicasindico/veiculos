@@ -23,20 +23,21 @@ return
 login.style.display="none"
 app.style.display="block"
 /* 🔥 GARANTE CONTEXTO */
-window.CONTEXTO=window.CONTEXTO||{usuario_id:usuarioId,empresa_id:localStorage.getItem("empresa_id"),isAdmin:localStorage.getItem("tipo_usuario")==="admin"}
+window.CONTEXTO=window.CONTEXTO||{usuario_id:usuarioId,empresa_id:localStorage.getItem("empresa_id"),isAdmin:String(localStorage.getItem("tipo_usuario")).toLowerCase()==="admin"}
 /* 🔥 CARREGAMENTO NORMAL */
 await carregarDados()
+/* 🔒 GARANTE QUE ESTADO ESTÁ FILTRADO */
+if(!window.APP_STATE || !window.APP_STATE.veiculos){
+console.warn("Dados ainda não carregados")
+return
+}
 configurarMenus()
-configurarInstalacaoPWA()
-registrarServiceWorker()
 definirCamposIniciais()
-window.renderizarVeiculos?.()
-window.renderizarMotoristas?.()
-window.renderizarAbastecimentos?.()
-window.renderizarAlertas?.()
-window.renderizarRelatorios?.()
+/* 🔥 ATUALIZA DEPOIS DE TUDO */
+setTimeout(()=>{
 window.renderizarDashboard?.()
 atualizarDashboard()
+},50)
 window.atualizarDashboardInteligente?.()
 /* 🔥 FORÇAR PAINEL CORRETO */
 const paineis=document.querySelectorAll(".painel")
@@ -86,6 +87,9 @@ a=a.filter(x=>idsVeiculos.includes(String(x.veiculo_id)))
 window.APP_STATE.veiculos=v
 window.APP_STATE.motoristas=m
 window.APP_STATE.abastecimentos=a
+console.log("USUARIO:",window.CONTEXTO)
+console.log("VEICULOS FILTRADOS:",v.length)
+console.log("ABAST FILTRADOS:",a.length)
 return
 }catch(e){console.error("Erro ao carregar Supabase",e)}
 }
