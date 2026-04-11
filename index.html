@@ -107,7 +107,7 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 </div>
 
 <div class="card">
-<h3>📋 Histórico</h3>
+<h3 onclick="abrirHistorico()">📋 Histórico</h3>
 <div id="lista"></div>
 </div>
 
@@ -129,6 +129,7 @@ window.alerta=document.getElementById("alerta")
 window.grafico=document.getElementById("grafico")
 window.veiculoSel=document.getElementById("veiculoSel")
 init()
+aplicarAnoAtual()
 })
 /* ========LOGIN================================================== */
 async function login(){
@@ -538,7 +539,32 @@ return d.toLocaleDateString("pt-BR",{month:"2-digit",year:"numeric"})
 }
 /* =============FUNCTION LOGOUT================================================= */
 function logout(){localStorage.clear();location.reload()}
-/* ====================================================103 PDF PROFISSIONAL==================================================== */
+/* ================= SCROLL HISTÓRICO ================= */
+function abrirHistorico(){
+window.scrollTo({top:0,behavior:"smooth"})
+aplicarAnoAtual()
+}
+/* ================= FILTRO ANO COMPLETO ================= */
+function aplicarAnoAtual(){
+const hoje=new Date()
+const ano=hoje.getFullYear()
+
+const inicio=ano+"-01-01"
+const fim=ano+"-12-31"
+
+const di=document.getElementById("dataInicio")
+const df=document.getElementById("dataFim")
+const filtro=document.getElementById("filtroPeriodo")
+
+if(di)di.value=inicio
+if(df)df.value=fim
+if(filtro)filtro.value="periodo"
+render()
+}
+  
+
+  
+/* ======103 PDF PROFISSIONAL==================================================== */
 async function exportarPDF(){
 const {jsPDF}=window.jspdf
 const doc=new jsPDF()
