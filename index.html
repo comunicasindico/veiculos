@@ -88,7 +88,9 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 <select id="filtroPeriodo">
 <option value="all">📊 Todo período</option>
 <option value="mes">📅 Mês atual</option>
+<option value="periodo">📆 Período</option>
 </select>
+
 <input type="date" id="dataInicio">
 <input type="date" id="dataFim">
 <button onclick="render()">Filtrar</button>
@@ -332,21 +334,24 @@ if(e.target.id==="csvFile")importarCSV(e.target.files[0])
 /* ====================================================100 – RENDER DASHBOARD PROFISSIONAL==================================================== */
 async function render(){
 let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+if(!data)data=[]
+const filtro=document.getElementById("filtroPeriodo")?.value
 const di=document.getElementById("dataInicio")?.value
 const df=document.getElementById("dataFim")?.value
 
-if(di && df){
+if(!filtro || filtro==="all"){
+// 🔥 NÃO FILTRA → mostra tudo (2025 + 2026)
+}
+else if(filtro==="mes"){
+const hoje=new Date()
+const mesAtual=hoje.toISOString().slice(0,7)
+data=data.filter(a=>a.data_abastecimento?.startsWith(mesAtual))
+}
+else if(filtro==="periodo" && di && df){
 data=data.filter(a=>{
 const d=a.data_abastecimento?.slice(0,10)
 return d>=di && d<=df
 })
-}
-if(!data)data=[]
-const filtro=document.getElementById("filtroPeriodo")?.value
-if(filtro==="mes"){
-const hoje=new Date()
-const mesAtual=hoje.toISOString().slice(0,7)
-data=data.filter(a=>a.data_abastecimento?.startsWith(mesAtual))
 }
 if(lista){
 lista.innerHTML=data.map(a=>`
@@ -373,7 +378,7 @@ kpi.innerHTML=""
 alerta.innerHTML=""
 return
 }
-let consumo=[],labels=[],totalCons=0,count=0,totalValor=0,totalKm=data[0]?.quilometragem||0
+let consumo=[],labels=[],totalCons=0,count=0,totalValor=0,totalKm=0
 let melhor=0,pior=999
 for(let i=1;i<data.length;i++){
 let kmDiff=(data[i].quilometragem||0)-(data[i-1].quilometragem||0)
