@@ -10,9 +10,19 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" type="image/png" href="img/icone-192.png">
 <link rel="icon" href="img/favicon.ico">
+<style>
+html,body{width:100%;height:100%;margin:0;padding:0;overflow-x:hidden}
+body{position:relative;min-height:100vh;background:#000}
+#bgParallax{position:fixed;top:-40px;left:-40px;width:calc(100% + 80px);height:calc(100% + 80px);background:url("img/lua.jpeg") no-repeat center center;background-size:cover;transform:translate3d(0,0,0) scale(1.08);will-change:transform;transition:transform .08s linear;z-index:0}
+#bgParallax::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.28)}
+#telaLogin{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;z-index:2;background:transparent}
+#telaLogin .login-box{position:relative;background:rgba(15,23,42,.58);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 60px rgba(0,0,0,.45);border-radius:18px;padding:28px;width:min(92vw,420px);z-index:3}
+#telaLogin .login-box h2,#telaLogin .login-box p,#telaLogin .login-box input,#telaLogin .login-box button,#telaLogin .login-box .erro{position:relative;z-index:4}
+#app{position:relative;z-index:1}
+</style>
 </head>
 <body>
-
+<div id="bgParallax"></div>
 <!-- 🔐 LOGIN -->
 <div id="telaLogin" class="login-container">
 <div class="login-box">
@@ -24,10 +34,8 @@
 <p id="msgLogin" class="erro"></p>
 </div>
 </div>
-
 <!-- 🔥 APP (TUDO DENTRO AQUI) -->
 <div id="app" style="display:none">
-
 <header class="topbar">
 <div class="brand">
 <div class="brand-logo">🚗</div>
@@ -39,9 +47,7 @@
 <button id="btnInstalar" class="btn btn-secundario oculto">Instalar app</button>
 <button id="btnLogout" class="btn btn-secundario">Sair</button>
 </header>
-
 <main class="container">
-
 <section class="cards-grid">
 <button class="card-menu ativo" data-target="painelInicio">Início</button>
 <button class="card-menu" data-target="painelVeiculos">Meu Veículo</button>
@@ -51,7 +57,6 @@
 <button class="card-menu" data-target="painelAlertas">Alertas</button>
 <button class="card-menu" data-target="painelRelatorios">Relatórios</button>
 </section>
-
 <section id="painelInicio" class="painel ativo">
 <div class="hero">
 <h2 id="tituloPainel">Meu Veículo</h2>
@@ -61,7 +66,6 @@
 <strong>Acesso:</strong> <span id="escopoUsuario">Apenas seu veículo</span>
 </div>
 </div>
-
 <div class="kpis">
 <div class="kpi-card"><span>Meu Veículo</span><strong id="kpiVeiculos">1</strong></div>
 <div class="kpi-card"><span>Abastecimentos</span><strong id="kpiAbastecimentos">0</strong></div>
@@ -69,28 +73,23 @@
 <div class="kpi-card"><span>Consumo Médio</span><strong id="kpiConsumo">0 km/l</strong></div>
 <div class="kpi-card"><span>Alertas</span><strong id="kpiAlertas">0</strong></div>
 </div>
-
 <div class="bloco">
 <h3>Resumo rápido</h3>
 <div id="resumoRapido" class="lista-vazia"></div>
 </div>
-
 <div class="bloco">
 <h3>Consumo e gastos</h3>
 <canvas id="graficoConsumo" height="120"></canvas>
 </div>
 </section>
-
 <section id="painelVeiculos" class="painel">
 <div class="bloco">
 <h2>Meu veículo</h2>
 <form id="formVeiculo" class="form-grid">
-
 <div class="admin-only">
 <label>Cliente</label>
 <select id="usuarioSelecionadoAdmin"></select>
 </div>
-
 <input type="text" id="placa" placeholder="Placa" required>
 <input type="text" id="marca" placeholder="Marca">
 <input type="text" id="modelo" placeholder="Modelo">
@@ -98,20 +97,16 @@
 <input type="number" id="kmAtual" placeholder="KM atual">
 <input type="date" id="vencimentoIpva">
 <input type="date" id="vencimentoLicenciamento">
-
 <div class="full actions">
 <button type="submit" class="btn">Salvar</button>
 </div>
-
 </form>
 </div>
-
 <div class="bloco">
 <h3>Dados do veículo</h3>
 <div id="listaVeiculos" class="lista-vazia"></div>
 </div>
 </section>
-
 <section id="painelMotoristas" class="painel admin-only">
 <div class="bloco">
 <h2>Gestão de clientes</h2>
@@ -123,12 +118,10 @@
 </div>
 </form>
 </div>
-
 <div class="bloco">
 <div id="listaMotoristas"></div>
 </div>
 </section>
-
 <section id="painelAbastecimentos" class="painel">
 <div class="bloco">
 <h2>Abastecimento</h2>
@@ -143,39 +136,30 @@
 </div>
 </form>
 </div>
-
 <div class="bloco">
 <div id="listaAbastecimentos"></div>
 </div>
 </section>
-
 <section id="painelCamera" class="painel">
 <div class="bloco">
 <video id="cameraPreview" autoplay playsinline muted></video>
 <button id="btnAbrirCamera" class="btn">Abrir câmera</button>
 </div>
 </section>
-
 <section id="painelAlertas" class="painel">
 <div id="listaAlertas"></div>
 </section>
-
 <section id="painelRelatorios" class="painel">
 <div id="painelRelatorioResumo"></div>
 <div id="tabelaRelatorio"></div>
 </section>
-
 </main>
 </div>
-
 <div id="toast" class="toast"></div>
-
 <div id="modalSenha" style="display:none">
 <input type="password" id="novaSenha">
 <button onclick="salvarNovaSenha()">Salvar</button>
 </div>
-<div id="toast" class="toast"></div>
-<!-- SCRIPTS SEMPRE ANTES DO FECHAMENTO -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -192,5 +176,30 @@
 <script src="js/camera.js"></script>
 <script src="js/alertas.js"></script>
 <script src="js/relatorios.js"></script>
+<script>
+(function(){
+const bg=document.getElementById("bgParallax")
+if(!bg)return
+function moverParallax(clientX,clientY){
+const x=(clientX/window.innerWidth-.5)*24
+const y=(clientY/window.innerHeight-.5)*24
+bg.style.transform=`translate3d(${x}px,${y}px,0) scale(1.08)`
+}
+document.addEventListener("mousemove",function(e){
+moverParallax(e.clientX,e.clientY)
+})
+document.addEventListener("touchmove",function(e){
+if(!e.touches||!e.touches[0])return
+moverParallax(e.touches[0].clientX,e.touches[0].clientY)
+},{passive:true})
+window.addEventListener("deviceorientation",function(e){
+const gamma=typeof e.gamma==="number"?e.gamma:0
+const beta=typeof e.beta==="number"?e.beta:0
+const x=Math.max(-12,Math.min(12,gamma))*1.2
+const y=Math.max(-12,Math.min(12,beta))*1.2
+bg.style.transform=`translate3d(${x}px,${y}px,0) scale(1.08)`
+})
+})()
+</script>
 </body>
 </html>
