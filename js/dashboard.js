@@ -37,15 +37,27 @@ return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
 
 /* ====================================================062 – KPIs==================================================== */
 function atualizarKPIsFinanceiros(){
-const m=calcularMetricas()
+
+const v=window.APP_STATE.veiculos||[]
+const m=window.APP_STATE.motoristas||[]
+const a=window.APP_STATE.abastecimentos||[]
+
+const elV=document.getElementById("kpiVeiculos")
+const elM=document.getElementById("kpiMotoristas")
+const elA=document.getElementById("kpiAbastecimentos")
+
+if(elV)elV.textContent=v.length
+if(elM)elM.textContent=window.CONTEXTO.isAdmin?m.length:1
+if(elA)elA.textContent=a.length
+
+const mCalc=calcularMetricas()
 
 const elTotal=document.getElementById("kpiCustoTotal")
 const elConsumo=document.getElementById("kpiConsumo")
 
-if(elTotal)elTotal.textContent=formatarMoeda(m.total)
-if(elConsumo)elConsumo.textContent=m.consumo?m.consumo.toFixed(2)+" km/l":"0 km/l"
+if(elTotal)elTotal.textContent=window.Utils.moeda(mCalc.total)
+if(elConsumo)elConsumo.textContent=mCalc.consumo?mCalc.consumo.toFixed(2)+" km/l":"0 km/l"
 }
-
 /* ====================================================063 – DASHBOARD GLOBAL==================================================== */
 function atualizarDashboardInteligente(){
 atualizarKPIsFinanceiros()
