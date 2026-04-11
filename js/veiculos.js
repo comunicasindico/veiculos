@@ -1,38 +1,310 @@
 window.VEICULO_EDITANDO_ID=null;
+
 (function(){
-const form=document.getElementById("formVeiculo");
-const busca=document.getElementById("buscaVeiculo");
-form?.addEventListener("submit",salvarVeiculo);
-form?.addEventListener("reset",()=>{setTimeout(()=>{cancelarEdicaoVeiculo()},0)});
-busca?.addEventListener("input",renderizarVeiculos);
+
+/* ====================================================001 – INIT==================================================== */
+const form=document.getElementById("formVeiculo")
+const busca=document.getElementById("buscaVeiculo")
+
+form?.addEventListener("submit",salvarVeiculo)
+busca?.addEventListener("input",renderizarVeiculos)
+
+/* ====================================================002 – PAYLOAD==================================================== */
 function obterPayloadVeiculo(){
-const usuarioId=window.CONTEXTO?.isAdmin?document.getElementById("usuarioSelecionadoAdmin")?.value:window.CONTEXTO?.usuario_id||localStorage.getItem("usuario_id");
+
+const ctx=window.CONTEXTO
+
 return{
-empresa_id:window.CONTEXTO?.empresa_id,
-usuario_id:usuarioId,
+empresa_id:ctx?.empresa_id,
+usuario_id:ctx?.isAdmin
+?document.getElementById("usuarioSelecionadoAdmin")?.value||ctx.usuario_id
+:ctx?.usuario_id,
+
 placa:(document.getElementById("placa")?.value||"").toUpperCase().trim(),
-marca:document.getElementById("marca")?.value?.trim()||"",
-modelo:document.getElementById("modelo")?.value?.trim()||"",
-ano:document.getElementById("ano")?.value?Number(document.getElementById("ano").value):null,
-cor:document.getElementById("cor")?.value?.trim()||"",
-renavam:document.getElementById("renavam")?.value?.trim()||"",
+marca:document.getElementById("marca")?.value||"",
+modelo:document.getElementById("modelo")?.value||"",
+ano:Number(document.getElementById("ano")?.value||0)||null,
+cor:document.getElementById("cor")?.value||"",
+renavam:document.getElementById("renavam")?.value||"",
 combustivel_principal:document.getElementById("combustivelPrincipal")?.value||"",
 km_atual:Number(document.getElementById("kmAtual")?.value||0),
 vencimento_ipva:document.getElementById("vencimentoIpva")?.value||null,
 vencimento_licenciamento:document.getElementById("vencimentoLicenciamento")?.value||null,
-observacoes:document.getElementById("observacoesVeiculo")?.value?.trim()||"",
+observacoes:document.getElementById("observacoesVeiculo")?.value||"",
 updated_at:new Date().toISOString()
+
 }
+
 }
-async function salvarVeiculo(e){e.preventDefault();const item=obterPayloadVeiculo();if(!item.placa){window.toast("Informe a placa do veículo");return}const placaDuplicada=window.APP_STATE.veiculos.some(v=>{return String(v.placa||"").toUpperCase().trim()===item.placa&&String(v.id)!==String(window.VEICULO_EDITANDO_ID||"")});if(placaDuplicada){window.toast("Já existe um veículo com esta placa");return}if(window.VEICULO_EDITANDO_ID){await atualizarVeiculo(item)}else{await inserirVeiculo(item)}cancelarEdicaoVeiculo();renderizarVeiculos();window.renderizarMotoristas?.();window.renderizarAbastecimentos?.();window.renderizarAlertas?.();window.renderizarRelatorios?.();window.atualizarDashboard()}
-async function inserirVeiculo(item){if(window.db){const payload={...item};const{data,error}=await window.db.from("veiculos").insert(payload).select().single();if(error){console.error(error);window.toast("Erro ao salvar veículo");return}window.APP_STATE.veiculos.unshift(data);window.toast("Veículo salvo com sucesso");return}item.id=window.Utils.gerarId();item.created_at=new Date().toISOString();window.APP_STATE.veiculos.unshift(item);window.salvarDadosLocal();window.toast("Veículo salvo com sucesso")}
-async function atualizarVeiculo(item){if(window.db){const usuarioId=localStorage.getItem("usuario_id");const tipo=localStorage.getItem("tipo_usuario");let query=window.db.from("veiculos").update(item).eq("id",window.VEICULO_EDITANDO_ID);if(tipo!=="admin"){query=query.eq("usuario_id",usuarioId)}const{data,error}=await query.select().single();if(error){console.error(error);window.toast("Erro ao atualizar veículo");return}window.APP_STATE.veiculos=window.APP_STATE.veiculos.map(v=>String(v.id)===String(window.VEICULO_EDITANDO_ID)?data:v);window.toast("Veículo atualizado com sucesso");return}window.APP_STATE.veiculos=window.APP_STATE.veiculos.map(v=>{if(String(v.id)!==String(window.VEICULO_EDITANDO_ID))return v;return{...v,...item}});window.salvarDadosLocal();window.toast("Veículo atualizado com sucesso")}
-function renderizarVeiculos(){const box=document.getElementById("listaVeiculos");if(!box)return;const termo=window.Utils.normalizar(document.getElementById("buscaVeiculo")?.value||"");const lista=(window.APP_STATE.veiculos||[]).filter(v=>{if(!v)return false;const base=`${v.placa||""} ${v.marca||""} ${v.modelo||""}`;if(!termo)return true;return window.Utils.normalizar(base).includes(termo)});if(!lista.length){box.className="lista-vazia";box.textContent="Nenhum veículo cadastrado.";atualizarSelectsVeiculos();atualizarTextoBotaoVeiculo();carregarUsuariosAdmin();return}box.className="";box.innerHTML=lista.map(v=>{const ipva=v.vencimento_ipva?`IPVA: ${window.Utils.formatarData(v.vencimento_ipva)}`:"IPVA: não informado";const lic=v.vencimento_licenciamento?`Licenciamento: ${window.Utils.formatarData(v.vencimento_licenciamento)}`:"Licenciamento: não informado";return`<div class="item-lista"><div class="item-lista-topo"><h4>${v.placa||"-"} • ${v.marca||"Sem marca"} ${v.modelo||""}</h4><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn" type="button" onclick="editarVeiculo('${v.id}')">Editar</button><button class="btn btn-secundario" type="button" onclick="removerVeiculo('${v.id}')">Excluir</button></div></div><div><span class="tag">${v.combustivel_principal||"Combustível não informado"}</span>${v.ano?`<span class="tag">Ano ${v.ano}</span>`:""}${v.cor?`<span class="tag">${v.cor}</span>`:""}</div><div class="mini">${ipva} • ${lic}</div><div class="mini">KM atual: ${v.km_atual||0} • Renavam: ${v.renavam||"-"}</div>${v.observacoes?`<div class="mini">Obs.: ${v.observacoes}</div>`:""}</div>`}).join("");atualizarSelectsVeiculos();atualizarTextoBotaoVeiculo();carregarUsuariosAdmin()}
-function atualizarSelectsVeiculos(){const selects=[document.getElementById("veiculoPrincipalMotorista"),document.getElementById("veiculoAbastecimento"),document.getElementById("filtroRelatorioVeiculo")];selects.forEach(select=>{if(!select)return;const valorAtual=select.value;const primeiro=select.id==="filtroRelatorioVeiculo"?'<option value="todos">Todos</option>':'<option value="">Selecione</option>';select.innerHTML=primeiro+window.APP_STATE.veiculos.map(v=>`<option value="${v.id}">${v.placa} • ${v.marca||""} ${v.modelo||""}</option>`).join("");if([...select.options].some(o=>o.value===valorAtual))select.value=valorAtual})}
-function preencherFormularioVeiculo(v){document.getElementById("placa").value=v.placa||"";document.getElementById("marca").value=v.marca||"";document.getElementById("modelo").value=v.modelo||"";document.getElementById("ano").value=v.ano||"";document.getElementById("cor").value=v.cor||"";document.getElementById("renavam").value=v.renavam||"";document.getElementById("combustivelPrincipal").value=v.combustivel_principal||"";document.getElementById("kmAtual").value=v.km_atual||0;document.getElementById("vencimentoIpva").value=v.vencimento_ipva||"";document.getElementById("vencimentoLicenciamento").value=v.vencimento_licenciamento||"";document.getElementById("observacoesVeiculo").value=v.observacoes||""}
-function atualizarTextoBotaoVeiculo(){const btnSalvar=form?.querySelector('button[type="submit"]');if(btnSalvar)btnSalvar.textContent=window.VEICULO_EDITANDO_ID?"Atualizar veículo":"Salvar veículo";let btnCancelar=document.getElementById("btnCancelarEdicaoVeiculo");const areaAcoes=form?.querySelector(".actions");if(window.VEICULO_EDITANDO_ID){if(!btnCancelar&&areaAcoes){btnCancelar=document.createElement("button");btnCancelar.type="button";btnCancelar.id="btnCancelarEdicaoVeiculo";btnCancelar.className="btn btn-secundario";btnCancelar.textContent="Cancelar edição";btnCancelar.addEventListener("click",cancelarEdicaoVeiculo);areaAcoes.appendChild(btnCancelar)}}else{if(btnCancelar)btnCancelar.remove()}}
-function cancelarEdicaoVeiculo(){window.VEICULO_EDITANDO_ID=null;form?.reset();atualizarTextoBotaoVeiculo()}
-function carregarUsuariosAdmin(){const select=document.getElementById("usuarioSelecionadoAdmin");if(!select)return;if(!window.CONTEXTO?.isAdmin)return;const usuarios=window.APP_STATE.motoristas||[];select.innerHTML=usuarios.sort((a,b)=>a.nome.localeCompare(b.nome)).map(u=>`<option value="${u.id}">${u.nome}</option>`).join("")}
-window.editarVeiculo=function(id){const v=window.APP_STATE.veiculos.find(x=>String(x.id)===String(id));if(!v){window.toast("Veículo não encontrado");return}window.VEICULO_EDITANDO_ID=id;preencherFormularioVeiculo(v);atualizarTextoBotaoVeiculo();window.toast("Veículo carregado para edição");window.scrollTo({top:0,behavior:"smooth"})}
-window.removerVeiculo=async function(id){if(!confirm("Deseja excluir este veículo?"))return;if(window.db){const usuarioId=localStorage.getItem("usuario_id");const tipo=localStorage.getItem("tipo_usuario");let query=window.db.from("veiculos").delete().eq("id",id);if(tipo!=="admin"){query=query.eq("usuario_id",usuarioId)}const{error}=await query;if(error){console.error(error);window.toast("Erro ao excluir veículo");return}}else{window.salvarDadosLocal()}window.APP_STATE.veiculos=window.APP_STATE.veiculos.filter(v=>v.id!==id);window.APP_STATE.motoristas=window.APP_STATE.motoristas.map(m=>String(m.veiculo_principal_id)===String(id)?{...m,veiculo_principal_id:null}:m);window.APP_STATE.abastecimentos=window.APP_STATE.abastecimentos.filter(a=>String(a.veiculo_id)!==String(id));if(String(window.VEICULO_EDITANDO_ID)===String(id))cancelarEdicaoVeiculo();renderizarVeiculos();window.renderizarMotoristas?.();window.renderizarAbastecimentos?.();window.renderizarAlertas?.();window.renderizarRelatorios?.();window.atualizarDashboard();window.toast("Veículo excluído")}
-window.renderizarVeiculos=renderizarVeiculos;window.atualizarSelectsVeiculos=atualizarSelectsVeiculos})();
+
+/* ====================================================003 – SALVAR==================================================== */
+async function salvarVeiculo(e){
+
+e.preventDefault()
+
+const item=obterPayloadVeiculo()
+
+if(!item.placa){
+window.toast("Informe a placa")
+return
+}
+
+/* 🔒 DUPLICADO */
+const duplicado=(window.APP_STATE.veiculos||[]).some(v=>{
+return String(v.placa||"").toUpperCase()===item.placa &&
+String(v.id)!==String(window.VEICULO_EDITANDO_ID||"")
+})
+
+if(duplicado){
+window.toast("Placa já existe")
+return
+}
+
+/* 🔥 INSERT / UPDATE */
+if(window.VEICULO_EDITANDO_ID){
+await atualizarVeiculo(item)
+}else{
+await inserirVeiculo(item)
+}
+
+cancelarEdicaoVeiculo()
+renderizarTudoGeral()
+
+}
+
+/* ====================================================004 – INSERT==================================================== */
+async function inserirVeiculo(item){
+
+if(window.db){
+
+const {data,error}=await window.db.from("veiculos").insert(item).select().single()
+
+if(error){
+console.error(error)
+window.toast("Erro ao salvar")
+return
+}
+
+window.APP_STATE.veiculos.unshift(data)
+
+}else{
+
+item.id=window.Utils.gerarId()
+item.created_at=new Date().toISOString()
+
+window.APP_STATE.veiculos.unshift(item)
+window.salvarDadosLocal()
+
+}
+
+window.toast("Veículo salvo")
+
+}
+
+/* ====================================================005 – UPDATE==================================================== */
+async function atualizarVeiculo(item){
+
+const ctx=window.CONTEXTO
+
+if(window.db){
+
+let query=window.db.from("veiculos")
+.update(item)
+.eq("id",window.VEICULO_EDITANDO_ID)
+
+if(!ctx?.isAdmin){
+query=query.eq("usuario_id",ctx.usuario_id)
+}
+
+const {data,error}=await query.select().single()
+
+if(error){
+console.error(error)
+window.toast("Erro ao atualizar")
+return
+}
+
+window.APP_STATE.veiculos=
+window.APP_STATE.veiculos.map(v=>
+String(v.id)===String(window.VEICULO_EDITANDO_ID)?data:v
+)
+
+}else{
+
+window.APP_STATE.veiculos=
+window.APP_STATE.veiculos.map(v=>{
+if(String(v.id)!==String(window.VEICULO_EDITANDO_ID))return v
+return{...v,...item}
+})
+
+window.salvarDadosLocal()
+
+}
+
+window.toast("Veículo atualizado")
+
+}
+
+/* ====================================================006 – RENDER==================================================== */
+function renderizarVeiculos(){
+
+const box=document.getElementById("listaVeiculos")
+if(!box)return
+
+const ctx=window.CONTEXTO
+const termo=window.Utils.normalizar(document.getElementById("buscaVeiculo")?.value||"")
+
+/* 🔐 FILTRO SaaS */
+let lista=(window.APP_STATE.veiculos||[])
+
+if(!ctx?.isAdmin){
+lista=lista.filter(v=>String(v.usuario_id)===String(ctx.usuario_id))
+}
+
+/* 🔍 BUSCA */
+lista=lista.filter(v=>{
+const base=`${v.placa} ${v.marca} ${v.modelo}`
+return !termo||window.Utils.normalizar(base).includes(termo)
+})
+
+if(!lista.length){
+box.className="lista-vazia"
+box.textContent="Nenhum veículo"
+atualizarSelectsVeiculos()
+return
+}
+
+box.className=""
+
+box.innerHTML=lista.map(v=>`
+<div class="item-lista">
+
+<div class="item-lista-topo">
+<h4>${v.placa} • ${v.marca||""} ${v.modelo||""}</h4>
+<div>
+<button class="btn" onclick="editarVeiculo('${v.id}')">Editar</button>
+<button class="btn btn-secundario" onclick="removerVeiculo('${v.id}')">Excluir</button>
+</div>
+</div>
+
+<div>
+<span class="tag">${v.combustivel_principal||"-"}</span>
+${v.ano?`<span class="tag">${v.ano}</span>`:""}
+</div>
+
+<div class="mini">
+IPVA: ${window.Utils.formatarData(v.vencimento_ipva)} • 
+Lic: ${window.Utils.formatarData(v.vencimento_licenciamento)}
+</div>
+
+<div class="mini">
+KM: ${v.km_atual||0}
+</div>
+
+</div>
+`).join("")
+
+atualizarSelectsVeiculos()
+
+}
+
+/* ====================================================007 – SELECT==================================================== */
+function atualizarSelectsVeiculos(){
+
+const selects=[
+"veiculoPrincipalMotorista",
+"veiculoAbastecimento",
+"filtroRelatorioVeiculo"
+]
+
+selects.forEach(id=>{
+
+const el=document.getElementById(id)
+if(!el)return
+
+const valor=el.value
+
+el.innerHTML=
+(id==="filtroRelatorioVeiculo"
+?'<option value="todos">Todos</option>'
+:'<option value="">Selecione</option>')+
+(window.APP_STATE.veiculos||[]).map(v=>
+`<option value="${v.id}">${v.placa}</option>`
+).join("")
+
+if([...el.options].some(o=>o.value===valor)){
+el.value=valor
+}
+
+})
+
+}
+
+/* ====================================================008 – EDITAR==================================================== */
+window.editarVeiculo=function(id){
+
+const v=window.APP_STATE.veiculos.find(x=>String(x.id)===String(id))
+if(!v)return
+
+window.VEICULO_EDITANDO_ID=id
+
+document.getElementById("placa").value=v.placa||""
+document.getElementById("marca").value=v.marca||""
+document.getElementById("modelo").value=v.modelo||""
+document.getElementById("kmAtual").value=v.km_atual||0
+
+window.toast("Editando veículo")
+
+}
+
+/* ====================================================009 – REMOVER==================================================== */
+window.removerVeiculo=async function(id){
+
+if(!confirm("Excluir veículo?"))return
+
+const ctx=window.CONTEXTO
+
+if(window.db){
+
+let query=window.db.from("veiculos").delete().eq("id",id)
+
+if(!ctx?.isAdmin){
+query=query.eq("usuario_id",ctx.usuario_id)
+}
+
+const {error}=await query
+
+if(error){
+console.error(error)
+window.toast("Erro ao excluir")
+return
+}
+
+}else{
+window.salvarDadosLocal()
+}
+
+window.APP_STATE.veiculos=
+window.APP_STATE.veiculos.filter(v=>v.id!==id)
+
+renderizarTudoGeral()
+
+window.toast("Veículo removido")
+
+}
+
+/* ====================================================010 – GLOBAL RENDER==================================================== */
+function renderizarTudoGeral(){
+renderizarVeiculos()
+window.renderizarMotoristas?.()
+window.renderizarAbastecimentos?.()
+window.renderizarRelatorios?.()
+window.renderizarAlertas?.()
+window.atualizarDashboard?.()
+}
+
+/* ====================================================EXPORT==================================================== */
+window.renderizarVeiculos=renderizarVeiculos
+window.atualizarSelectsVeiculos=atualizarSelectsVeiculos
+
+})()
