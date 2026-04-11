@@ -314,3 +314,5 @@ t.style.background=erro?"#ef4444":"#22c55e"
 t.style.display="block"
 setTimeout(()=>t.style.display="none",3000)
 }
+configurarMenus()
+carregarDados()
