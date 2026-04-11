@@ -2,165 +2,150 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Veículos SaaS PRO</title>
+<title>Veículos App PRO</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#020617">
+<link rel="manifest" href="manifest.json">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5"></script>
 <style>
-body{font-family:Arial;background:#020617;color:#fff;padding:20px}
-.box{max-width:420px;margin:80px auto;background:#111827;padding:20px;border-radius:10px}
-input,select,button{width:100%;padding:10px;margin:5px 0;border-radius:6px;border:none}
-button{background:#22c55e;font-weight:bold;cursor:pointer}
-.card{background:#111827;padding:15px;border-radius:10px;margin-top:10px}
-.kpi{font-size:14px;margin-top:5px;color:#22c55e}
-.alerta{color:#ef4444;font-weight:bold;margin-top:5px}
-canvas{max-width:100%;margin-top:10px}
+body{font-family:Arial;background:#020617;color:#fff;padding:15px}
+.card{background:#111827;padding:15px;border-radius:12px;margin-top:10px}
+button{padding:12px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold;width:100%;margin-top:5px}
+input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:none}
+.kpi{color:#22c55e}
+.alerta{color:#ef4444;font-weight:bold}
+video,canvas{width:100%;border-radius:10px;margin-top:10px}
 </style>
 </head>
 <body>
 
-<div id="login" class="box">
-<h2>Login</h2>
-<input id="user" placeholder="Usuário">
-<input id="pass" type="password" placeholder="Senha">
-<button id="btnLogin">Entrar</button>
-</div>
-
-<div id="app" style="display:none">
-<h2>Painel Veículos PRO</h2>
+<h2>🚗 Veículos PRO</h2>
 
 <div class="card">
-<h3>Selecionar Veículo</h3>
-<select id="selectVeiculo"></select>
-</div>
-
-<div class="card">
-<h3>Resumo</h3>
-<div id="veiculo"></div>
+<select id="veiculoSel"></select>
 <div id="kpi"></div>
 <div id="alerta"></div>
 </div>
 
 <div class="card">
-<h3>Novo Abastecimento</h3>
+<h3>📷 Ler Nota</h3>
+<video id="video" autoplay></video>
+<button onclick="capturar()">Capturar Nota</button>
+<canvas id="canvas"></canvas>
+<div id="ocr"></div>
+</div>
+
+<div class="card">
+<h3>📍 Rota GPS</h3>
+<button onclick="iniciarGPS()">Iniciar Rastreamento</button>
+<div id="gps"></div>
+</div>
+
+<div class="card">
+<h3>⛽ Abastecimento</h3>
 <input id="litros" placeholder="Litros">
-<input id="valor" placeholder="Valor Total">
-<input id="km" placeholder="KM Atual">
-<button id="btnSalvar">Salvar</button>
+<input id="valor" placeholder="Valor">
+<input id="km" placeholder="KM">
+<button onclick="salvar()">Salvar</button>
 </div>
 
 <div class="card">
-<h3>Gráfico Consumo</h3>
+<h3>📊 Gráfico</h3>
 <canvas id="grafico"></canvas>
-</div>
-
-<div class="card">
-<h3>Histórico</h3>
-<div id="lista"></div>
-</div>
-
-<button id="btnLogout">Sair</button>
 </div>
 
 <script>
 
-/* 000 RESET */
+/* RESET TOTAL */
 if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()))}
 if('caches'in window){caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)))}
 
-/* 001 INIT */
-document.addEventListener("DOMContentLoaded",()=>{
-window.db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
-window.user=user=document.getElementById("user")
-window.pass=pass=document.getElementById("pass")
-window.loginDiv=login=document.getElementById("login")
-window.appDiv=app=document.getElementById("app")
-window.selectVeiculo=document.getElementById("selectVeiculo")
-window.veiculoDiv=document.getElementById("veiculo")
-window.listaDiv=document.getElementById("lista")
-window.kpiDiv=document.getElementById("kpi")
-window.alertaDiv=document.getElementById("alerta")
-window.litros=document.getElementById("litros")
-window.valor=document.getElementById("valor")
-window.km=document.getElementById("km")
-document.getElementById("btnLogin").onclick=loginSistema
-document.getElementById("btnSalvar").onclick=salvar
-document.getElementById("btnLogout").onclick=logout
-selectVeiculo.onchange=trocar
-init()
-})
+/* SUPABASE */
+const db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
 
-/* 010 LOGIN */
-async function loginSistema(){
-const u=user.value.trim().toLowerCase()
-const p=pass.value
-const {data}=await db.from("usuarios").select("*").eq("usuario_apelido",u).single()
-if(!data||data.senha_hash!==p){alert("Login inválido");return}
-localStorage.setItem("uid",data.id)
-localStorage.setItem("tipo",data.perfil)
-init()
-}
+/* INIT */
+document.addEventListener("DOMContentLoaded",init)
 
-/* 020 LOGOUT */
-function logout(){localStorage.clear();location.reload()}
-
-/* 030 INIT */
+/* INIT */
 async function init(){
-const uid=localStorage.getItem("uid")
-if(!uid){login.style.display="block";app.style.display="none";return}
-login.style.display="none";app.style.display="block"
-let {data:veiculos}=await db.from("veiculos").select("*")
-if(localStorage.getItem("tipo")!=="admin"){veiculos=veiculos.filter(v=>String(v.usuario_id)===String(uid))}
-window.VEICULOS=veiculos
-selectVeiculo.innerHTML=veiculos.map(v=>`<option value="${v.id}">${v.modelo} - ${v.placa}</option>`).join("")
-window.VID=veiculos[0]?.id
+let {data:v}=await db.from("veiculos").select("*")
+window.VEICULOS=v||[]
+veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo}</option>`)
+window.VID=v[0]?.id
+iniciarCamera()
 render()
 }
 
-/* 040 TROCAR */
-function trocar(){window.VID=selectVeiculo.value;render()}
-
-/* 050 RENDER */
-async function render(){
-const v=VEICULOS.find(x=>String(x.id)===String(VID))
-veiculoDiv.innerHTML=`${v.modelo} | ${v.placa} | KM ${v.km_atual||0}`
-let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
-if(!data||data.length<2){listaDiv.innerHTML="Poucos dados";return}
-let consumo=[],labels=[],totalCons=0,count=0,totalValor=0,totalKm=0
-for(let i=1;i<data.length;i++){
-let kmDiff=data[i].quilometragem-data[i-1].quilometragem
-let cons=kmDiff/data[i].litros
-consumo.push(cons)
-labels.push(i)
-if(cons>0){totalCons+=cons;count++}
-totalValor+=data[i].valor_total
-totalKm+=kmDiff
-}
-let media=(totalCons/count).toFixed(2)
-let custoKm=(totalValor/totalKm).toFixed(2)
-kpiDiv.innerHTML=`<div class="kpi">Média: ${media} km/l</div><div class="kpi">Custo por KM: R$ ${custoKm}</div>`
-if(v.km_atual%5000<300){alertaDiv.innerHTML='<div class="alerta">⚠ Revisão próxima</div>'}else{alertaDiv.innerHTML=""}
-renderGrafico(labels,consumo)
-listaDiv.innerHTML=data.map(a=>`<div>${a.quilometragem} km | ${a.litros}L | R$${a.valor_total}<hr></div>`).join("")
+/* CAMERA */
+async function iniciarCamera(){
+const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
+video.srcObject=stream
 }
 
-/* 060 SALVAR */
+/* OCR */
+async function capturar(){
+const ctx=canvas.getContext("2d")
+canvas.width=video.videoWidth
+canvas.height=video.videoHeight
+ctx.drawImage(video,0,0)
+const {data:{text}}=await Tesseract.recognize(canvas,"por")
+ocr.innerText=text
+}
+
+/* GPS */
+let watchId
+function iniciarGPS(){
+if(watchId)return
+watchId=navigator.geolocation.watchPosition(pos=>{
+gps.innerHTML=`Lat:${pos.coords.latitude}<br>Lng:${pos.coords.longitude}`
+})
+}
+
+/* SALVAR */
 async function salvar(){
-await db.from("abastecimentos").insert({veiculo_id:VID,litros:parseFloat(litros.value),valor_total:parseFloat(valor.value),quilometragem:parseFloat(km.value),data_abastecimento:new Date().toISOString()})
+await db.from("abastecimentos").insert({
+veiculo_id:VID,
+litros:parseFloat(litros.value),
+valor_total:parseFloat(valor.value),
+quilometragem:parseFloat(km.value),
+data_abastecimento:new Date().toISOString()
+})
 await db.from("veiculos").update({km_atual:parseFloat(km.value)}).eq("id",VID)
-litros.value="";valor.value="";km.value=""
 render()
 }
 
-/* 070 GRÁFICO */
+/* RENDER */
 let chart
-function renderGrafico(labels,data){
-const ctx=document.getElementById("grafico")
-if(chart){chart.destroy()}
-chart=new Chart(ctx,{type:"line",data:{labels:labels,datasets:[{label:"KM/L",data:data}]},options:{plugins:{legend:{labels:{color:"#fff"}}},scales:{x:{ticks:{color:"#fff"}},y:{ticks:{color:"#fff"}}}}})
+async function render(){
+let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+if(!data||data.length<2)return
+let consumo=[],labels=[],total=0,count=0
+for(let i=1;i<data.length;i++){
+let c=(data[i].quilometragem-data[i-1].quilometragem)/data[i].litros
+consumo.push(c);labels.push(i)
+total+=c;count++
 }
+let media=(total/count).toFixed(2)
+kpi.innerHTML=`<div class="kpi">KM/L: ${media}</div>`
+renderGrafico(labels,consumo)
+}
+
+/* GRÁFICO */
+function renderGrafico(labels,data){
+if(chart)chart.destroy()
+chart=new Chart(grafico,{type:"line",data:{labels:labels,datasets:[{label:"Consumo",data:data}]}})
+}
+
+/* PWA INSTALL */
+let deferredPrompt
+window.addEventListener('beforeinstallprompt',e=>{
+e.preventDefault()
+deferredPrompt=e
+setTimeout(()=>{if(confirm("Instalar app?"))deferredPrompt.prompt()},3000)
+})
 
 </script>
 
