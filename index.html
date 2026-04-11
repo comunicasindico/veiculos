@@ -10,19 +10,20 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" type="image/png" href="img/icone-192.png">
 <link rel="icon" href="img/favicon.ico">
+
 <style>
 /* ====================================================LOGIN FULL SCREEN==================================================== */
 #telaLogin{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:#020617;
-display:flex;
-align-items:center;
-justify-content:center;
-z-index:99999;
+position:fixed!important;
+top:0!important;
+left:0!important;
+width:100%!important;
+height:100%!important;
+background:#020617!important;
+display:flex!important;
+align-items:center!important;
+justify-content:center!important;
+z-index:999999!important;
 }
 /* 🔥 CAIXA LOGIN */
 .login-box{
@@ -46,20 +47,18 @@ border:none;
 width:100%;
 margin-top:10px;
 }
-/* 🔥 GARANTE QUE APP NÃO APAREÇA */
+/* 🔥 APP BLOQUEADO POR PADRÃO */
 #app{
-display:none;
+display:none!important;
 }
-#app.ativo{
-display:block;
-}
-
-
 </style>
+
 </head>
+
 <body>
+
 <!-- 🔐 LOGIN -->
-<div id="telaLogin" class="login-container">
+<div id="telaLogin">
 <div class="login-box">
 <h2>Meu Veículo</h2>
 <p>Acesse sua conta</p>
@@ -69,8 +68,10 @@ display:block;
 <p id="msgLogin" class="erro"></p>
 </div>
 </div>
-<!-- 🔥 APP (TUDO DENTRO AQUI) -->
-<div id="app" style="display:none;visibility:hidden">
+
+<!-- 🔥 APP -->
+<div id="app">
+
 <header class="topbar">
 <div class="brand">
 <div class="brand-logo">🚗</div>
@@ -82,7 +83,9 @@ display:block;
 <button id="btnInstalar" class="btn btn-secundario oculto">Instalar app</button>
 <button id="btnLogout" class="btn btn-secundario">Sair</button>
 </header>
+
 <main class="container">
+
 <section class="cards-grid">
 <button class="card-menu ativo" data-target="painelInicio">Início</button>
 <button class="card-menu" data-target="painelVeiculos">Meu Veículo</button>
@@ -92,6 +95,7 @@ display:block;
 <button class="card-menu" data-target="painelAlertas">Alertas</button>
 <button class="card-menu" data-target="painelRelatorios">Relatórios</button>
 </section>
+
 <section id="painelInicio" class="painel ativo">
 <div class="hero">
 <h2 id="tituloPainel">Meu Veículo</h2>
@@ -101,37 +105,26 @@ display:block;
 <strong>Acesso:</strong> <span id="escopoUsuario">Apenas seu veículo</span>
 </div>
 </div>
+
 <div class="kpis">
-<div class="kpi-card">
-<span>Meu Veículo</span>
-<strong id="kpiVeiculos">1</strong>
+<div class="kpi-card"><span>Meu Veículo</span><strong id="kpiVeiculos">1</strong></div>
+<div class="kpi-card"><span>Abastecimentos</span><strong id="kpiAbastecimentos">0</strong></div>
+<div class="kpi-card"><span>Gasto Total</span><strong id="kpiCustoTotal">R$ 0,00</strong></div>
+<div class="kpi-card"><span>Consumo Médio</span><strong id="kpiConsumo">0 km/l</strong></div>
+<div class="kpi-card"><span>Alertas</span><strong id="kpiAlertas">0</strong></div>
 </div>
-<div class="kpi-card">
-<span>Abastecimentos</span>
-<strong id="kpiAbastecimentos">0</strong>
-</div>
-<div class="kpi-card">
-<span>Gasto Total</span>
-<strong id="kpiCustoTotal">R$ 0,00</strong>
-</div>
-<div class="kpi-card">
-<span>Consumo Médio</span>
-<strong id="kpiConsumo">0 km/l</strong>
-</div>
-<div class="kpi-card">
-<span>Alertas</span>
-<strong id="kpiAlertas">0</strong>
-</div>
-</div>
+
 <div class="bloco">
 <h3>Resumo rápido</h3>
 <div id="resumoRapido" class="lista-vazia"></div>
 </div>
+
 <div class="bloco">
 <h3>Consumo e gastos</h3>
 <canvas id="graficoConsumo" height="120"></canvas>
 </div>
 </section>
+
 <section id="painelVeiculos" class="painel">
 <div class="bloco">
 <h2>Meu veículo</h2>
@@ -157,6 +150,7 @@ display:block;
 <div id="listaVeiculos" class="lista-vazia"></div>
 </div>
 </section>
+
 <section id="painelMotoristas" class="painel admin-only">
 <div class="bloco">
 <h2>Gestão de clientes</h2>
@@ -172,6 +166,7 @@ display:block;
 <div id="listaMotoristas"></div>
 </div>
 </section>
+
 <section id="painelAbastecimentos" class="painel">
 <div class="bloco">
 <h2>Abastecimento</h2>
@@ -190,27 +185,34 @@ display:block;
 <div id="listaAbastecimentos"></div>
 </div>
 </section>
+
 <section id="painelCamera" class="painel">
 <div class="bloco">
 <video id="cameraPreview" autoplay playsinline muted></video>
 <button id="btnAbrirCamera" class="btn">Abrir câmera</button>
 </div>
 </section>
+
 <section id="painelAlertas" class="painel">
 <div id="listaAlertas"></div>
 </section>
+
 <section id="painelRelatorios" class="painel">
 <div id="painelRelatorioResumo"></div>
 <div id="tabelaRelatorio"></div>
 </section>
+
 </main>
+
 </div>
+
 <div id="toast" class="toast"></div>
+
 <div id="modalSenha" style="display:none">
 <input type="password" id="novaSenha">
 <button onclick="salvarNovaSenha()">Salvar</button>
 </div>
-<!-- SCRIPTS SEMPRE ANTES DO FECHAMENTO -->
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -227,5 +229,6 @@ display:block;
 <script src="js/camera.js"></script>
 <script src="js/alertas.js"></script>
 <script src="js/relatorios.js"></script>
+
 </body>
 </html>
