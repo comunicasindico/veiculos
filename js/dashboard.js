@@ -1,11 +1,4 @@
-/* ====================================================
-060 – RENDER DASHBOARD (GRÁFICO)
-==================================================== */
-// (sua função renderizarDashboard aqui)
-
-/* ====================================================
-070 – DASHBOARD INTELIGENTE (REAL)
-==================================================== */
+/* ====================================================060 – MÉTRICAS==================================================== */
 function calcularMetricas(){
 const lista=(window.APP_STATE.abastecimentos||[]).slice()
 if(!lista.length)return{total:0,litros:0,km:0,consumo:0}
@@ -37,20 +30,23 @@ const consumo=litros?km/litros:0
 return{total,litros,km,consumo}
 }
 
-/* ====================================================
-071 – ATUALIZAR KPIs
-==================================================== */
+/* ====================================================061 – FORMATAR MOEDA==================================================== */
+function formatarMoeda(v){
+return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+}
+
+/* ====================================================062 – KPIs==================================================== */
 function atualizarKPIsFinanceiros(){
 const m=calcularMetricas()
+
 const elTotal=document.getElementById("kpiCustoTotal")
 const elConsumo=document.getElementById("kpiConsumo")
-if(elTotal)elTotal.textContent=window.Utils.moeda(m.total)
+
+if(elTotal)elTotal.textContent=formatarMoeda(m.total)
 if(elConsumo)elConsumo.textContent=m.consumo?m.consumo.toFixed(2)+" km/l":"0 km/l"
 }
 
-/* ====================================================
-072 – INTEGRAÇÃO GLOBAL
-==================================================== */
+/* ====================================================063 – DASHBOARD GLOBAL==================================================== */
 function atualizarDashboardInteligente(){
 atualizarKPIsFinanceiros()
 }
