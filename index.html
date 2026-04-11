@@ -1,204 +1,85 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-<!-- ====================================================001 HEAD====================================================  -->
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Meu Veículo</title>
-<meta name="theme-color" content="#0f172a">
-<meta name="description" content="Controle individual de veículo, combustível, IPVA e CNH">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/style.css">
-<link rel="icon" type="image/png" href="img/icone-192.png">
-<link rel="icon" href="img/favicon.ico">
-<!-- ====================================================002 STYLE====================================================  -->
+<title>Veículo Simples</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <style>
-body{margin:0;font-family:Arial;background:#020617;color:#fff}
-#telaLogin{position:fixed;top:0;left:0;width:100%;height:100%;background:#020617;display:flex;align-items:center;justify-content:center;z-index:9999}
-.login-box{background:#111827;padding:30px;border-radius:12px;box-shadow:0 0 30px rgba(0,0,0,.6);text-align:center;width:320px}
-.login-box input{width:100%;padding:10px;margin:6px 0;border-radius:6px;border:none}
-.login-box .btn{width:100%;margin-top:10px}
-#app{display:none}
-.topbar{position:sticky;top:0;z-index:1000;background:rgba(15,23,42,.9);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
-.topbar-left{display:flex;align-items:center;gap:10px}
-.topbar-right{display:flex;gap:10px}
-.brand{display:flex;align-items:center;gap:10px}
-.brand-logo{font-size:22px}
-.container{padding:20px}
-.btn{background:#22c55e;color:#000;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:bold}
-.btn-secundario{background:#334155;color:#fff}
-.btn-sair,#btnLogout{background:#ef4444;color:#fff}
-.cards-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
-.card-menu{padding:10px;border-radius:8px;border:none;cursor:pointer;background:#1e293b;color:#fff;transition:all .2s ease}
-.card-menu:hover{transform:translateY(-2px);background:#334155}
-.card-menu.ativo{background:#22c55e;color:#000;font-weight:bold}
-.painel{display:none;opacity:0;transform:translateX(30px);transition:all .3s cubic-bezier(.4,0,.2,1)}
-.painel.ativo{display:block;opacity:1;transform:translateX(0)}
-.bloco{background:#111827;padding:15px;border-radius:10px;margin-bottom:15px}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.full{grid-column:1/-1}
-.admin-only{display:none}
-body.admin .admin-only{display:block}
-button:active{transform:scale(.96)}
-@keyframes spin{to{transform:rotate(360deg)}}
-#telaLogin{display:flex}
-#app{display:none}
-body.logado #telaLogin{display:none}
-body.logado #app{display:block}
-
+body{font-family:Arial;background:#020617;color:#fff;padding:20px}
+.box{max-width:400px;margin:80px auto;background:#111827;padding:20px;border-radius:10px}
+input,button{width:100%;padding:10px;margin:5px 0;border-radius:6px;border:none}
+button{background:#22c55e;font-weight:bold}
 </style>
 </head>
 <body>
-<!-- ====================================================003 LOGIN====================================================  -->
-<div id="telaLogin">
-<div class="login-box">
-<h2>Meu Veículo</h2>
-<p>Acesse sua conta</p>
-<input type="text" id="loginUsuario" placeholder="Usuário">
-<input type="password" id="loginSenha" placeholder="Senha">
-<button onclick="login()" class="btn">Entrar</button>
-<p id="msgLogin"></p>
-</div>
-</div>
-<!-- ====================================================004 APP====================================================  -->
-<div id="app">
-<header class="topbar">
-<div class="topbar-left">
-<div class="brand-logo">🚗</div>
-<div>
-<strong>Meu Veículo</strong>
-<div id="infoUsuario" style="font-size:12px;opacity:.7"></div>
-</div>
-</div>
-<div class="topbar-right">
-<button id="btnInstalar" class="btn btn-secundario">Instalar</button>
-<button id="btnLogout" onclick="logoutConfirm()" class="btn btn-sair">Sair</button>
-</div>
-</header>
-<main class="container">
-<!-- ====================================================005 MENU====================================================  -->
-<section class="cards-grid">
-<button class="card-menu ativo" data-target="painelInicio">Início</button>
-<button class="card-menu" data-target="painelVeiculos">Meu Veículo</button>
-<button class="card-menu admin-only" data-target="painelMotoristas">Motoristas</button>
-<button class="card-menu" data-target="painelAbastecimentos">Abastecimentos</button>
-<button class="card-menu" data-target="painelCamera">Nota Fiscal</button>
-<button class="card-menu" data-target="painelAlertas">Alertas</button>
-<button class="card-menu" data-target="painelRelatorios">Relatórios</button>
-</section>
-<!-- ====================================================006 INICIO====================================================  -->
-<section id="painelInicio" class="painel ativo">
-<div class="bloco">
-<h2>Resumo</h2>
-<div id="resumoRapido"></div>
-</div>
-</section>
-<!-- ====================================================007 VEICULOS====================================================  -->
-<section id="painelVeiculos" class="painel">
-<div class="bloco">
-<h2>Meu veículo</h2>
-<form id="formVeiculo" class="form-grid">
-<div class="admin-only full">
-<label>Cliente</label>
-<select id="usuarioSelecionadoAdmin"></select>
-</div>
-<input type="text" id="placa" placeholder="Placa">
-<input type="text" id="marca" placeholder="Marca">
-<input type="text" id="modelo" placeholder="Modelo">
-<input type="number" id="ano" placeholder="Ano">
-<input type="number" id="kmAtual" placeholder="KM">
-<input type="date" id="vencimentoIpva">
-<input type="date" id="vencimentoLicenciamento">
-<div class="full">
-<button type="submit" class="btn">Salvar</button>
-</div>
-</form>
-</div>
-<div class="bloco">
-<div id="listaVeiculos"></div>
-</div>
-</section>
-<!-- ====================================================008 MOTORISTAS====================================================  -->
-<section id="painelMotoristas" class="painel admin-only">
-<div class="bloco">
-<form id="formMotorista" class="form-grid">
-<input type="text" id="nomeMotorista" placeholder="Nome">
-<input type="email" id="emailMotorista" placeholder="Email">
-<div class="full">
-<button type="submit" class="btn">Salvar</button>
-</div>
-</form>
-</div>
-<div class="bloco">
-<div id="listaMotoristas"></div>
-</div>
-</section>
-<!-- ====================================================009 ABASTECIMENTOS====================================================  -->
-<section id="painelAbastecimentos" class="painel">
-<div class="bloco">
-<form id="formAbastecimento" class="form-grid">
-<input type="datetime-local" id="dataAbastecimento">
-<input type="text" id="postoAbastecimento" placeholder="Posto">
-<input type="number" id="litrosAbastecimento" placeholder="Litros">
-<input type="number" id="valorTotalAbastecimento" placeholder="Valor">
-<input type="number" id="quilometragemAbastecimento" placeholder="KM">
-<div class="full">
-<button type="submit" class="btn">Salvar</button>
-</div>
-</form>
-</div>
-<div class="bloco">
-<div id="listaAbastecimentos"></div>
-</div>
-</section>
-<!-- ====================================================010 CAMERA====================================================  -->
-<section id="painelCamera" class="painel">
-<div class="bloco">
-<video id="cameraPreview" autoplay playsinline muted></video>
-<button id="btnAbrirCamera" class="btn">Abrir câmera</button>
-</div>
-</section>
-<!-- ====================================================011 ALERTAS====================================================  -->
-<section id="painelAlertas" class="painel">
-<div id="listaAlertas"></div>
-</section>
-<!-- ====================================================012 RELATORIOS====================================================  -->
-<section id="painelRelatorios" class="painel">
-<div id="painelRelatorioResumo"></div>
-<div id="tabelaRelatorio"></div>
-</section>
-</main>
-</div>
-<!-- ====================================================013 SCRIPTS====================================================  -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="js/config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase.js"></script>
-<script src="js/login.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/contexto.js"></script>
 
-<script src="js/app.js"></script>
-<script src="js/veiculos.js"></script>
-<script src="js/motoristas.js"></script>
-<script src="js/abastecimentos.js"></script>
-<script src="js/camera.js"></script>
-<script src="js/alertas.js"></script>
-<script src="js/relatorios.js"></script>
-<!-- ====================================================014 LOGOUT====================================================  -->
+<div id="login" class="box">
+<h2>Login</h2>
+<input id="user" placeholder="Usuário">
+<input id="pass" type="password" placeholder="Senha">
+<button onclick="login()">Entrar</button>
+</div>
+
+<div id="app" style="display:none">
+<h2>Painel</h2>
+<div id="dados"></div>
+<button onclick="logout()">Sair</button>
+</div>
+
 <script>
+const db=supabase.createClient(
+"https://gspdlrenyrzbkxlvyugc.supabase.co",
+"sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw"
+)
+
+async function login(){
+const u=user.value.toLowerCase()
+const p=pass.value
+
+const {data}=await db.from("usuarios").select("*").eq("usuario_apelido",u).single()
+
+if(!data||data.senha_hash!==p){alert("Erro login");return}
+
+localStorage.setItem("uid",data.id)
+localStorage.setItem("tipo",data.perfil)
+
+init()
+}
+
 function logout(){
 localStorage.clear()
 location.reload()
 }
+
+async function init(){
+const uid=localStorage.getItem("uid")
+if(!uid)return
+
+login.style.display="none"
+app.style.display="block"
+
+const tipo=localStorage.getItem("tipo")
+
+let v=await db.from("veiculos").select("*")
+let a=await db.from("abastecimentos").select("*")
+
+let veiculos=v.data
+let abastecimentos=a.data
+
+if(tipo!=="admin"){
+veiculos=veiculos.filter(x=>x.usuario_id===uid)
+const ids=veiculos.map(x=>x.id)
+abastecimentos=abastecimentos.filter(x=>ids.includes(x.veiculo_id))
+}
+
+dados.innerHTML=`
+Veículos: ${veiculos.length}<br>
+Abastecimentos: ${abastecimentos.length}<br>
+`
+}
+
+init()
 </script>
-<div id="loaderGlobal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:99999">
-<div style="width:50px;height:50px;border:4px solid #334155;border-top:4px solid #22c55e;border-radius:50%;animation:spin 1s linear infinite"></div>
-</div>
-<div id="toast" style="position:fixed;bottom:20px;right:20px;background:#22c55e;color:#000;padding:12px 18px;border-radius:8px;display:none;font-weight:bold;z-index:99999"></div>
-  
+
 </body>
 </html>
