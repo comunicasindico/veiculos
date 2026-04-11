@@ -2,27 +2,34 @@ document.addEventListener("DOMContentLoaded",iniciarApp)
 /* =============================================INICIAR APP ================================================== */
 async function iniciarApp(){
 carregarContexto()
+
 const app=document.getElementById("app")
 const login=document.getElementById("telaLogin")
+
 /* 🔒 RESET VISUAL TOTAL */
 app.style.display="none"
 login.style.display="none"
+
 /* 🔐 CONTROLE DE SESSÃO */
 let usuarioId=localStorage.getItem("usuario_id")
 const tempoLogin=localStorage.getItem("login_time")
+
 /* 🔒 EXPIRAÇÃO AUTOMÁTICA (8H) */
 if(tempoLogin&&Date.now()-parseInt(tempoLogin)>1000*60*60*8){
 localStorage.clear()
 usuarioId=null
 }
+
 /* 🔐 NÃO LOGADO → LOGIN */
 if(!usuarioId){
 login.style.display="flex"
 return
 }
+
 /* 🔓 LIBERA APP */
 login.style.display="none"
 app.style.display="block"
+document.body.classList.add("logado")
 
 /* 🔥 GARANTE CONTEXTO */
 window.CONTEXTO={
@@ -32,16 +39,29 @@ tipo:localStorage.getItem("tipo_usuario")||"motorista",
 isAdmin:String(localStorage.getItem("tipo_usuario")).toLowerCase()==="admin"
 }
 
-/* 🔥 CARREGAMENTO NORMAL */
+/* 🔥 CARREGA DADOS */
 await carregarDados()
 
-/* 🔒 GARANTE QUE ESTADO ESTÁ FILTRADO */
+/* 🔒 VALIDA DADOS */
 if(!window.APP_STATE || !window.APP_STATE.veiculos){
 console.warn("Dados ainda não carregados")
 return
-atualizarTopo()
 }
 
+/* 🔥 INICIALIZA INTERFACE */
+configurarMenus()
+renderTudo()
+atualizarTopo()
+}
+/* ====================================================999 – RENDER GLOBAL==================================================== */
+function renderTudo(){
+if(typeof renderResumo==="function")renderResumo()
+if(typeof renderVeiculos==="function")renderVeiculos()
+if(typeof renderAbastecimentos==="function")renderAbastecimentos()
+if(typeof renderMotoristas==="function")renderMotoristas()
+if(typeof renderAlertas==="function")renderAlertas()
+if(typeof renderRelatorios==="function")renderRelatorios()
+}
 /* ====================================================USUARIO LOGADO==================================================== */
 const nome=localStorage.getItem("usuario_nome")||""
 const tipo=localStorage.getItem("tipo_usuario")||"motorista"
@@ -182,26 +202,35 @@ localStorage.setItem(keys.motoristas,JSON.stringify(window.APP_STATE.motoristas)
 localStorage.setItem(keys.abastecimentos,JSON.stringify(window.APP_STATE.abastecimentos))
 }
 window.salvarDadosLocal=salvarDadosLocal
-/* ====================================================902 – MENU ABSURDO==================================================== */
+/* ====================================================901 – MENU PREMIUM==================================================== */
 function configurarMenus(){
 const botoes=document.querySelectorAll(".card-menu")
 const paineis=document.querySelectorAll(".painel")
+
 const salvo=localStorage.getItem("painelAtual")
+
 if(salvo){
-document.querySelectorAll(".card-menu").forEach(b=>b.classList.remove("ativo"))
-document.querySelector(`[data-target="${salvo}"]`)?.classList.add("ativo")
+botoes.forEach(b=>b.classList.remove("ativo"))
+const btn=document.querySelector(`[data-target="${salvo}"]`)
+if(btn)btn.classList.add("ativo")
 paineis.forEach(p=>p.classList.remove("ativo"))
-document.getElementById(salvo)?.classList.add("ativo")
+const el=document.getElementById(salvo)
+if(el)el.classList.add("ativo")
 }
+
 botoes.forEach(btn=>{
 btn.onclick=()=>{
 const alvo=btn.dataset.target
 localStorage.setItem("painelAtual",alvo)
+
 botoes.forEach(b=>b.classList.remove("ativo"))
 btn.classList.add("ativo")
+
 paineis.forEach(p=>p.classList.remove("ativo"))
+
 setTimeout(()=>{
-document.getElementById(alvo)?.classList.add("ativo")
+const el=document.getElementById(alvo)
+if(el)el.classList.add("ativo")
 },120)
 }
 })
@@ -209,7 +238,11 @@ document.getElementById(alvo)?.classList.add("ativo")
 /* ===================================================campos iniciais=================================================== */
 function definirCamposIniciais(){
 const input=document.getElementById("dataAbastecimento")
-if(input&&!input.value)input.value=window.Utils.agoraInputDateTime()
+if(input&&!input.value){
+const agora=new Date()
+const iso=new Date(agora.getTime()-agora.getTimezoneOffset()*60000).toISOString().slice(0,16)
+input.value=iso
+}
 }
 /* ====================================================DASHBOARD CORRIGIDO==================================================== */
 function atualizarDashboard(){
