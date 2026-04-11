@@ -243,6 +243,10 @@ borderWidth:2
 }]
 },
 options:{
+animation:{
+duration:1200,
+easing:"easeOutQuart"
+},
 responsive:true,
 plugins:{legend:{labels:{color:"#fff"}}},
 scales:{x:{ticks:{color:"#fff"}},y:{ticks:{color:"#fff"}}}
@@ -273,6 +277,12 @@ if(e.target.id==="csvFile")importarCSV(e.target.files[0])
 /* ====================================================100 – RENDER DASHBOARD PROFISSIONAL==================================================== */
 async function render(){
 let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+const filtro=document.getElementById("filtroPeriodo")?.value
+if(filtro==="mes"){
+const hoje=new Date()
+const mesAtual=hoje.toISOString().slice(0,7)
+data=data.filter(a=>a.data_abastecimento.startsWith(mesAtual))
+}
 if(!data||data.length<2){
 if(lista){
 lista.innerHTML=data.map(a=>`
