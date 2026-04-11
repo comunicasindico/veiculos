@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+/* ====================================================001 HEAD==================================================== */
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Meu Veículo</title>
 <meta name="theme-color" content="#0f172a">
 <meta name="description" content="Controle individual de veículo, combustível, IPVA e CNH">
@@ -10,61 +11,33 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" type="image/png" href="img/icone-192.png">
 <link rel="icon" href="img/favicon.ico">
-
+/* ====================================================002 STYLE==================================================== */
 <style>
-/* ====================================================LOGIN FULL SCREEN==================================================== */
-#telaLogin{
-position:fixed!important;
-top:0!important;
-left:0!important;
-width:100%!important;
-height:100%!important;
-background:#020617!important;
-display:flex!important;
-align-items:center!important;
-justify-content:center!important;
-z-index:999999!important;
-}
-/* 🔥 CAIXA LOGIN */
-.login-box{
-background:#111827;
-padding:30px;
-border-radius:12px;
-box-shadow:0 0 30px rgba(0,0,0,0.6);
-text-align:center;
-width:300px;
-}
-/* 🔥 INPUTS */
-.login-box input{
-width:100%;
-padding:10px;
-margin:5px 0;
-border-radius:6px;
-border:none;
-}
-/* 🔥 BOTÃO */
-.login-box .btn{
-width:100%;
-margin-top:10px;
-}
-/* 🔥 APP BLOQUEADO POR PADRÃO */
-#app{
-display:none!important;
-}
-#btnLogout{
-display:inline-block!important;
-margin-left:10px;
-z-index:10;
-}
-
-
+body{margin:0;font-family:Arial;background:#020617;color:#fff}
+#telaLogin{position:fixed;top:0;left:0;width:100%;height:100%;background:#020617;display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-box{background:#111827;padding:30px;border-radius:12px;box-shadow:0 0 30px rgba(0,0,0,.6);text-align:center;width:320px}
+.login-box input{width:100%;padding:10px;margin:6px 0;border-radius:6px;border:none}
+.login-box .btn{width:100%;margin-top:10px}
+#app{display:none}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#0f172a;border-bottom:1px solid rgba(255,255,255,.1)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{font-size:22px}
+.container{padding:20px}
+.btn{background:#22c55e;color:#000;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:bold}
+.btn-secundario{background:#334155;color:#fff}
+#btnLogout{background:#ef4444;color:#fff}
+.cards-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.card-menu{padding:10px;border-radius:8px;border:none;cursor:pointer;background:#1e293b;color:#fff}
+.card-menu.ativo{background:#22c55e;color:#000}
+.painel{display:none}
+.painel.ativo{display:block}
+.bloco{background:#111827;padding:15px;border-radius:10px;margin-bottom:15px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
 </style>
-
 </head>
-
 <body>
-
-<!-- 🔐 LOGIN -->
+/* ====================================================003 LOGIN==================================================== */
 <div id="telaLogin">
 <div class="login-box">
 <h2>Meu Veículo</h2>
@@ -72,27 +45,26 @@ z-index:10;
 <input type="text" id="loginUsuario" placeholder="Usuário">
 <input type="password" id="loginSenha" placeholder="Senha">
 <button onclick="login()" class="btn">Entrar</button>
-<p id="msgLogin" class="erro"></p>
+<p id="msgLogin"></p>
 </div>
 </div>
-
-<!-- 🔥 APP -->
+/* ====================================================004 APP==================================================== */
 <div id="app">
-
 <header class="topbar">
 <div class="brand">
 <div class="brand-logo">🚗</div>
 <div>
 <h1>Meu Veículo</h1>
-<p>Controle pessoal de veículo e custos</p>
+<p style="font-size:12px;opacity:.7">Controle pessoal</p>
 </div>
 </div>
-<button id="btnInstalar" class="btn btn-secundario oculto">Instalar app</button>
-<button id="btnLogout" class="btn btn-secundario">Sair</button>
+<div>
+<button id="btnInstalar" class="btn btn-secundario">Instalar</button>
+<button id="btnLogout" onclick="logout()" class="btn">Sair</button>
+</div>
 </header>
-
 <main class="container">
-
+/* ====================================================005 MENU==================================================== */
 <section class="cards-grid">
 <button class="card-menu ativo" data-target="painelInicio">Início</button>
 <button class="card-menu" data-target="painelVeiculos">Meu Veículo</button>
@@ -102,70 +74,45 @@ z-index:10;
 <button class="card-menu" data-target="painelAlertas">Alertas</button>
 <button class="card-menu" data-target="painelRelatorios">Relatórios</button>
 </section>
-
+/* ====================================================006 INICIO==================================================== */
 <section id="painelInicio" class="painel ativo">
-<div class="hero">
-<h2 id="tituloPainel">Meu Veículo</h2>
-<p id="descricaoPainel">Controle completo do seu veículo e seus custos.</p>
-<div style="margin-top:10px;font-size:13px;opacity:0.8">
-<strong>Modo:</strong> <span id="tipoUsuario">Motorista</span> |
-<strong>Acesso:</strong> <span id="escopoUsuario">Apenas seu veículo</span>
-<span id="usuarioLogado" style="margin-right:10px"></span>
-</div>
-</div>
-
-<div class="kpis">
-<div class="kpi-card"><span>Meu Veículo</span><strong id="kpiVeiculos">1</strong></div>
-<div class="kpi-card"><span>Abastecimentos</span><strong id="kpiAbastecimentos">0</strong></div>
-<div class="kpi-card"><span>Gasto Total</span><strong id="kpiCustoTotal">R$ 0,00</strong></div>
-<div class="kpi-card"><span>Consumo Médio</span><strong id="kpiConsumo">0 km/l</strong></div>
-<div class="kpi-card"><span>Alertas</span><strong id="kpiAlertas">0</strong></div>
-</div>
-
 <div class="bloco">
-<h3>Resumo rápido</h3>
-<div id="resumoRapido" class="lista-vazia"></div>
-</div>
-
-<div class="bloco">
-<h3>Consumo e gastos</h3>
-<canvas id="graficoConsumo" height="120"></canvas>
+<h2>Resumo</h2>
+<div id="resumoRapido"></div>
 </div>
 </section>
-
+/* ====================================================007 VEICULOS==================================================== */
 <section id="painelVeiculos" class="painel">
 <div class="bloco">
 <h2>Meu veículo</h2>
 <form id="formVeiculo" class="form-grid">
-<div class="admin-only">
+<div class="admin-only full">
 <label>Cliente</label>
 <select id="usuarioSelecionadoAdmin"></select>
 </div>
-<input type="text" id="placa" placeholder="Placa" required>
+<input type="text" id="placa" placeholder="Placa">
 <input type="text" id="marca" placeholder="Marca">
 <input type="text" id="modelo" placeholder="Modelo">
 <input type="number" id="ano" placeholder="Ano">
-<input type="number" id="kmAtual" placeholder="KM atual">
+<input type="number" id="kmAtual" placeholder="KM">
 <input type="date" id="vencimentoIpva">
 <input type="date" id="vencimentoLicenciamento">
-<div class="full actions">
+<div class="full">
 <button type="submit" class="btn">Salvar</button>
 </div>
 </form>
 </div>
 <div class="bloco">
-<h3>Dados do veículo</h3>
-<div id="listaVeiculos" class="lista-vazia"></div>
+<div id="listaVeiculos"></div>
 </div>
 </section>
-
+/* ====================================================008 MOTORISTAS==================================================== */
 <section id="painelMotoristas" class="painel admin-only">
 <div class="bloco">
-<h2>Gestão de clientes</h2>
 <form id="formMotorista" class="form-grid">
-<input type="text" id="nomeMotorista" placeholder="Nome" required>
+<input type="text" id="nomeMotorista" placeholder="Nome">
 <input type="email" id="emailMotorista" placeholder="Email">
-<div class="full actions">
+<div class="full">
 <button type="submit" class="btn">Salvar</button>
 </div>
 </form>
@@ -174,17 +121,16 @@ z-index:10;
 <div id="listaMotoristas"></div>
 </div>
 </section>
-
+/* ====================================================009 ABASTECIMENTOS==================================================== */
 <section id="painelAbastecimentos" class="painel">
 <div class="bloco">
-<h2>Abastecimento</h2>
 <form id="formAbastecimento" class="form-grid">
-<input type="datetime-local" id="dataAbastecimento" required>
+<input type="datetime-local" id="dataAbastecimento">
 <input type="text" id="postoAbastecimento" placeholder="Posto">
 <input type="number" id="litrosAbastecimento" placeholder="Litros">
 <input type="number" id="valorTotalAbastecimento" placeholder="Valor">
 <input type="number" id="quilometragemAbastecimento" placeholder="KM">
-<div class="full actions">
+<div class="full">
 <button type="submit" class="btn">Salvar</button>
 </div>
 </form>
@@ -193,34 +139,25 @@ z-index:10;
 <div id="listaAbastecimentos"></div>
 </div>
 </section>
-
+/* ====================================================010 CAMERA==================================================== */
 <section id="painelCamera" class="painel">
 <div class="bloco">
 <video id="cameraPreview" autoplay playsinline muted></video>
 <button id="btnAbrirCamera" class="btn">Abrir câmera</button>
 </div>
 </section>
-
+/* ====================================================011 ALERTAS==================================================== */
 <section id="painelAlertas" class="painel">
 <div id="listaAlertas"></div>
 </section>
-
+/* ====================================================012 RELATORIOS==================================================== */
 <section id="painelRelatorios" class="painel">
 <div id="painelRelatorioResumo"></div>
 <div id="tabelaRelatorio"></div>
 </section>
-
 </main>
-
 </div>
-
-<div id="toast" class="toast"></div>
-
-<div id="modalSenha" style="display:none">
-<input type="password" id="novaSenha">
-<button onclick="salvarNovaSenha()">Salvar</button>
-</div>
-
+/* ====================================================013 SCRIPTS==================================================== */
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -237,6 +174,12 @@ z-index:10;
 <script src="js/camera.js"></script>
 <script src="js/alertas.js"></script>
 <script src="js/relatorios.js"></script>
-
+/* ====================================================014 LOGOUT==================================================== */
+<script>
+function logout(){
+localStorage.clear()
+location.reload()
+}
+</script>
 </body>
 </html>
