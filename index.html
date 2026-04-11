@@ -141,24 +141,77 @@ await db.from("veiculos").update({km_atual:parseFloat(km.value)}).eq("id",VID)
 render()
 }
 
-/* ====================================================050 RENDER==================================================== */
-let chart
+/* ====================================================100 – DASHBOARD PROFISSIONAL==================================================== */
 async function render(){
 let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
-if(!data||data.length<2){lista.innerHTML="Sem dados";return}
-let consumo=[],labels=[],total=0,count=0
+if(!data||data.length<2){
+lista.innerHTML="Sem dados suficientes"
+kpi.innerHTML=""
+return
+}
+/* ================= KPI ================= */
+let consumo=[],labels=[],totalCons=0,count=0,totalValor=0,totalKm=0
+let melhor=0,pior=999
+
 for(let i=1;i<data.length;i++){
 let kmDiff=data[i].quilometragem-data[i-1].quilometragem
-let c=kmDiff/data[i].litros
-consumo.push(c);labels.push(i)
-total+=c;count++
-}
-let media=(total/count).toFixed(2)
-kpi.innerHTML=`KM/L: ${media}`
-renderGrafico(labels,consumo)
-lista.innerHTML=data.map(a=>`<div>${a.quilometragem} km | ${a.litros}L<hr></div>`).join("")
-}
+let cons=kmDiff/data[i].litros
+consumo.push(cons)
+labels.push(i)
 
+if(cons>0){
+totalCons+=cons
+count++
+if(cons>melhor)melhor=cons
+if(cons<pior)pior=cons
+}
+totalValor+=data[i].valor_total
+totalKm+=kmDiff
+}
+let media=(totalCons/count).toFixed(2)
+let custoKm=(totalValor/totalKm).toFixed(2)
+/* ================= KPI UI ================= */
+kpi.innerHTML=`
+<div>🚗 <b>Média:</b> ${media} km/l</div>
+<div>💰 <b>Custo/KM:</b> R$ ${custoKm}</div>
+<div>📈 <b>Melhor:</b> ${melhor.toFixed(2)} km/l</div>
+<div>📉 <b>Pior:</b> ${pior.toFixed(2)} km/l</div>
+`
+/* ================= ALERTA ================= */
+if(media<6){
+alerta.innerHTML='<div class="alerta">⚠ Consumo alto</div>'
+}else{
+alerta.innerHTML=''
+}
+/* ================= GRÁFICO PRINCIPAL ================= */
+renderGrafico(labels,consumo)
+/* ================= GRÁFICO MENSAL ================= */
+let meses={}
+data.forEach((a,i)=>{
+let mes=a.data_abastecimento.slice(0,7)
+if(!meses[mes])meses[mes]={km:0,litros:0}
+if(i>0){
+meses[mes].km+=a.quilometragem-data[i-1].quilometragem
+meses[mes].litros+=a.litros
+}
+})
+let labelsMes=[],consumoMes=[]
+for(let m in meses){
+let c=meses[m].km/meses[m].litros
+labelsMes.push(m)
+consumoMes.push(c)
+}
+renderGraficoMensal(labelsMes,consumoMes)
+
+/* ================= LISTA ================= */
+lista.innerHTML=data.map(a=>`
+<div>
+${a.data_abastecimento.slice(0,10)} | ${a.quilometragem} km<br>
+${a.litros}L | R$${a.valor_total}
+<hr>
+</div>
+`).join("")
+}
 /* ====================================================060 GRAFICO==================================================== */
 function renderGrafico(labels,data){
 if(!grafico)return
@@ -169,7 +222,6 @@ data:{labels:labels,datasets:[{label:"KM/L",data:data,borderWidth:2}]},
 options:{responsive:true,plugins:{legend:{labels:{color:"#fff"}}},scales:{x:{ticks:{color:"#fff"}},y:{ticks:{color:"#fff"}}}}
 })
 }
-
 /* ====================================================070 CSV IMPORT==================================================== */
 async function importarCSV(file){
 const text=await file.text()
