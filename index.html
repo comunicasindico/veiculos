@@ -481,17 +481,84 @@ function formatarData(d){
 const dt=new Date(d)
 return dt.toLocaleDateString("pt-BR")
 }
-/* =============103 PDF==================================================== */
-function exportarPDF(){
+/* ====================================================103 PDF PROFISSIONAL==================================================== */
+async function exportarPDF(){
 const {jsPDF}=window.jspdf
 const doc=new jsPDF()
-doc.text("Relatório de Consumo",10,10)
-let y=20
-document.querySelectorAll("#lista .card").forEach(el=>{
-doc.text(el.innerText,10,y)
-y+=10
+/* ================= DADOS ================= */
+const uid=localStorage.getItem("uid")
+
+let {data:veiculo}=await db.from("veiculos").select("*").eq("id",VID).single()
+let {data:usuario}=await db.from("usuarios").select("*").eq("id",uid).single()
+let {data:abast}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+/* ================= FILTRO ================= */
+const filtro=document.getElementById("filtroPeriodo")?.value
+if(filtro==="mes"){
+const hoje=new Date()
+const mesAtual=hoje.toISOString().slice(0,7)
+abast=abast.filter(a=>a.data_abastecimento.startsWith(mesAtual))
+}
+/* ================= CABEÇALHO ================= */
+doc.setFontSize(14)
+doc.text("RELATÓRIO DE CONSUMO",10,10)
+
+doc.setFontSize(10)
+doc.text(`Motorista: ${usuario?.nome||"-"}`,10,18)
+doc.text(`Veículo: ${veiculo?.modelo||"-"} (${veiculo?.placa||"-"})`,10,24)
+doc.text(`Combustível: ${veiculo?.combustivel||"-"}`,10,30)
+doc.text(`Período: ${filtro==="mes"?"Mês atual":"Completo"}`,10,36)
+/* ================= LINHA ================= */
+let y=45
+doc.setFontSize(9)
+doc.text("Data",10,y)
+doc.text("Litros",45,y)
+doc.text("Valor",75,y)
+doc.text("KM",110,y)
+y+=5
+/* ================= DADOS ================= */
+let totalLitros=0,totalValor=0
+
+abast.forEach(a=>{
+if(y>280){
+doc.addPage()
+y=10
+}
+const data=formatarData(a.data_abastecimento)
+const litros=Number(a.litros).toFixed(2)
+const valor=Number(a.valor_total).toFixed(2)
+const km=a.quilometragem
+
+doc.text(data,10,y)
+doc.text(litros,45,y)
+doc.text("R$ "+valor,75,y)
+doc.text(String(km),110,y)
+y+=6
+
+totalLitros+=Number(a.litros)
+totalValor+=Number(a.valor_total)
 })
-doc.save("relatorio.pdf")
+/* ================= TOTAIS ================= */
+y+=5
+doc.setFontSize(11)
+doc.text("Resumo:",10,y)
+y+=6
+doc.setFontSize(10)
+doc.text(`Total Litros: ${totalLitros.toFixed(2)} L`,10,y)
+y+=6
+doc.text(`Total Gasto: R$ ${totalValor.toFixed(2)}`,10,y)
+/* ================= DOCUMENTAÇÃO (FUTURO) ================= */
+y+=10
+doc.setFontSize(11)
+doc.text("Documentação:",10,y)
+y+=6
+doc.setFontSize(9)
+doc.text("IPVA: -",10,y)
+y+=5
+doc.text("Seguro: -",10,y)
+y+=5
+doc.text("CNH: -",10,y)
+/* ================= SALVAR ================= */
+doc.save("relatorio_consumo.pdf")
 }
 /* ====================================================210 – ACCORDION iPHONE FIX==================================================== */
 document.addEventListener("DOMContentLoaded",()=>{
