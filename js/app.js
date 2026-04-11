@@ -72,12 +72,14 @@ window.db.from("abastecimentos").select("*").order("data_abastecimento",{ascendi
 let v=veiculos||[]
 let m=motoristas||[]
 let a=abastecimentos||[]
+/* 🔒 FILTRO COMPLETO POR USUÁRIO */
 if(window.CONTEXTO && !window.CONTEXTO.isAdmin){
-/* 🔒 VEÍCULOS → só do usuário */
-v=v.filter(x=>String(x.usuario_id)===String(window.CONTEXTO.usuario_id))
-/* 🔒 MOTORISTAS → só ele */
-m=m.filter(x=>String(x.id)===String(window.CONTEXTO.usuario_id))
-/* 🔒 ABASTECIMENTOS → só dos veículos dele */
+const uid=String(window.CONTEXTO.usuario_id)
+/* 🚗 VEÍCULOS → só dele */
+v=v.filter(x=>String(x.usuario_id)===uid)
+/* 👤 MOTORISTAS → só ele */
+m=m.filter(x=>String(x.id)===uid)
+/* ⛽ ABASTECIMENTOS → só dos veículos dele */
 const idsVeiculos=v.map(x=>String(x.id))
 a=a.filter(x=>idsVeiculos.includes(String(x.veiculo_id)))
 }
@@ -131,16 +133,50 @@ function definirCamposIniciais(){
 const input=document.getElementById("dataAbastecimento")
 if(input&&!input.value)input.value=window.Utils.agoraInputDateTime()
 }
-/* ====================================================DASHBOARD==================================================== */
+/* ====================================================DASHBOARD CORRIGIDO==================================================== */
 function atualizarDashboard(){
 const elV=document.getElementById("kpiVeiculos")
 const elA=document.getElementById("kpiAbastecimentos")
 const elL=document.getElementById("kpiAlertas")
-if(elV)elV.textContent=window.APP_STATE.veiculos.length
-if(elA)elA.textContent=window.APP_STATE.abastecimentos.length
-if(elL)elL.textContent=window.gerarAlertas?window.gerarAlertas().length:0
+
+let v=window.APP_STATE.veiculos||[]
+let m=window.APP_STATE.motoristas||[]
+let a=window.APP_STATE.abastecimentos||[]
+
+/* 🔒 FILTRO POR USUÁRIO */
+if(window.CONTEXTO && !window.CONTEXTO.isAdmin){
+const uid=String(window.CONTEXTO.usuario_id)
+v=v.filter(x=>String(x.usuario_id)===uid)
+const ids=v.map(x=>String(x.id))
+a=a.filter(x=>ids.includes(String(x.veiculo_id)))
+m=m.filter(x=>String(x.id)===uid)
 }
-window.atualizarDashboard=atualizarDashboard
+
+/* 🔢 ATUALIZA KPIs */
+if(elV)elV.textContent=v.length
+if(elA)elA.textContent=a.length
+if(elL)elL.textContent=window.gerarAlertas?window.gerarAlertas().length:0
+
+/* 🔥 CUSTO TOTAL */
+const elCusto=document.getElementById("kpiCustoTotal")
+if(elCusto){
+const total=a.reduce((s,x)=>s+Number(x.valor_total||0),0)
+elCusto.textContent=total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+}
+
+/* 🔥 CONSUMO MÉDIO */
+const elConsumo=document.getElementById("kpiConsumo")
+if(elConsumo){
+let kmTotal=0
+let litrosTotal=0
+a.forEach(x=>{
+kmTotal+=Number(x.quilometragem||0)
+litrosTotal+=Number(x.litros||0)
+})
+const media=litrosTotal?kmTotal/litrosTotal:0
+elConsumo.textContent=media.toFixed(1)+" km/l"
+}
+}
 /* ====================================================TOAST==================================================== */
 function toast(msg){
 const el=document.getElementById("toast")
