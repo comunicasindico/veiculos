@@ -3,9 +3,8 @@ document.addEventListener("DOMContentLoaded",iniciarApp)
 async function iniciarApp(){
 const app=document.getElementById("app")
 const login=document.getElementById("telaLogin")
-/* 🔒 BLOQUEIO TOTAL INICIAL (ANTI-FLASH + CACHE) */
-app.style.display="none"
-app.style.visibility="hidden"
+/* 🔒 RESET VISUAL TOTAL */
+app.classList.remove("ativo")
 login.style.display="none"
 /* 🔐 CONTROLE DE SESSÃO */
 let usuarioId=localStorage.getItem("usuario_id")
@@ -15,15 +14,14 @@ if(tempoLogin&&Date.now()-parseInt(tempoLogin)>1000*60*60*8){
 localStorage.clear()
 usuarioId=null
 }
-/* 🔐 SE NÃO LOGADO → MOSTRA LOGIN */
+/* 🔐 NÃO LOGADO → LOGIN */
 if(!usuarioId){
 login.style.display="flex"
 return
 }
 /* 🔓 LIBERA APP */
 login.style.display="none"
-app.style.display="block"
-app.style.visibility="visible"
+app.classList.add("ativo")
 /* 🔥 GARANTE CONTEXTO */
 window.CONTEXTO=window.CONTEXTO||{usuario_id:usuarioId,empresa_id:localStorage.getItem("empresa_id"),isAdmin:localStorage.getItem("tipo_usuario")==="admin"}
 /* 🔥 CARREGAMENTO NORMAL */
