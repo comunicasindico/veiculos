@@ -28,8 +28,9 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 .collapsed .collapsible-content{max-height:0;opacity:0;padding:0}
 .toggle{font-size:18px;color:#22c55e;transition:0.2s}
 #app>div:first-child button{flex:1}
+#lista .card{flex-direction:row;flex-wrap:wrap}
 #lista input{background:#020617;color:#fff;border:1px solid #22c55e}
-#lista button{padding:6px 8px;font-size:12px}
+#lista button{padding:5px 8px;font-size:12px}
 
 
 </style>
@@ -245,11 +246,6 @@ valor.value=""
 km.value=""
 render()
 }
-/* =============FORMATAR DATA================================================== */
-function formatarData(d){
-const dt=new Date(d)
-return dt.toLocaleDateString("pt-BR")
-}
 /* =============FUNÇÃO EDITAR================================================== */
 function editar(id,litrosVal,valorVal,kmVal){
 litros.value=litrosVal
@@ -321,22 +317,18 @@ lista.innerHTML=data.map(a=>`
 <div class="card" id="row_${a.id}" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
 
 <div id="view_${a.id}">
-📅 ${formatarData(a.data_abastecimento)} • ⛽ ${a.litros}L • 💰 R$ ${a.valor_total} • 📍 ${a.quilometragem} km
+📅 ${formatarData(a.data_abastecimento)} - ⛽ ${a.litros}L - 💰 R$ ${Number(a.valor_total).toFixed(2)} - 📍 ${a.quilometragem} km
 </div>
 
-<div id="edit_${a.id}" style="display:none;flex-direction:column;gap:5px">
-<input id="lit_${a.id}" value="${a.litros}">
-<input id="val_${a.id}" value="${a.valor_total}">
-<input id="km_${a.id}" value="${a.quilometragem}">
-<div style="display:flex;gap:5px">
+<div id="edit_${a.id}" style="display:none;gap:5px">
+<input id="lit_${a.id}" value="${a.litros}" style="width:70px">
+<input id="val_${a.id}" value="${a.valor_total}" style="width:90px">
+<input id="km_${a.id}" value="${a.quilometragem}" style="width:90px">
 <button onclick="salvarInline('${a.id}')">💾</button>
 <button onclick="cancelarInline('${a.id}')">❌</button>
 </div>
-</div>
 
-<div style="display:flex;gap:5px">
 <button onclick="editarInline('${a.id}')">✏️</button>
-</div>
 
 </div>
 `).join("")
@@ -483,6 +475,11 @@ quilometragem:kmVal
 }).eq("id",id)
 await db.from("veiculos").update({km_atual:kmVal}).eq("id",VID)
 render()
+}
+/* =============FORMATAR DATA================================================== */
+function formatarData(d){
+const dt=new Date(d)
+return dt.toLocaleDateString("pt-BR")
 }
 /* =============103 PDF==================================================== */
 function exportarPDF(){
