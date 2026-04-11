@@ -22,6 +22,7 @@ return
 /* 🔓 LIBERA APP */
 login.style.display="none"
 app.style.display="block"
+
 /* 🔥 GARANTE CONTEXTO */
 window.CONTEXTO={
 usuario_id:usuarioId,
@@ -29,48 +30,84 @@ empresa_id:localStorage.getItem("empresa_id"),
 tipo:localStorage.getItem("tipo_usuario")||"motorista",
 isAdmin:String(localStorage.getItem("tipo_usuario")).toLowerCase()==="admin"
 }
+
 /* 🔥 CARREGAMENTO NORMAL */
 await carregarDados()
+
 /* 🔒 GARANTE QUE ESTADO ESTÁ FILTRADO */
 if(!window.APP_STATE || !window.APP_STATE.veiculos){
 console.warn("Dados ainda não carregados")
 return
 }
+
+/* ====================================================USUARIO LOGADO==================================================== */
+const nome=localStorage.getItem("usuario_nome")||""
+const tipo=localStorage.getItem("tipo_usuario")||"motorista"
+const elNome=document.getElementById("usuarioLogado")
+const elTipo=document.getElementById("tipoUsuario")
+const elEscopo=document.getElementById("escopoUsuario")
+if(elNome)elNome.innerText=nome
+if(elTipo)elTipo.innerText=tipo==="admin"?"Administrador":"Motorista"
+if(elEscopo)elEscopo.innerText=tipo==="admin"?"Acesso total":"Apenas seu veículo"
+
+/* 🔧 CONFIGURAÇÕES */
 configurarMenus()
 definirCamposIniciais()
+
 /* 🔥 ATUALIZA DEPOIS DE TUDO */
 setTimeout(()=>{
 window.renderizarDashboard?.()
 atualizarDashboard()
 },50)
+
 window.atualizarDashboardInteligente?.()
+
 /* 🔥 FORÇAR PAINEL CORRETO */
 const paineis=document.querySelectorAll(".painel")
 const botoes=document.querySelectorAll(".card-menu")
+
 botoes.forEach(b=>b.classList.remove("ativo"))
-paineis.forEach(p=>{p.classList.remove("ativo");p.style.display="none"})
+paineis.forEach(p=>{
+p.classList.remove("ativo")
+p.style.display="none"
+})
+
 if(window.CONTEXTO.isAdmin){
+
 const alvo=document.getElementById("painelVeiculos")
 const btn=[...botoes].find(b=>b.dataset.target==="painelVeiculos")
+
 if(btn)btn.classList.add("ativo")
-if(alvo){alvo.classList.add("ativo");alvo.style.display="block"}
+if(alvo){
+alvo.classList.add("ativo")
+alvo.style.display="block"
+}
+
 }else{
+
 const alvo=document.getElementById("painelAbastecimentos")
 const btn=[...botoes].find(b=>b.dataset.target==="painelAbastecimentos")
+
 if(btn)btn.classList.add("ativo")
-if(alvo){alvo.classList.add("ativo");alvo.style.display="block"}
+if(alvo){
+alvo.classList.add("ativo")
+alvo.style.display="block"
 }
+
+}
+
+/* 🔓 BOTÃO SAIR */
 const btnLogout=document.getElementById("btnLogout")
 if(btnLogout){
 btnLogout.onclick=logout
 btnLogout.style.display="inline-block"
 }
-if(!window.CONTEXTO.isAdmin){
 
+/* 🔒 ESCONDER ITENS ADMIN */
+if(!window.CONTEXTO.isAdmin){
 document.querySelectorAll(".admin-only").forEach(el=>{
 el.style.display="none"
 })
-
 }
 }
 /* ====================================================LOAD DADOS==================================================== */
