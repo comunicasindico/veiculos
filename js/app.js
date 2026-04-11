@@ -111,9 +111,19 @@ el.style.display="none"
 })
 }
 }
-/* ====================================================LOAD DADOS==================================================== */
+/* ====================================================010 – CONTEXTO USUARIO==================================================== */
+function isAdmin(){
+return localStorage.getItem("tipo_usuario")==="admin"
+}
+function getEmpresaId(){
+return localStorage.getItem("empresa_id")
+}
+function getUsuarioId(){
+return localStorage.getItem("usuario_id")
+}
+/* ====================================================LOAD DADOS (CORRIGIDO)==================================================== */
 async function carregarDados(){
-if(window.db){
+if(!window.db){carregarDadosLocal();return}
 try{
 const[{data:veiculos},{data:motoristas},{data:abastecimentos}]=await Promise.all([
 window.db.from("veiculos").select("*").order("created_at",{ascending:false}),
@@ -123,9 +133,9 @@ window.db.from("abastecimentos").select("*").order("data_abastecimento",{ascendi
 let v=veiculos||[]
 let m=motoristas||[]
 let a=abastecimentos||[]
-/* 🔒 FILTRO COMPLETO POR USUÁRIO */
+/* ====================================================FILTRO USUARIO==================================================== */
 if(window.CONTEXTO && !window.CONTEXTO.isAdmin){
-const uid=String(window.CONTEXTO.usuario_id)
+const uid=String(window.CONTEXTO.usuario_id||"")
 /* 🚗 VEÍCULOS */
 v=v.filter(x=>String(x.usuario_id)===uid)
 /* ⛽ ABASTECIMENTOS */
@@ -134,30 +144,17 @@ a=a.filter(x=>ids.includes(String(x.veiculo_id)))
 /* 👤 MOTORISTA */
 m=m.filter(x=>String(x.id)===uid)
 }
-/* 🔒 FORÇA FILTRO FINAL (GARANTE MESMO SE FALHAR ANTES) */
-if(window.CONTEXTO && !window.CONTEXTO.isAdmin){
-
-const uid=String(window.CONTEXTO.usuario_id)
-
-v=v.filter(x=>String(x.usuario_id)===uid)
-
-const ids=v.map(x=>String(x.id))
-a=a.filter(x=>ids.includes(String(x.veiculo_id)))
-
-m=m.filter(x=>String(x.id)===uid)
-
-}
-
-/* 🔥 SALVA ESTADO FINAL */
+/* ====================================================SALVA ESTADO==================================================== */
 window.APP_STATE.veiculos=v
 window.APP_STATE.motoristas=m
 window.APP_STATE.abastecimentos=a
-console.log("USUARIO:",window.CONTEXTO.usuario_id)
-console.log("VEICULOS FINAL:",v.length)
-console.log("VEICULOS FILTRADOS:",v.length)
-console.log("ABAST FILTRADOS:",a.length)
+/* ====================================================LOG DEBUG LIMPO==================================================== */
+console.log("USER:",window.CONTEXTO?.usuario_id)
+console.log("VEICULOS:",v.length)
+console.log("ABAST:",a.length)
 return
-}catch(e){console.error("Erro ao carregar Supabase",e)}
+}catch(e){
+console.error("Erro Supabase:",e)
 }
 carregarDadosLocal()
 }
