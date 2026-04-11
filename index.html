@@ -11,71 +11,46 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
 <style>
 body{font-family:Arial;background:#020617;color:#fff;padding:15px}
-.card{background:#111827;padding:15px;border-radius:12px;margin-top:10px}
-button{padding:12px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold;width:100%;margin-top:5px}
+.card{background:linear-gradient(145deg,#111827,#0b1220);padding:15px;border-radius:12px;margin-top:10px;box-shadow:0 4px 20px rgba(0,0,0,0.4);transition:0.3s}
+.card:hover{transform:scale(1.02)}
+button{padding:12px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold;width:100%;margin-top:5px;transition:0.2s}
+button:hover{transform:scale(1.03)}
 input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:none}
 .kpi{color:#22c55e}
 .alerta{color:#ef4444;font-weight:bold}
 video,canvas{width:100%;border-radius:10px;margin-top:10px}
-.card{
-background:linear-gradient(145deg,#111827,#0b1220);
-box-shadow:0 4px 20px rgba(0,0,0,0.4);
-transition:0.3s
-}
-.card:hover{
-transform:scale(1.02)
-}
-button{
-transition:0.2s
-}
-button:hover{
-transform:scale(1.03)
-}
-.collapsible-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-cursor:pointer;
-font-weight:bold;
-padding:5px 0;
-}
+.collapsible-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:bold;padding:5px 0}
+.collapsible-content{max-height:500px;overflow:hidden;transition:all 0.35s ease}
+.collapsed .collapsible-content{max-height:0;opacity:0;padding:0}
+.toggle{font-size:18px;color:#22c55e;transition:0.2s}
+#app>div:first-child button{flex:1}
 
-.collapsible-content{
-max-height:500px;
-overflow:hidden;
-transition:all 0.35s ease;
-}
 
-.collapsed .collapsible-content{
-max-height:0;
-opacity:0;
-padding:0;
-}
-
-.toggle{
-font-size:18px;
-color:#22c55e;
-transition:0.2s;
-}
-  
 </style>
-
 </head>
 <body>
+
 <div id="loginBox" class="card" style="max-width:300px;margin:auto">
 <h3>Login</h3>
 <input id="user" placeholder="Usuário">
 <input id="pass" type="password" placeholder="Senha">
 <button onclick="login()">Entrar</button>
 </div>
-<button onclick="toggleDetalhe()">📈 Ver análise detalhada</button>
-<div id="detalheBox" style="display:none"></div>
+
 <div id="app" style="display:none">
-<button onclick="exportarPDF()">📄 Exportar PDF</button>
+
 <h2>🚗 Veículos PRO</h2>
+
+<div style="display:flex;gap:10px;margin-bottom:10px">
+<button onclick="toggleDetalhe()">📈 Análise</button>
+<button onclick="exportarPDF()">📄 PDF</button>
+</div>
+
+<div id="detalheBox" style="display:none"></div>
 
 <div class="card">
 <select id="veiculoSel"></select>
@@ -104,12 +79,15 @@ transition:0.2s;
 <input id="km" placeholder="KM">
 <button onclick="salvar()">Salvar</button>
 </div>
+
 <div class="card">
+<h3>📊 Filtro</h3>
 <select id="filtroPeriodo">
 <option value="all">📊 Todo período</option>
-<option value="mes">📅 Apenas mês atual</option>
+<option value="mes">📅 Mês atual</option>
 </select>
 </div>
+
 <div class="card">
 <h3>📊 Gráfico</h3>
 <canvas id="grafico"></canvas>
@@ -123,6 +101,8 @@ transition:0.2s;
 <div class="card">
 <h3>📋 Histórico</h3>
 <div id="lista"></div>
+</div>
+
 </div>
 
 <script>
@@ -451,56 +431,42 @@ y+=10
 })
 doc.save("relatorio.pdf")
 }
-/* ====================================================210 – ACCORDION iPHONE==================================================== */
+/* ====================================================210 – ACCORDION iPHONE FIX==================================================== */
 document.addEventListener("DOMContentLoaded",()=>{
-
 const cards=document.querySelectorAll(".card")
 let activeIndex=localStorage.getItem("accordion")||0
-
 cards.forEach((card,index)=>{
-
 const title=card.querySelector("h3")
 if(!title)return
-
 const header=document.createElement("div")
 header.className="collapsible-header"
-
 const toggle=document.createElement("span")
 toggle.className="toggle"
 toggle.innerText="−"
-
 const titleClone=title.cloneNode(true)
-
 header.appendChild(titleClone)
 header.appendChild(toggle)
-
 const content=document.createElement("div")
 content.className="collapsible-content"
-/* mover conteúdo */
 Array.from(card.children).forEach(el=>{
 if(el.tagName==="H3")return
 content.appendChild(el)
 })
-
 card.innerHTML=""
 card.appendChild(header)
 card.appendChild(content)
-/* estado inicial */
 if(index!=activeIndex){
 card.classList.add("collapsed")
 toggle.innerText="+"
 }
-/* clique estilo iPhone */
 header.onclick=()=>{
-/* fecha todos */
-cards.forEach((c,i)=>{
+cards.forEach(c=>{
 c.classList.add("collapsed")
-c.querySelector(".toggle").innerText="+"
+const t=c.querySelector(".toggle")
+if(t)t.innerText="+"
 })
-/* abre o atual */
 card.classList.remove("collapsed")
 toggle.innerText="−"
-/* salva estado */
 localStorage.setItem("accordion",index)
 }
 })
