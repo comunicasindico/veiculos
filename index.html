@@ -46,11 +46,33 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 
 <div id="app" style="display:none">
 
-<div style="display:flex;align-items:center;gap:10px">
-<h2 style="margin:0">🚗 Veículos PRO</h2>
+<div class="card" style="display:flex;flex-wrap:wrap;gap:10px;align-items:end">
+
+<div style="flex:2">
+<label>Veículo</label>
+<select id="veiculoSel"></select>
+</div>
+
+<div>
+<label>Data início</label>
+<input type="date" id="dataInicio">
+</div>
+
+<div>
+<label>Data fim</label>
+<input type="date" id="dataFim">
+</div>
+
+<div style="display:flex;gap:5px">
+<button onclick="pesquisarPeriodo()">🔍 Pesquisar</button>
+</div>
+
+<div style="margin-left:auto;display:flex;gap:5px">
+<button onclick="toggleDetalhe()">📈</button>
+<button onclick="exportarPDF()">📄</button>
 <button onclick="logout()" class="btnSair">Sair</button>
-<button onclick="toggleDetalhe()">📈 Análise</button>
-<button onclick="exportarPDF()">📄 PDF</button>
+</div>
+
 </div>
 
 <div id="detalheBox" style="display:none"></div>
@@ -81,19 +103,6 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 <input id="valor" placeholder="Valor">
 <input id="km" placeholder="KM">
 <button onclick="salvar()">Salvar</button>
-</div>
-
-<div class="card">
-<h3>📊 Filtro</h3>
-<select id="filtroPeriodo">
-<option value="all">📊 Todo período</option>
-<option value="mes">📅 Mês atual</option>
-<option value="periodo">📆 Período</option>
-</select>
-
-<input type="date" id="dataInicio">
-<input type="date" id="dataFim">
-<button onclick="render()">Filtrar</button>
 </div>
 
 <div class="card">
@@ -153,7 +162,6 @@ async function init(){
 const hoje=new Date()
 const inicio=new Date(hoje.getFullYear(),hoje.getMonth(),1)
 const fim=new Date()
-
 dataInicio.value=inicio.toISOString().slice(0,10)
 dataFim.value=fim.toISOString().slice(0,10)
   
@@ -339,14 +347,11 @@ if(e.target.id==="csvFile")importarCSV(e.target.files[0])
 async function render(){
 let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
 if(!data)data=[]
-const filtro=document.getElementById("filtroPeriodo")?.value
+
 const di=document.getElementById("dataInicio")?.value
 const df=document.getElementById("dataFim")?.value
-if(filtro==="mes"){
-const mesAtual=new Date().toISOString().slice(0,7)
-data=data.filter(a=>a.data_abastecimento?.startsWith(mesAtual))
-}
-else if(filtro==="periodo"&&di&&df){
+/* 🔥 FILTRO NOVO (CABEÇALHO) */
+if(di&&df){
 data=data.filter(a=>{
 const d=a.data_abastecimento?.slice(0,10)
 return d>=di&&d<=df
@@ -555,7 +560,17 @@ if(df)df.value=fim
 if(filtro)filtro.value="periodo"
 render()
 }
-  
+/* ======PESQUISAR PERIODO==================================================== */
+function pesquisarPeriodo(){
+const di=document.getElementById("dataInicio").value
+const df=document.getElementById("dataFim").value
+if(!di||!df){
+alert("Selecione o período")
+return
+}
+document.getElementById("filtroPeriodo")?.remove() // segurança
+render()
+}
 
   
 /* ======103 PDF PROFISSIONAL==================================================== */
