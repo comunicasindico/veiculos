@@ -129,7 +129,6 @@ window.alerta=document.getElementById("alerta")
 window.grafico=document.getElementById("grafico")
 window.veiculoSel=document.getElementById("veiculoSel")
 init()
-aplicarAnoAtual()
 })
 /* ========LOGIN================================================== */
 async function login(){
@@ -196,6 +195,7 @@ veiculoSel.onchange=()=>{
 window.VID=veiculoSel.value
 render()
 }
+aplicarAnoAtual()
 /* 🚀 RENDER */
 render()
 }
