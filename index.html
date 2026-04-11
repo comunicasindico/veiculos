@@ -47,8 +47,7 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 
 <div style="display:flex;justify-content:space-between;align-items:center">
 <h2>🚗 Veículos PRO</h2>
-<button onclick="logout()" style="background:#ef4444;color:#fff;width:auto;padding:6px 10px;font-size:12px;border-radius:8px">Sair</button>
-</div>
+<button onclick="logout()" style="background:#ef4444;color:#fff;width:fit-content;padding:4px 10px;font-size:11px;border-radius:6px;margin-left:auto;display:block">Sair</button></div>
 <div style="display:flex;gap:10px;margin-bottom:10px">
 <button onclick="toggleDetalhe()">📈 Análise</button>
 <button onclick="exportarPDF()">📄 PDF</button>
@@ -410,22 +409,41 @@ labels:labels,
 datasets:[{
 label:"KM/L",
 data:data,
-borderRadius:8,
-backgroundColor:"rgba(34,197,94,0.7)"
+borderRadius:10,
+backgroundColor:"rgba(34,197,94,0.85)"
 }]
 },
 options:{
+responsive:true,
+maintainAspectRatio:false,
 plugins:{
 legend:{display:false},
 tooltip:{
 backgroundColor:"#000",
 titleColor:"#fff",
-bodyColor:"#fff"
+bodyColor:"#fff",
+titleFont:{size:14},
+bodyFont:{size:13}
 }
 },
 scales:{
-x:{ticks:{color:"#ccc"}},
-y:{ticks:{color:"#ccc"}}
+x:{
+ticks:{
+color:"#fff",
+font:{size:13,weight:"bold"},
+maxRotation:0,
+minRotation:0,
+autoSkip:false
+},
+grid:{display:false}
+},
+y:{
+ticks:{
+color:"#ccc",
+font:{size:12}
+},
+grid:{color:"rgba(255,255,255,0.05)"}
+}
 }
 }
 })
