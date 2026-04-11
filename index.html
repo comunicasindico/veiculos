@@ -10,6 +10,58 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" type="image/png" href="img/icone-192.png">
 <link rel="icon" href="img/favicon.ico">
+<style>
+/* ====================================================LOGIN FULL SCREEN==================================================== */
+#telaLogin{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#020617;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:99999;
+}
+/* 🔥 CAIXA LOGIN */
+.login-box{
+background:#111827;
+padding:30px;
+border-radius:12px;
+box-shadow:0 0 30px rgba(0,0,0,0.6);
+text-align:center;
+width:300px;
+}
+/* 🔥 INPUTS */
+.login-box input{
+width:100%;
+padding:10px;
+margin:5px 0;
+border-radius:6px;
+border:none;
+}
+/* 🔥 BOTÃO */
+.login-box .btn{
+width:100%;
+margin-top:10px;
+}
+/* 🔥 GARANTE QUE APP NÃO APAREÇA */
+#app{
+display:none;
+visibility:hidden;
+opacity:0;
+}
+/* 🔥 QUANDO ATIVO */
+#app.ativo{
+display:block;
+visibility:visible;
+opacity:1;
+}
+</style>
+
+
+
 </head>
 <body>
 <!-- 🔐 LOGIN -->
