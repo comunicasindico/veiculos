@@ -47,7 +47,7 @@ video,canvas{width:100%;border-radius:10px;margin-top:10px}
 
 <div style="display:flex;justify-content:space-between;align-items:center">
 <h2>🚗 Veículos PRO</h2>
-<button onclick="logout()" style="width:auto;padding:8px 12px">🚪 Sair</button>
+<button onclick="logout()" style="background:#ef4444;color:#fff;width:auto;padding:6px 10px;font-size:12px;border-radius:8px">Sair</button>
 </div>
 <div style="display:flex;gap:10px;margin-bottom:10px">
 <button onclick="toggleDetalhe()">📈 Análise</button>
@@ -313,71 +313,50 @@ const hoje=new Date()
 const mesAtual=hoje.toISOString().slice(0,7)
 data=data.filter(a=>a.data_abastecimento?.startsWith(mesAtual))
 }
-
-/* ================= LISTA (SEMPRE MOSTRA) ================= */
 if(lista){
 lista.innerHTML=data.map(a=>`
 <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-
 <div id="view_${a.id}" style="flex:1;font-size:14px">
 📅 ${formatarData(a.data_abastecimento)} - ⛽ ${a.litros||0}L - 💰 R$ ${Number(a.valor_total||0).toFixed(2)} - 📍 ${a.quilometragem||0} km
 </div>
-
 <div id="edit_${a.id}" style="display:none;flex:1;gap:5px">
 <input id="lit_${a.id}" value="${a.litros||0}" style="width:60px">
 <input id="val_${a.id}" value="${a.valor_total||0}" style="width:80px">
 <input id="km_${a.id}" value="${a.quilometragem||0}" style="width:80px">
 </div>
-
 <div style="display:flex;gap:5px">
 <button onclick="editarInline('${a.id}')">✏️</button>
 <button onclick="salvarInline('${a.id}')" id="btnSave_${a.id}" style="display:none">💾</button>
 <button onclick="cancelarInline('${a.id}')" id="btnCancel_${a.id}" style="display:none">❌</button>
 <button onclick="excluir('${a.id}')">🗑️</button>
 </div>
-
 </div>
 `).join("")
 }
-
-/* ================= SE NÃO TEM DADOS SUFICIENTES ================= */
 if(data.length<2){
 kpi.innerHTML=""
 alerta.innerHTML=""
 return
 }
-
-/* ================= KPI ================= */
 let consumo=[],labels=[],totalCons=0,count=0,totalValor=0,totalKm=0
 let melhor=0,pior=999
-
 for(let i=1;i<data.length;i++){
 let kmDiff=(data[i].quilometragem||0)-(data[i-1].quilometragem||0)
 let litros=data[i].litros||0
 if(litros<=0||kmDiff<=0)continue
-
 let cons=kmDiff/litros
-
 consumo.push(cons)
 labels.push(i)
-
 totalCons+=cons
 count++
-
 if(cons>melhor)melhor=cons
 if(cons<pior)pior=cons
-
 totalValor+=(data[i].valor_total||0)
 totalKm+=kmDiff
 }
-
-/* proteção */
 if(count===0){kpi.innerHTML="";return}
-
 let media=(totalCons/count).toFixed(2)
 let custoKm=(totalKm>0?(totalValor/totalKm):0).toFixed(2)
-
-/* ================= KPI UI ================= */
 kpi.innerHTML=`
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
 <div class="card"><b>Média</b><br>${media} km/l</div>
@@ -386,20 +365,8 @@ kpi.innerHTML=`
 <div class="card"><b>Pior</b><br>${pior.toFixed(2)}</div>
 </div>
 `
-
-/* ================= ALERTA ================= */
-if(media<6){
-alerta.innerHTML='⚠ Consumo elevado'
-}else if(media>9){
-alerta.innerHTML='🚀 Excelente consumo'
-}else{
-alerta.innerHTML=''
-}
-
-/* ================= GRÁFICO PRINCIPAL ================= */
+if(media<6){alerta.innerHTML='⚠ Consumo elevado'}else if(media>9){alerta.innerHTML='🚀 Excelente consumo'}else{alerta.innerHTML=''}
 renderGrafico(labels,consumo)
-
-/* ================= GRÁFICO MENSAL ================= */
 let meses={}
 data.forEach((a,i)=>{
 let mes=a.data_abastecimento?.slice(0,7)
@@ -414,18 +381,14 @@ meses[mes].litros+=litros
 }
 }
 })
-
 let labelsMes=[],consumoMes=[]
-for(let m in meses){
+Object.keys(meses).sort((a,b)=>new Date(a)-new Date(b)).forEach(m=>{
 if(meses[m].litros>0){
-labelsMes.push(m)
+labelsMes.push(formatarMes(m))
 consumoMes.push(meses[m].km/meses[m].litros)
 }
-}
-
+})
 renderGraficoMensal(labelsMes,consumoMes)
-
-/* ================= DETALHE ================= */
 detalheBox.innerHTML=`
 <div class="card">
 <b>Total gasto:</b> R$ ${totalValor.toFixed(2)}<br>
@@ -508,6 +471,11 @@ render()
 function formatarData(d){
 const dt=new Date(d)
 return dt.toLocaleDateString("pt-BR")
+}
+/* =============FORMATAR MÊS================================================== */
+function formatarMes(m){
+const d=new Date(m+"-01")
+return d.toLocaleDateString("pt-BR",{month:"2-digit",year:"numeric"})
 }
 /* =============FUNCTION LOGOUT================================================= */
 function logout(){localStorage.clear();location.reload()}
