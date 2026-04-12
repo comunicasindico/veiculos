@@ -201,18 +201,11 @@ select.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo} ${x.placa?'- '+x.
 window.VID=v[0].id
 select.addEventListener("change",async function(){
 window.VID=this.value
-const diInput=document.getElementById("dataInicio")
-const dfInput=document.getElementById("dataFim")
-const diSalvo=localStorage.getItem("filtro_di")
-const dfSalvo=localStorage.getItem("filtro_df")
-if(diSalvo&&dfSalvo){
-if(diInput)diInput.value=diSalvo
-if(dfInput)dfInput.value=dfSalvo
-}else{
-await definirPeriodoInicial()
-}
+await aplicarPeriodo()
 render()
 })
+await aplicarPeriodo()
+render()
 }
 /* ====================================================011 – PERÍODO AUTOMÁTICO FINAL==================================================== */
 async function definirPeriodoInicial(){
@@ -225,10 +218,26 @@ if(data&&data.length&&data[0].data_abastecimento){
 const primeira=data[0].data_abastecimento.slice(0,10)
 inicio=primeira<anoBase?primeira:anoBase
 }
-const di=document.getElementById("dataInicio")
-const df=document.getElementById("dataFim")
-if(di)di.value=inicio
-if(df)df.value=hoje
+return{inicio,hoje}
+}
+/* ====================================================012 – APLICAR PERÍODO==================================================== */
+async function aplicarPeriodo(){
+const diInput=document.getElementById("dataInicio")
+const dfInput=document.getElementById("dataFim")
+if(!diInput||!dfInput){
+console.error("Inputs não encontrados")
+return
+}
+const diSalvo=localStorage.getItem("filtro_di")
+const dfSalvo=localStorage.getItem("filtro_df")
+if(diSalvo&&dfSalvo){
+diInput.value=diSalvo
+dfInput.value=dfSalvo
+}else{
+const p=await definirPeriodoInicial()
+diInput.value=p.inicio
+dfInput.value=p.hoje
+}
 }
 /* ====================================================020 CAMERA CONTROL==================================================== */
 let stream=null
