@@ -142,6 +142,11 @@ window.grafico=document.getElementById("grafico")
 const select=document.getElementById("veiculoSel")
 init()
 })
+/* ====================================================000 – DATE UTILS==================================================== */
+function hojeISO(){const d=new Date();const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return localhojeISO()}
+function toISODateLocal(d){if(!d)return"";if(typeof d==="string"){return d.slice(0,10)}const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return localhojeISO()}
+function fromISOToBR(iso){if(!iso)return"-";const s=iso.slice(0,10);const[y,m,dd]=s.split("-");return`${dd}/${m}/${y}`}
+
 /* ========LOGIN================================================== */
 async function login(){
 const u=user.value.toLowerCase()
@@ -162,15 +167,8 @@ init()
 }
 /* ====================================================010 INIT==================================================== */
 async function init(){
-const hoje=new Date()
-const inicio=new Date(hoje.getFullYear(),hoje.getMonth(),1)
-const fim=new Date()
-dataInicio.value=inicio.toISOString().slice(0,10)
-dataFim.value=fim.toISOString().slice(0,10)
-  
 const uid=localStorage.getItem("uid")
 const tipo=localStorage.getItem("tipo")
-/* 🔐 CONTROLE LOGIN */
 if(!uid){
 document.getElementById("loginBox").style.display="block"
 document.getElementById("app").style.display="none"
@@ -179,48 +177,39 @@ return
 document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
 }
-/* 🚗 BUSCAR VEÍCULOS */
 let {data:v,error}=await db.from("veiculos").select("*")
 if(error){alert("Erro ao carregar veículos");return}
-/* 🔥 FILTRO POR PERFIL */
-if(tipo!=="admin"){
-v=v.filter(x=>String(x.usuario_id)===String(uid))
-}
-/* 🧠 GARANTIA */
+if(tipo!=="admin"){v=v.filter(x=>String(x.usuario_id)===String(uid))}
 if(!v||!v.length){
 const select=document.getElementById("veiculoSel")
 if(select){select.innerHTML="<option>Nenhum veículo</option>"}
 return
 }
-/* 🚗 LISTA */
 window.VEICULOS=v
-
 const select=document.getElementById("veiculoSel")
 if(!select){
 console.error("veiculoSel não encontrado")
 return
 }
-
-select.innerHTML=v.map(x=>`
-<option value="${x.id}">
-${x.modelo} ${x.placa?'- '+x.placa:''}
-</option>
-`).join("")
-
-/* 🎯 VEÍCULO ATUAL */
+select.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo} ${x.placa?'- '+x.placa:''}</option>`).join("")
 window.VID=v[0].id
-
-/* 🔁 TROCA VEÍCULO (CORRETO) */
-select.addEventListener("change",function(){
+select.addEventListener("change",async function(){
 window.VID=this.value
+await definirPeriodoInicial()
 render()
 })
-
-/* 🚀 RENDER */
+await definirPeriodoInicial()
 render()
 }
-/* ============================aplicar filtro=================================================== */
-
+/* ====================================================011 – PERÍODO AUTOMÁTICO==================================================== */
+async function definirPeriodoInicial(){
+const fim=hojeISO()
+let {data}=await db.from("abastecimentos").select("data_abastecimento").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true}).limit(1)
+let inicio=fim
+if(data&&data.length&&data[0].data_abastecimento){inicio=toISODateLocal(data[0].data_abastecimento)}
+dataInicio.value=inicio
+dataFim.value=fim
+}
 /* ====================================================020 CAMERA CONTROL==================================================== */
 let stream=null
 async function abrirCamera(){
@@ -272,7 +261,7 @@ veiculo_id:VID,
 litros:parseFloat(litros.value),
 valor_total:parseFloat(valor.value),
 quilometragem:parseFloat(km.value),
-data_abastecimento:new Date().toISOString()
+data_abastecimento:hojeISO()
 })
 }
 await db.from("veiculos").update({km_atual:parseFloat(km.value)}).eq("id",VID)
@@ -417,7 +406,7 @@ renderGrafico(consumo.map((_,i)=>i+1),consumo)
 /* MENSAL */
 let meses={}
 data.forEach((a,i)=>{
-let m=a.data_abastecimento?.slice(0,7)
+let mes=(a.data_abastecimento||"").slice(0,7)
 if(!m)return
 if(!meses[m])meses[m]={km:0,litros:0}
 if(i>0){
@@ -523,10 +512,7 @@ await db.from("abastecimentos").delete().eq("id",id)
 render()
 }
 /* =============FORMATAR DATA================================================== */
-function formatarData(d){
-const dt=new Date(d)
-return dt.toLocaleDateString("pt-BR")
-}
+function formatarData(d){return fromISOToBR(d)}
 /* =============FORMATAR MÊS================================================== */
 function formatarMes(m){
 const d=new Date(m+"-01")
