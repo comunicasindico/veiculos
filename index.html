@@ -155,21 +155,19 @@ function fromISOToBR(iso){if(!iso)return"-";const s=iso.slice(0,10);const[y,m,dd
 
 /* ========LOGIN================================================== */
 async function login(){
-const u=user.value.toLowerCase()
-const p=pass.value
-const {data}=await db.from("usuarios")
-.select("*")
-.eq("usuario_apelido",u)
-.single()
-if(!data||data.senha_hash!==p){
+const u=document.getElementById("user")?.value?.toLowerCase()
+const p=document.getElementById("pass")?.value
+if(!u||!p){alert("Preencha usuário e senha");return}
+const {data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",u).single()
+if(error||!data||data.senha_hash!==p){
 alert("Login inválido")
 return
 }
 localStorage.setItem("uid",data.id)
-localStorage.setItem("tipo",data.perfil)
+localStorage.setItem("tipo",data.perfil==="admin"?"admin":"motorista")
 document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
-init()
+if(typeof init==="function"){init()}
 }
 /* ====================================================010 INIT==================================================== */
 async function init(){
