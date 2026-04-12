@@ -147,7 +147,11 @@ const select=document.getElementById("veiculoSel")
 init()
 })
 /* ====================================================000 – DATE UTILS==================================================== */
-function hojeISO(){const d=new Date();const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return hojeISO()}
+function hojeISO(){
+const d=new Date()
+const local=new Date(d.getTime()-d.getTimezoneOffset()*60000)
+return local.toISOString().slice(0,10)
+}
 function toISODateLocal(d){if(!d)return"";if(typeof d==="string"){return d.slice(0,10)}const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return hojeISO()}
 function fromISOToBR(iso){if(!iso)return"-";const s=iso.slice(0,10);const[y,m,dd]=s.split("-");return`${dd}/${m}/${y}`}
 
