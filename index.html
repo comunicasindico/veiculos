@@ -201,12 +201,13 @@ select.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo} ${x.placa?'- '+x.
 window.VID=v[0].id
 select.addEventListener("change",async function(){
 window.VID=this.value
-await definirPeriodoInicial()
+const diInput=document.getElementById("dataInicio")
+const dfInput=document.getElementById("dataFim")
 const diSalvo=localStorage.getItem("filtro_di")
 const dfSalvo=localStorage.getItem("filtro_df")
 if(diSalvo&&dfSalvo){
-dataInicio.value=diSalvo
-dataFim.value=dfSalvo
+if(diInput)diInput.value=diSalvo
+if(dfInput)dfInput.value=dfSalvo
 }else{
 await definirPeriodoInicial()
 }
