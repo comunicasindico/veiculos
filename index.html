@@ -150,9 +150,18 @@ const d=new Date()
 const local=new Date(d.getTime()-d.getTimezoneOffset()*60000)
 return local.toISOString().slice(0,10)
 }
-function toISODateLocal(d){if(!d)return"";if(typeof d==="string"){return d.slice(0,10)}const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return hojeISO()}
-function fromISOToBR(iso){if(!iso)return"-";const s=iso.slice(0,10);const[y,m,dd]=s.split("-");return`${dd}/${m}/${y}`}
-
+function toISODateLocal(d){
+if(!d)return""
+if(typeof d==="string")return d.slice(0,10)
+const local=new Date(d.getTime()-d.getTimezoneOffset()*60000)
+return local.toISOString().slice(0,10)
+}
+function fromISOToBR(iso){
+if(!iso)return"-"
+const s=iso.slice(0,10)
+const[y,m,dd]=s.split("-")
+return`${dd}/${m}/${y}`
+}
 /* ========LOGIN================================================== */
 async function login(){
 const u=document.getElementById("user")?.value?.toLowerCase()
@@ -169,10 +178,12 @@ document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
 if(typeof init==="function"){init()}
 }
-/* ====================================================010 INIT==================================================== */
+/* ====================================================010 – INIT FINAL PROFISSIONAL==================================================== */
 async function init(){
 const uid=localStorage.getItem("uid")
 const tipo=localStorage.getItem("tipo")
+const empresa=localStorage.getItem("empresa_id")
+
 if(!uid){
 document.getElementById("loginBox").style.display="block"
 document.getElementById("app").style.display="none"
@@ -181,28 +192,45 @@ return
 document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
 }
-let {data:v,error}=await db.from("veiculos").select("*")
+
+/* 🚗 BUSCAR VEÍCULOS */
+let {data:v,error}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
 if(error){alert("Erro ao carregar veículos");return}
 if(tipo!=="admin"){v=v.filter(x=>String(x.usuario_id)===String(uid))}
+
+/* 🔥 SEM VEÍCULO */
 if(!v||!v.length){
 const select=document.getElementById("veiculoSel")
 if(select){select.innerHTML="<option>Nenhum veículo</option>"}
 return
 }
+
+/* 🧠 CACHE */
 window.VEICULOS=v
+
 const select=document.getElementById("veiculoSel")
 if(!select){
 console.error("veiculoSel não encontrado")
 return
 }
+
+/* 🔽 SELECT */
 select.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo} ${x.placa?'- '+x.placa:''}</option>`).join("")
+
+/* 🎯 VEÍCULO ATUAL */
 window.VID=v[0].id
+
+/* 📅 PERÍODO INTELIGENTE */
+await aplicarPeriodo()
+
+/* 🔁 TROCA VEÍCULO */
 select.addEventListener("change",async function(){
 window.VID=this.value
 await aplicarPeriodo()
 render()
 })
-await aplicarPeriodo()
+
+/* 🚀 RENDER */
 render()
 }
 /* ====================================================011 – PERÍODO AUTOMÁTICO FINAL==================================================== */
@@ -231,11 +259,19 @@ const dfSalvo=localStorage.getItem("filtro_df")
 if(diSalvo&&dfSalvo){
 diInput.value=diSalvo
 dfInput.value=dfSalvo
-}else{
+return
+}
 const p=await definirPeriodoInicial()
+if(!p){
+console.warn("Período não retornado, usando fallback")
+const hoje=hojeISO()
+const anoAtual=new Date().getFullYear()
+diInput.value=(anoAtual-1)+"-01-01"
+dfInput.value=hoje
+return
+}
 diInput.value=p.inicio
 dfInput.value=p.hoje
-}
 }
 /* ====================================================020 CAMERA CONTROL==================================================== */
 let stream=null
