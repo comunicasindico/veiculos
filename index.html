@@ -390,18 +390,16 @@ return d>=di&&d<=df
 })
 /* HISTÓRICO COMPACTO */
 lista.innerHTML=data.map(a=>`
-<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px">
-<div>📅 ${formatarData(a.data_abastecimento)}</div>
-<div style="display:flex;gap:10px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;margin:2px 0;background:rgba(255,255,255,0.02);border-radius:6px;font-size:12px">
+<div style="min-width:95px">📅 ${formatarData(a.data_abastecimento)}</div>
+<div style="display:flex;gap:8px;flex:1;justify-content:center">
 <span>⛽ ${a.litros||0}L</span>
-<span>💰 R$ ${(a.valor_total||0).toFixed(2)}</span>
+<span>💰 ${(a.valor_total||0).toFixed(0)}</span>
 <span>📍 ${a.quilometragem||0}</span>
 </div>
-<div style="display:flex;gap:5px">
-<button onclick="editarInline('${a.id}')">✏️</button>
-<button onclick="salvarInline('${a.id}')" id="btnSave_${a.id}" style="display:none">💾</button>
-<button onclick="cancelarInline('${a.id}')" id="btnCancel_${a.id}" style="display:none">❌</button>
-<button onclick="excluir('${a.id}')">🗑️</button>
+<div style="display:flex;gap:4px">
+<button onclick="editarInline('${a.id}')" style="padding:2px 6px">✏️</button>
+<button onclick="excluir('${a.id}')" style="padding:2px 6px">🗑️</button>
 </div>
 </div>
 `).join("")
