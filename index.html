@@ -67,6 +67,10 @@ canvas{max-height:260px}
 
 <div style="display:flex;gap:5px">
 <button onclick="pesquisarPeriodo()">🔍 Pesquisar</button>
+<button onclick="filtroHoje()">Hoje</button>
+<button onclick="filtro7()">7D</button>
+<button onclick="filtro30()">30D</button>
+<button onclick="filtroAno()">Ano</button>
 </div>
 
 <div style="margin-left:auto;display:flex;gap:5px">
@@ -196,6 +200,14 @@ window.VID=v[0].id
 select.addEventListener("change",async function(){
 window.VID=this.value
 await definirPeriodoInicial()
+const diSalvo=localStorage.getItem("filtro_di")
+const dfSalvo=localStorage.getItem("filtro_df")
+if(diSalvo&&dfSalvo){
+dataInicio.value=diSalvo
+dataFim.value=dfSalvo
+}else{
+await definirPeriodoInicial()
+}
 render()
 })
 }
@@ -546,16 +558,50 @@ render()
 }
 /* ======PESQUISAR PERIODO==================================================== */
 function pesquisarPeriodo(){
-const di=document.getElementById("dataInicio").value
-const df=document.getElementById("dataFim").value
-if(!di||!df){
+const di=dataInicio.value
+const df=dataFim.value
+if(!di&&!df){
 alert("Selecione o período")
 return
 }
-document.getElementById("filtroPeriodo")?.remove() // segurança
+localStorage.setItem("filtro_di",di||"")
+localStorage.setItem("filtro_df",df||"")
 render()
 }
 
+
+  
+function setPeriodo(di,df){
+dataInicio.value=di
+dataFim.value=df
+localStorage.setItem("filtro_di",di)
+localStorage.setItem("filtro_df",df)
+render()
+}
+function filtroHoje(){
+const h=hojeISO()
+setPeriodo(h,h)
+}
+function filtro7(){
+const d=new Date()
+d.setDate(d.getDate()-7)
+const di=toISODateLocal(d)
+const df=hojeISO()
+setPeriodo(di,df)
+}
+function filtro30(){
+const d=new Date()
+d.setDate(d.getDate()-30)
+const di=toISODateLocal(d)
+const df=hojeISO()
+setPeriodo(di,df)
+}
+function filtroAno(){
+const ano=new Date().getFullYear()
+const di=ano+"-01-01"
+const df=hojeISO()
+setPeriodo(di,df)
+}
   
 /* ======103 PDF PROFISSIONAL==================================================== */
 async function exportarPDF(){
