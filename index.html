@@ -389,20 +389,53 @@ const d=a.data_abastecimento.substring(0,10)
 return d>=di&&d<=df
 }).sort((a,b)=>a.data_abastecimento.localeCompare(b.data_abastecimento))
 /* HISTÓRICO COMPACTO */
-lista.innerHTML=data.map(a=>`
+/* ====================================================030 – HISTÓRICO PROFISSIONAL==================================================== */
+let grupos={}
+data.forEach((a,i)=>{
+let chave=(a.data_abastecimento||"").slice(0,7)
+if(!chave)return
+if(!grupos[chave])grupos[chave]=[]
+grupos[chave].push(a)
+})
+let html=""
+Object.keys(grupos).sort((a,b)=>b.localeCompare(a)).forEach(m=>{
+let arr=grupos[m]
+let totalMes=0,totalKmMes=0,totalLitros=0
+arr.forEach((a,i)=>{
+totalMes+=(a.valor_total||0)
+if(i>0){
+let km=(a.quilometragem||0)-(arr[i-1].quilometragem||0)
+let litros=a.litros||0
+if(km>0&&litros>0){
+totalKmMes+=km
+totalLitros+=litros
+}
+}
+})
+let mediaMes=totalLitros>0?(totalKmMes/totalLitros).toFixed(2):"-"
+html+=`
+<div style="margin-top:10px;padding:6px 10px;background:rgba(34,197,94,0.08);border-radius:8px;font-size:13px;font-weight:bold">
+📊 ${formatarMes(m)} • 💰 R$ ${totalMes.toFixed(0)} • 📍 ${totalKmMes} km • ⛽ ${mediaMes} km/l
+</div>
+`
+arr.slice().reverse().forEach(a=>{
+html+=`
 <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;margin:2px 0;background:rgba(255,255,255,0.02);border-radius:6px;font-size:12px">
-<div style="min-width:95px">📅 ${formatarData(a.data_abastecimento)}</div>
+<div style="min-width:90px">📅 ${formatarData(a.data_abastecimento)}</div>
 <div style="display:flex;gap:8px;flex:1;justify-content:center">
 <span>⛽ ${a.litros||0}L</span>
 <span>💰 ${(a.valor_total||0).toFixed(0)}</span>
 <span>📍 ${a.quilometragem||0}</span>
 </div>
 <div style="display:flex;gap:4px">
-<button onclick="editarInline('${a.id}')" style="padding:2px 6px">✏️</button>
-<button onclick="excluir('${a.id}')" style="padding:2px 6px">🗑️</button>
+<button onclick="editarInline('${a.id}')">✏️</button>
+<button onclick="excluir('${a.id}')">🗑️</button>
 </div>
 </div>
-`).join("")
+`
+})
+})
+lista.innerHTML=html
 /* KPI */
 if(data.length<2){
 kpi.innerHTML=""
@@ -430,9 +463,7 @@ let media=(totalCons/count).toFixed(2)
 let custoKm=(totalValor/totalKm||0).toFixed(2)
 kpi.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="card">Média<br>${media}</div><div class="card">Custo/km<br>${custoKm}</div><div class="card">Melhor<br>${melhor.toFixed(2)}</div><div class="card">Pior<br>${pior.toFixed(2)}</div></div>`
 alerta.innerHTML=media<6?"⚠ Consumo alto":media>9?"🚀 Excelente":""
-/* GRÁFICO */
 renderGrafico(consumo.map((_,i)=>i+1),consumo)
-/* MENSAL */
 let meses={}
 data.forEach((a,i)=>{
 let m=(a.data_abastecimento||"").slice(0,7)
@@ -455,7 +486,6 @@ valores.push(meses[m].km/meses[m].litros)
 }
 })
 renderGraficoMensal(labels,valores)
-/* DETALHE */
 detalheBox.innerHTML=`<div class="card">Total gasto: R$ ${totalValor.toFixed(2)}<br>Total KM: ${totalKm}<br>Média: ${media}</div>`
 }
 }
