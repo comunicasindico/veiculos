@@ -494,6 +494,7 @@ labels.push(formatarMes(m))
 valores.push(meses[m].km/meses[m].litros)
 }
 })
+
 renderGraficoMensal(labels,valores)
 detalheBox.innerHTML=`<div class="card">Total gasto: R$ ${totalValor.toFixed(2)}<br>Total KM: ${totalKm}<br>Média: ${media}</div>`
 }
