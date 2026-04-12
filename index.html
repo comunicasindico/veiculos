@@ -224,8 +224,10 @@ if(data&&data.length&&data[0].data_abastecimento){
 const primeira=data[0].data_abastecimento.slice(0,10)
 inicio=primeira<anoBase?primeira:anoBase
 }
-dataInicio.value=inicio
-dataFim.value=hoje
+const di=document.getElementById("dataInicio")
+const df=document.getElementById("dataFim")
+if(di)di.value=inicio
+if(df)df.value=hoje
 }
 /* ====================================================020 CAMERA CONTROL==================================================== */
 let stream=null
