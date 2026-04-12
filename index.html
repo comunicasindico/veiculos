@@ -373,7 +373,7 @@ if(e.target.id==="csvFile")importarCSV(e.target.files[0])
 /* ====================================================020 – RENDER FINAL==================================================== */
 async function render(){
 try{
-let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID)
 if(!data)data=[]
 const hoje=hojeISO()
 const anoAtual=new Date().getFullYear()
@@ -387,7 +387,7 @@ data=data.filter(a=>{
 if(!a.data_abastecimento)return false
 const d=a.data_abastecimento.substring(0,10)
 return d>=di&&d<=df
-})
+}).sort((a,b)=>a.data_abastecimento.localeCompare(b.data_abastecimento))
 /* HISTÓRICO COMPACTO */
 lista.innerHTML=data.map(a=>`
 <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;margin:2px 0;background:rgba(255,255,255,0.02);border-radius:6px;font-size:12px">
