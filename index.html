@@ -68,8 +68,6 @@ canvas{max-height:260px}
 <div style="display:flex;gap:5px">
 <button onclick="pesquisarPeriodo()">🔍 Pesquisar</button>
 <button onclick="filtroHoje()">Hoje</button>
-<button onclick="filtro7()">7D</button>
-<button onclick="filtro30()">30D</button>
 <button onclick="filtroAno()">Ano</button>
 </div>
 
@@ -425,7 +423,7 @@ renderGrafico(consumo.map((_,i)=>i+1),consumo)
 /* MENSAL */
 let meses={}
 data.forEach((a,i)=>{
-let mes=(a.data_abastecimento||"").slice(0,7)
+let m=(a.data_abastecimento||"").slice(0,7)
 if(!m)return
 if(!meses[m])meses[m]={km:0,litros:0}
 if(i>0){
