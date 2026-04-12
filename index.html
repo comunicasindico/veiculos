@@ -143,8 +143,8 @@ const select=document.getElementById("veiculoSel")
 init()
 })
 /* ====================================================000 – DATE UTILS==================================================== */
-function hojeISO(){const d=new Date();const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return localhojeISO()}
-function toISODateLocal(d){if(!d)return"";if(typeof d==="string"){return d.slice(0,10)}const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return localhojeISO()}
+function hojeISO(){const d=new Date();const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return hojeISO()}
+function toISODateLocal(d){if(!d)return"";if(typeof d==="string"){return d.slice(0,10)}const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return hojeISO()}
 function fromISOToBR(iso){if(!iso)return"-";const s=iso.slice(0,10);const[y,m,dd]=s.split("-");return`${dd}/${m}/${y}`}
 
 /* ========LOGIN================================================== */
@@ -344,15 +344,16 @@ async function render(){
 let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
 if(!data)data=[]
 
-const di=document.getElementById("dataInicio")?.value
-const df=document.getElementById("dataFim")?.value
-/* 🔥 FILTRO NOVO (CABEÇALHO) */
-if(di&&df){
+const hoje=hojeISO()
+const anoAtual=new Date().getFullYear()
+let di=document.getElementById("dataInicio")?.value
+let df=document.getElementById("dataFim")?.value
+if(!di){di=anoAtual+"-01-01"}
+if(!df){df=hoje}
 data=data.filter(a=>{
-const d=a.data_abastecimento?.slice(0,10)
+const d=(a.data_abastecimento||"").slice(0,10)
 return d>=di&&d<=df
 })
-}
 /* LISTA COM EDIT */
 lista.innerHTML=data.map(a=>`
 <div class="card">
