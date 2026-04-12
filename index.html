@@ -445,7 +445,7 @@ html+=`
 </div>
 </div>
 `
-})
+
 })
 lista.innerHTML=html
 /* KPI */
@@ -505,7 +505,7 @@ detalheBox.innerHTML=`<div class="card">Total gasto: R$ ${totalValor.toFixed(2)}
 console.error("Erro no render:",e)
 }
 }
-/* ====================================================101 – GRAFICO MENSAL PRO==================================================== */
+  /* ====================================================101 – GRAFICO MENSAL PRO==================================================== */
 function renderGraficoMensal(labels,data){
 const el=document.getElementById("graficoMensal")
 if(!el)return
