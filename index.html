@@ -357,19 +357,23 @@ if(e.target.id==="csvFile")importarCSV(e.target.files[0])
 })
 /* ====================================================100 – RENDER PROFISSIONAL COMPLETO==================================================== */
 async function render(){
+try{
 let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
 if(!data)data=[]
 
 const hoje=hojeISO()
 const anoAtual=new Date().getFullYear()
-let di=document.getElementById("dataInicio")?.value
-let df=document.getElementById("dataFim")?.value
+let di=dataInicio.value
+let df=dataFim.value
 if(!di){di=anoAtual+"-01-01"}
 if(!df){df=hoje}
+console.log("FILTRO:",di,"→",df)
 data=data.filter(a=>{
-const d=(a.data_abastecimento||"").slice(0,10)
+if(!a.data_abastecimento)return false
+const d=a.data_abastecimento.substring(0,10)
 return d>=di&&d<=df
 })
+console.log("DADOS FILTRADOS:",data.map(x=>x.data_abastecimento))
 /* LISTA COM EDIT */
 lista.innerHTML=data.map(a=>`
 <div class="card">
@@ -448,6 +452,10 @@ Total gasto: R$ ${totalValor.toFixed(2)}<br>
 Total KM: ${totalKm}<br>
 Média: ${media}
 </div>`
+
+}catch(e){
+console.error("Erro no render:",e)
+}
 }
 /* ====================================================101 – GRAFICO MENSAL PRO==================================================== */
 function renderGraficoMensal(labels,data){
