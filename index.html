@@ -401,11 +401,16 @@ let html=""
 Object.keys(grupos).sort((a,b)=>b.localeCompare(a)).forEach(m=>{
 let arr=grupos[m]
 let totalMes=0,totalKmMes=0,totalLitros=0
-arr.forEach((a,i)=>{
+arr.forEach(a=>{
 totalMes+=(a.valor_total||0)
-if(i>0){
-let km=(a.quilometragem||0)-(arr[i-1].quilometragem||0)
-let litros=a.litros||0
+})
+for(let i=1;i<data.length;i++){
+let atual=data[i]
+let anterior=data[i-1]
+let mesAtual=(atual.data_abastecimento||"").slice(0,7)
+if(mesAtual!==m)continue
+let km=(atual.quilometragem||0)-(anterior.quilometragem||0)
+let litros=atual.litros||0
 if(km>0&&litros>0){
 totalKmMes+=km
 totalLitros+=litros
@@ -421,7 +426,12 @@ html+=`
 arr.slice().reverse().forEach(a=>{
 html+=`
 <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;margin:2px 0;background:rgba(255,255,255,0.02);border-radius:6px;font-size:12px">
-<div style="min-width:90px">📅 ${formatarData(a.data_abastecimento)}</div>
+<div id="view_${a.id}" style="min-width:90px">📅 ${formatarData(a.data_abastecimento)}</div>
+<div id="edit_${a.id}" style="display:none;flex:1">
+<input id="lit_${a.id}" value="${a.litros||0}" style="width:60px">
+<input id="val_${a.id}" value="${a.valor_total||0}" style="width:80px">
+<input id="km_${a.id}" value="${a.quilometragem||0}" style="width:80px">
+</div>
 <div style="display:flex;gap:8px;flex:1;justify-content:center">
 <span>⛽ ${a.litros||0}L</span>
 <span>💰 ${(a.valor_total||0).toFixed(0)}</span>
@@ -429,6 +439,8 @@ html+=`
 </div>
 <div style="display:flex;gap:4px">
 <button onclick="editarInline('${a.id}')">✏️</button>
+<button onclick="salvarInline('${a.id}')" id="btnSave_${a.id}" style="display:none">💾</button>
+<button onclick="cancelarInline('${a.id}')" id="btnCancel_${a.id}" style="display:none">❌</button>
 <button onclick="excluir('${a.id}')">🗑️</button>
 </div>
 </div>
