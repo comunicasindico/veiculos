@@ -213,14 +213,19 @@ await definirPeriodoInicial()
 render()
 })
 }
-/* ====================================================011 – PERÍODO AUTOMÁTICO==================================================== */
+/* ====================================================011 – PERÍODO AUTOMÁTICO FINAL==================================================== */
 async function definirPeriodoInicial(){
-const fim=hojeISO()
+const hoje=hojeISO()
+const anoAtual=new Date().getFullYear()
+const anoBase=(anoAtual-1)+"-01-01"
 let {data}=await db.from("abastecimentos").select("data_abastecimento").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true}).limit(1)
-let inicio=fim
-if(data&&data.length&&data[0].data_abastecimento){inicio=toISODateLocal(data[0].data_abastecimento)}
+let inicio=anoBase
+if(data&&data.length&&data[0].data_abastecimento){
+const primeira=data[0].data_abastecimento.slice(0,10)
+inicio=primeira<anoBase?primeira:anoBase
+}
 dataInicio.value=inicio
-dataFim.value=fim
+dataFim.value=hoje
 }
 /* ====================================================020 CAMERA CONTROL==================================================== */
 let stream=null
