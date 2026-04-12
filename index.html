@@ -370,35 +370,32 @@ render()
 document.addEventListener("change",e=>{
 if(e.target.id==="csvFile")importarCSV(e.target.files[0])
 })
-/* ====================================================100 – RENDER PROFISSIONAL COMPLETO==================================================== */
+/* ====================================================020 – RENDER FINAL==================================================== */
 async function render(){
 try{
 let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
 if(!data)data=[]
-
 const hoje=hojeISO()
 const anoAtual=new Date().getFullYear()
-let di=dataInicio.value
-let df=dataFim.value
-if(!di){di=anoAtual+"-01-01"}
+const diInput=document.getElementById("dataInicio")
+const dfInput=document.getElementById("dataFim")
+let di=diInput?.value
+let df=dfInput?.value
+if(!di){di=(anoAtual-1)+"-01-01"}
 if(!df){df=hoje}
-console.log("FILTRO:",di,"→",df)
 data=data.filter(a=>{
 if(!a.data_abastecimento)return false
 const d=a.data_abastecimento.substring(0,10)
 return d>=di&&d<=df
 })
-console.log("DADOS FILTRADOS:",data.map(x=>x.data_abastecimento))
-/* LISTA COM EDIT */
+/* HISTÓRICO COMPACTO */
 lista.innerHTML=data.map(a=>`
-<div class="card">
-<div id="view_${a.id}" style="flex:1">
-📅 ${formatarData(a.data_abastecimento)} - ⛽ ${a.litros||0}L - 💰 R$ ${(a.valor_total||0).toFixed(2)} - 📍 ${a.quilometragem||0}
-</div>
-<div id="edit_${a.id}" style="display:none;flex:1">
-<input id="lit_${a.id}" value="${a.litros||0}">
-<input id="val_${a.id}" value="${a.valor_total||0}">
-<input id="km_${a.id}" value="${a.quilometragem||0}">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px">
+<div>📅 ${formatarData(a.data_abastecimento)}</div>
+<div style="display:flex;gap:10px">
+<span>⛽ ${a.litros||0}L</span>
+<span>💰 R$ ${(a.valor_total||0).toFixed(2)}</span>
+<span>📍 ${a.quilometragem||0}</span>
 </div>
 <div style="display:flex;gap:5px">
 <button onclick="editarInline('${a.id}')">✏️</button>
@@ -408,7 +405,7 @@ lista.innerHTML=data.map(a=>`
 </div>
 </div>
 `).join("")
-/* KPI COMPLETO */
+/* KPI */
 if(data.length<2){kpi.innerHTML="";alerta.innerHTML="";return}
 let consumo=[],totalCons=0,count=0,totalValor=0,totalKm=0,melhor=0,pior=999
 for(let i=1;i<data.length;i++){
@@ -427,13 +424,7 @@ totalKm+=km
 if(count===0)return
 let media=(totalCons/count).toFixed(2)
 let custoKm=(totalValor/totalKm||0).toFixed(2)
-kpi.innerHTML=`
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-<div class="card">Média<br>${media}</div>
-<div class="card">Custo/km<br>${custoKm}</div>
-<div class="card">Melhor<br>${melhor.toFixed(2)}</div>
-<div class="card">Pior<br>${pior.toFixed(2)}</div>
-</div>`
+kpi.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="card">Média<br>${media}</div><div class="card">Custo/km<br>${custoKm}</div><div class="card">Melhor<br>${melhor.toFixed(2)}</div><div class="card">Pior<br>${pior.toFixed(2)}</div></div>`
 alerta.innerHTML=media<6?"⚠ Consumo alto":media>9?"🚀 Excelente":""
 /* GRÁFICO */
 renderGrafico(consumo.map((_,i)=>i+1),consumo)
@@ -461,13 +452,7 @@ valores.push(meses[m].km/meses[m].litros)
 })
 renderGraficoMensal(labels,valores)
 /* DETALHE */
-detalheBox.innerHTML=`
-<div class="card">
-Total gasto: R$ ${totalValor.toFixed(2)}<br>
-Total KM: ${totalKm}<br>
-Média: ${media}
-</div>`
-
+detalheBox.innerHTML=`<div class="card">Total gasto: R$ ${totalValor.toFixed(2)}<br>Total KM: ${totalKm}<br>Média: ${media}</div>`
 }catch(e){
 console.error("Erro no render:",e)
 }
