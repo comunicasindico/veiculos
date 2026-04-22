@@ -166,23 +166,52 @@ return`${dd}/${m}/${y}`
 async function login(){
 const u=document.getElementById("user")?.value?.toLowerCase()
 const p=document.getElementById("pass")?.value
-if(!u||!p){alert("Preencha usuário e senha");return}
-const {data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",u).single()
-if(error||!data||data.senha_hash!==p){
-alert("Login inválido")
+
+if(!u||!p){
+alert("Preencha usuário e senha")
 return
 }
-localStorage.setItem("uid",data.id)
-localStorage.setItem("tipo",data.perfil==="admin"?"admin":"motorista")
+
+/* 🔥 BUSCA SEGURA (SEM 406) */
+const {data,error}=await db.from("usuarios")
+.select("*")
+.eq("usuario_apelido",u)
+
+if(error||!data||!data.length){
+alert("Usuário não encontrado")
+return
+}
+
+const user=data[0]
+
+if(user.senha_hash!==p){
+alert("Senha incorreta")
+return
+}
+
+/* 🔥 SALVA CONTEXTO COMPLETO */
+localStorage.setItem("uid",user.id)
+localStorage.setItem("tipo",user.perfil==="admin"?"admin":"motorista")
+localStorage.setItem("empresa_id",user.empresa_id||"4d6ca61c-4435-4102-b628-69b0e126e9f4")
+
+/* 🔥 ENTRA DIRETO */
 document.getElementById("loginBox").style.display="none"
 document.getElementById("app").style.display="block"
-if(typeof init==="function"){init()}
+
+init()
 }
 /* ====================================================010 – INIT FINAL PROFISSIONAL==================================================== */
 async function init(){
 const uid=localStorage.getItem("uid")
 const tipo=localStorage.getItem("tipo")
-const empresa=localStorage.getItem("empresa_id")
+const empresa=localStorage.getItem("empresa_id")||"4d6ca61c-4435-4102-b628-69b0e126e9f4"
+
+/* 🔥 BLOQUEIO SE NÃO TEM EMPRESA */
+if(!empresa){
+alert("Usuário sem empresa vinculada")
+logout()
+return
+}
 
 if(!uid){
 document.getElementById("loginBox").style.display="block"
@@ -194,7 +223,13 @@ document.getElementById("app").style.display="block"
 }
 
 /* 🚗 BUSCAR VEÍCULOS */
-let {data:v,error}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
+let query=db.from("veiculos").select("*")
+
+if(empresa){
+query=query.eq("empresa_id",empresa)
+}
+
+let {data:v,error}=await query
 if(error){alert("Erro ao carregar veículos");return}
 if(tipo!=="admin"){v=v.filter(x=>String(x.usuario_id)===String(uid))}
 
@@ -229,7 +264,10 @@ window.VID=this.value
 await aplicarPeriodo()
 render()
 })
-
+if(!uid){
+logout()
+return
+}
 /* 🚀 RENDER */
 render()
 }
@@ -815,6 +853,13 @@ toggle.innerText="−"
 localStorage.setItem("accordion",index)
 }
 })
+/* 🔥 AUTO LOGIN */
+const uid=localStorage.getItem("uid")
+if(uid){
+document.getElementById("loginBox").style.display="none"
+document.getElementById("app").style.display="block"
+init()
+}
 })
 
   
