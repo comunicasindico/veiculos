@@ -233,6 +233,21 @@ let {data:v,error}=await query
 if(error){alert("Erro ao carregar veículos");return}
 if(tipo!=="admin"){v=v.filter(x=>String(x.usuario_id)===String(uid))}
 
+v=v.filter(x=>x.empresa_id===empresa)
+/* 🔒 SEGURANÇA MOTORISTA */
+if(tipo!=="admin"){
+v=v.filter(x=>String(x.usuario_id)===String(uid))
+}
+
+/* 🔧 AUTO CORREÇÃO (1x) */
+for(const veic of v){
+if(!veic.empresa_id){
+await db.from("veiculos")
+.update({empresa_id:empresa})
+.eq("id",veic.id)
+}
+}
+
 /* 🔥 SEM VEÍCULO */
 if(!v||!v.length){
 const select=document.getElementById("veiculoSel")
@@ -264,6 +279,12 @@ window.VID=this.value
 await aplicarPeriodo()
 render()
 })
+/* 🔒 VALIDAÇÃO CRÍTICA */
+if(!uid || !empresa){
+alert("Sessão inválida ou incompleta")
+logout()
+return
+}
 if(!uid){
 logout()
 return
@@ -430,10 +451,12 @@ if(!l.trim())continue
 const c=l.split(",")
 await db.from("abastecimentos").insert({
 veiculo_id:VID,
-litros:parseFloat(c[1]),
-valor_total:parseFloat(c[2]),
-quilometragem:parseFloat(c[3]),
-data_abastecimento:c[0]
+empresa_id:localStorage.getItem("empresa_id"),
+usuario_id:localStorage.getItem("uid"),
+litros:parseFloat(litros.value),
+valor_total:parseFloat(valor.value),
+quilometragem:parseFloat(km.value),
+data_abastecimento:hojeISO()
 })
 }
 render()
@@ -445,7 +468,10 @@ if(e.target.id==="csvFile")importarCSV(e.target.files[0])
 /* ====================================================020 – RENDER FINAL==================================================== */
 async function render(){
 try{
-let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID)
+let {data}=await db.from("abastecimentos")
+.select("*")
+.eq("veiculo_id",VID)
+.eq("empresa_id",localStorage.getItem("empresa_id"))
 if(!data)data=[]
 const hoje=hojeISO()
 const anoAtual=new Date().getFullYear()
@@ -861,7 +887,16 @@ document.getElementById("app").style.display="block"
 init()
 }
 })
-
+/* ===============FUNCTION CRIAR VEICULO============= */
+async function criarVeiculo(dados){
+await db.from("veiculos").insert({
+modelo:dados.modelo,
+placa:dados.placa,
+empresa_id:localStorage.getItem("empresa_id"),
+usuario_id:localStorage.getItem("uid"),
+km_atual:0
+})
+}
   
 </script>
 </div>
