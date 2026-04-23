@@ -385,17 +385,56 @@ ocr.innerText="🔎 Processando "+Math.round(m.progress*100)+"%"
 console.log("OCR TEXTO:",text)
 /* 🔥 NOVO MOTOR INTELIGENTE */
 const dados=extrairDadosNota(text)
+if(dados.buscarPosto && dados.cnpjLimpo){
+const info=await buscarCNPJ(dados.cnpjLimpo)
+if(info){
+dados.posto=info.fantasia||info.nome||dados.posto
+dados.cidade=info.cidade
+dados.uf=info.uf
+}
+}
 /* 🔥 RESULTADO PROFISSIONAL */
 ocr.innerHTML=`
 <div style="font-size:14px">
 💰 <b>R$ ${dados.valor||"-"}</b><br>
+🏪 ${dados.posto||"-"}<br>
+📍 ${dados.cidade||""} ${dados.uf||""}<br>
 🏢 ${dados.cnpj||"-"}<br>
 ⛽ ${dados.tipo||"-"}<br>
-🏪 ${dados.posto||"-"}
+⛽ ${dados.litros||"-"} L
 </div>
 `
 if(dados.valor)valor.value=dados.valor
+window.dadosOCR=dados
 fecharCamera()
+}
+/* ======================================CALCULAR MEDIA POSTO============================================== */
+function calcularMediaPosto(lista){
+let map={}
+lista.forEach(a=>{
+if(!a.posto||!a.valor_litro)return
+if(!map[a.posto])map[a.posto]={total:0,count:0}
+map[a.posto].total+=a.valor_litro
+map[a.posto].count++
+})
+Object.keys(map).forEach(p=>{
+map[p].media=map[p].total/map[p].count
+})
+return map
+}
+/* ======================================CALCULAR MEDIA CIDADE============================================== */
+function calcularMediaCidade(lista){
+let map={}
+lista.forEach(a=>{
+if(!a.cidade||!a.valor_litro)return
+if(!map[a.cidade])map[a.cidade]={total:0,count:0}
+map[a.cidade].total+=a.valor_litro
+map[a.cidade].count++
+})
+Object.keys(map).forEach(c=>{
+map[c].media=map[c].total/map[c].count
+})
+return map
 }
 /* ====================================================031 INTERPRETAR==================================================== */
 function interpretarNota(txt){
@@ -441,9 +480,15 @@ window.EDIT_ID=null
 }else{
 await db.from("abastecimentos").insert({
 veiculo_id:VID,
+empresa_id:localStorage.getItem("empresa_id"),
+usuario_id:localStorage.getItem("uid"),
 litros:parseFloat(litros.value),
 valor_total:parseFloat(valor.value),
+valor_litro:(parseFloat(valor.value)/parseFloat(litros.value)),
 quilometragem:parseFloat(km.value),
+posto:window.dadosOCR?.posto||"",
+cidade:window.dadosOCR?.cidade||"",
+uf:window.dadosOCR?.uf||"",
 data_abastecimento:hojeISO()
 })
 }
@@ -540,10 +585,7 @@ if(e.target.id==="csvFile")importarCSV(e.target.files[0])
 /* ====================================================020 – RENDER FINAL==================================================== */
 async function render(){
 try{
-let {data}=await db.from("abastecimentos")
-.select("*")
-.eq("veiculo_id",VID)
-.eq("empresa_id",localStorage.getItem("empresa_id"))
+let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).eq("empresa_id",localStorage.getItem("empresa_id"))
 if(!data)data=[]
 const hoje=hojeISO()
 const anoAtual=new Date().getFullYear()
@@ -558,10 +600,9 @@ if(!a.data_abastecimento)return false
 const d=a.data_abastecimento.substring(0,10)
 return d>=di&&d<=df
 }).sort((a,b)=>a.data_abastecimento.localeCompare(b.data_abastecimento))
-/* HISTÓRICO COMPACTO */
-/* ====================================================030 – HISTÓRICO PROFISSIONAL==================================================== */
+/* ================= HISTÓRICO ================= */
 let grupos={}
-data.forEach((a,i)=>{
+data.forEach(a=>{
 let chave=(a.data_abastecimento||"").slice(0,7)
 if(!chave)return
 if(!grupos[chave])grupos[chave]=[]
@@ -571,9 +612,7 @@ let html=""
 Object.keys(grupos).sort((a,b)=>b.localeCompare(a)).forEach(m=>{
 let arr=grupos[m]
 let totalMes=0,totalKmMes=0,totalLitros=0
-arr.forEach(a=>{
-totalMes+=(a.valor_total||0)
-})
+arr.forEach(a=>{totalMes+=(a.valor_total||0)})
 for(let i=1;i<data.length;i++){
 let atual=data[i]
 let anterior=data[i-1]
@@ -587,41 +626,18 @@ totalLitros+=litros
 }
 }
 let mediaMes=totalLitros>0?(totalKmMes/totalLitros).toFixed(2):"-"
-html+=`
-<div style="margin-top:10px;padding:6px 10px;background:rgba(34,197,94,0.08);border-radius:8px;font-size:13px;font-weight:bold">
-📊 ${formatarMes(m)} • 💰 R$ ${totalMes.toFixed(0)} • 📍 ${totalKmMes} km • ⛽ ${mediaMes} km/l
-</div>
-`
+html+=`<div style="margin-top:10px;padding:6px 10px;background:rgba(34,197,94,0.08);border-radius:8px;font-size:13px;font-weight:bold">📊 ${formatarMes(m)} • 💰 R$ ${totalMes.toFixed(0)} • 📍 ${totalKmMes} km • ⛽ ${mediaMes} km/l</div>`
 arr.slice().reverse().forEach(a=>{
-html+=`
-<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;margin:2px 0;background:rgba(255,255,255,0.02);border-radius:6px;font-size:12px">
-<div id="view_${a.id}" style="min-width:90px">📅 ${formatarData(a.data_abastecimento)}</div>
-<div id="edit_${a.id}" style="display:none;flex:1">
-<input id="lit_${a.id}" value="${a.litros||0}" style="width:60px">
-<input id="val_${a.id}" value="${a.valor_total||0}" style="width:80px">
-<input id="km_${a.id}" value="${a.quilometragem||0}" style="width:80px">
-</div>
-<div style="display:flex;gap:8px;flex:1;justify-content:center">
-<span>⛽ ${a.litros||0}L</span>
-<span>💰 ${(a.valor_total||0).toFixed(0)}</span>
-<span>📍 ${a.quilometragem||0}</span>
-</div>
-<div style="display:flex;gap:4px">
-<button onclick="editarInline('${a.id}')">✏️</button>
-<button onclick="salvarInline('${a.id}')" id="btnSave_${a.id}" style="display:none">💾</button>
-<button onclick="cancelarInline('${a.id}')" id="btnCancel_${a.id}" style="display:none">❌</button>
-<button onclick="excluir('${a.id}')">🗑️</button>
-</div>
-</div>
-`
+html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;margin:2px 0;background:rgba(255,255,255,0.02);border-radius:6px;font-size:12px"><div style="min-width:90px">📅 ${formatarData(a.data_abastecimento)}</div><div style="display:flex;gap:8px;flex:1;justify-content:center"><span>⛽ ${a.litros||0}L</span><span>💰 ${(a.valor_total||0).toFixed(0)}</span><span>📍 ${a.quilometragem||0}</span></div></div>`
 })
 })
 lista.innerHTML=html
-/* KPI */
+/* ================= KPI BASE ================= */
 if(data.length<2){
 kpi.innerHTML=""
 alerta.innerHTML=""
-}else{
+return
+}
 let consumo=[],totalCons=0,count=0,totalValor=0,totalKm=0,melhor=0,pior=999
 for(let i=1;i<data.length;i++){
 let km=(data[i].quilometragem||0)-(data[i-1].quilometragem||0)
@@ -639,38 +655,42 @@ totalKm+=km
 if(count===0){
 kpi.innerHTML=""
 alerta.innerHTML=""
-}else{
+return
+}
 let media=(totalCons/count).toFixed(2)
 let custoKm=(totalValor/totalKm||0).toFixed(2)
-kpi.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="card">Média<br>${media}</div><div class="card">Custo/km<br>${custoKm}</div><div class="card">Melhor<br>${melhor.toFixed(2)}</div><div class="card">Pior<br>${pior.toFixed(2)}</div></div>`
-alerta.innerHTML=media<6?"⚠ Consumo alto":media>9?"🚀 Excelente":""
+/* ================= INTELIGÊNCIA (PATCH 054 055 056) ================= */
+let mapPosto={},mapCidade={}
+data.forEach(a=>{
+if(a.posto&&a.valor_litro){
+if(!mapPosto[a.posto])mapPosto[a.posto]={total:0,count:0}
+mapPosto[a.posto].total+=a.valor_litro
+mapPosto[a.posto].count++
+}
+if(a.cidade&&a.valor_litro){
+if(!mapCidade[a.cidade])mapCidade[a.cidade]={total:0,count:0}
+mapCidade[a.cidade].total+=a.valor_litro
+mapCidade[a.cidade].count++
+}
+})
+Object.keys(mapPosto).forEach(p=>mapPosto[p].media=mapPosto[p].total/mapPosto[p].count)
+Object.keys(mapCidade).forEach(c=>mapCidade[c].media=mapCidade[c].total/mapCidade[c].count)
+let ultimo=data[data.length-1]
+let alertaTxt=""
+if(ultimo&&ultimo.valor_litro){
+let mp=mapPosto[ultimo.posto]?.media||0
+let mc=mapCidade[ultimo.cidade]?.media||0
+if(mp&&ultimo.valor_litro>mp*1.1)alertaTxt+="🚨 Acima da média do posto<br>"
+if(mc&&ultimo.valor_litro>mc*1.1)alertaTxt+="⚠ Acima da média da cidade<br>"
+if(mp&&ultimo.valor_litro<mp*0.9)alertaTxt+="💰 Excelente preço no posto<br>"
+}
+let mediaPreco=(data.reduce((s,a)=>s+(a.valor_litro||0),0)/data.length||0).toFixed(2)
+let ranking=Object.entries(mapPosto).sort((a,b)=>a[1].media-b[1].media)
+let melhorPosto=ranking.length?ranking[0][0]:"-"
+/* ================= KPI FINAL ================= */
+kpi.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="card">Média<br>${media}</div><div class="card">Custo/km<br>${custoKm}</div><div class="card">Melhor<br>${melhor.toFixed(2)}</div><div class="card">Pior<br>${pior.toFixed(2)}</div><div class="card">Preço Médio<br>${mediaPreco}</div><div class="card">Melhor Posto<br>${melhorPosto}</div></div>`
+alerta.innerHTML=alertaTxt||(media<6?"⚠ Consumo alto":media>9?"🚀 Excelente":"")
 renderGrafico(consumo.map((_,i)=>i+1),consumo)
-let meses={}
-data.forEach((a,i)=>{
-let m=(a.data_abastecimento||"").slice(0,7)
-if(!m)return
-if(!meses[m])meses[m]={km:0,litros:0}
-if(i>0){
-let km=(a.quilometragem||0)-(data[i-1].quilometragem||0)
-let litros=a.litros||0
-if(km>0&&litros>0){
-meses[m].km+=km
-meses[m].litros+=litros
-}
-}
-})
-let labels=[],valores=[]
-Object.keys(meses).sort().forEach(m=>{
-if(meses[m].litros>0){
-labels.push(formatarMes(m))
-valores.push(meses[m].km/meses[m].litros)
-}
-})
-
-renderGraficoMensal(labels,valores)
-detalheBox.innerHTML=`<div class="card">Total gasto: R$ ${totalValor.toFixed(2)}<br>Total KM: ${totalKm}<br>Média: ${media}</div>`
-}
-}
 }catch(e){
 console.error("Erro no render:",e)
 }
@@ -982,39 +1002,117 @@ d[i]=d[i+1]=d[i+2]=cinza
 }
 ctx.putImageData(imgData,0,0)
 }
-/* ===============FUNCTION ocr============= */
+/* ===============FUNCTION OCR COMPLETA PROFISSIONAL============= */
 function extrairDadosNota(txt){
 txt=txt.toUpperCase().replace(/\s+/g," ")
-let valores=[...txt.matchAll(/\d{1,3}(\.\d{3})*,\d{2}/g)]
-let listaValores=valores.map(v=>parseFloat(v[0].replace(/\./g,"").replace(",", ".")))
-let valor=null
-if(listaValores.length){
-valor=listaValores.sort((a,b)=>b-a)[0]
-if(valor<5&&listaValores.length>1){
-valor=listaValores.sort((a,b)=>b-a)[1]
-}
-}
+/* ================= CNPJ ================= */
 let cnpjMatch=txt.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/)
 let cnpj=cnpjMatch?cnpjMatch[0]:null
+let cnpjLimpo=cnpj?cnpj.replace(/\D/g,""):null
+/* ================= BASE DE POSTOS POR CNPJ ================= */
+const POSTOS={
+"17483693000113":"POSTO LLX",
+"33000167000101":"SHELL",
+"34028316000103":"IPIRANGA",
+"33000167000282":"BR PETROBRAS",
+"07526557000100":"ALE COMBUSTÍVEIS"
+}
+let posto=POSTOS[cnpjLimpo]||null
+/* ================= VALOR ================= */
+let valor=null
+let totalLinha=txt.match(/VALOR TOTAL R?\$?\s*([\d\.,]+)/)
+if(totalLinha){
+valor=parseFloat(totalLinha[1].replace(/\./g,"").replace(",","."))
+}
+if(!valor){
+let pag=txt.match(/REDE.*?([\d\.,]{4,})/)
+if(pag){
+valor=parseFloat(pag[1].replace(/\./g,"").replace(",","."))
+}
+}
+if(!valor){
+let valores=[...txt.matchAll(/\d{1,3}(\.\d{3})*,\d{2}/g)]
+let lista=valores.map(v=>parseFloat(v[0].replace(/\./g,"").replace(",", ".")))
+lista=lista.filter(v=>v>10)
+if(lista.length){
+valor=lista.sort((a,b)=>b-a)[0]
+}
+}
+/* ================= COMBUSTÍVEL ================= */
 let tipo=null
-if(txt.includes("GASOLINA"))tipo="Gasolina"
-if(txt.includes("ETANOL"))tipo="Etanol"
-if(txt.includes("DIESEL"))tipo="Diesel"
-let posto=null
-if(txt.includes("SHELL"))posto="Shell"
-if(txt.includes("IPIRANGA"))posto="Ipiranga"
-if(txt.includes("PETROBRAS"))posto="Petrobras"
-if(txt.includes("BR "))posto="BR"
+if(txt.includes("GASOLINA ADITIVADA"))tipo="Gasolina Aditivada"
+else if(txt.includes("GASOLINA COMUM"))tipo="Gasolina Comum"
+else if(txt.includes("GASOLINA"))tipo="Gasolina"
+else if(txt.includes("ETANOL"))tipo="Etanol"
+else if(txt.includes("DIESEL"))tipo="Diesel"
+/* ================= LITROS ================= */
+let litros=null
+let litMatch=txt.match(/(\d+,\d{3})\s*LT/)
+if(litMatch){
+litros=parseFloat(litMatch[1].replace(",","."))
+}
+/* ================= VALOR POR LITRO ================= */
+let valorLitro=null
+let vlMatch=txt.match(/(\d+,\d{2})\s+\d+,\d{3}\s*LT/)
+if(vlMatch){
+valorLitro=parseFloat(vlMatch[1].replace(",","."))
+}
+/* ================= DATA ================= */
+let data=null
+let dataMatch=txt.match(/\d{2}\/\d{2}\/\d{4}/)
+if(dataMatch){
+data=dataMatch[0]
+}
+/* ================= PLACA ================= */
+let placa=null
+let placaMatch=txt.match(/[A-Z]{3}\d[A-Z0-9]\d{2}/)
+if(placaMatch){
+placa=placaMatch[0]
+}
+/* ================= FALLBACK TOTAL ================= */
 if(!valor){
 let match=txt.match(/TOTAL.*?(\d+,\d{2})/)
 if(match){
 valor=parseFloat(match[1].replace(",","."))
 }
 }
-return{valor:valor?valor.toFixed(2):null,cnpj,tipo,posto}
+/* ================= RETURN ================= */
+return{
+valor:valor?valor.toFixed(2):null,
+cnpj,
+cnpjLimpo,
+posto,
+tipo,
+litros,
+valorLitro,
+data,
+placa,
+buscarPosto:true
 }
-/* ===============FUNCTION ocr============= */
-  
+}
+/* ===============FUNCTION BUSCAR CNPJ============= */
+async function buscarCNPJ(cnpjLimpo){
+try{
+let cache=localStorage.getItem("cnpj_"+cnpjLimpo)
+if(cache)return JSON.parse(cache)
+const res=await fetch("https://brasilapi.com.br/api/cnpj/v1/"+cnpjLimpo)
+if(!res.ok)throw new Error("CNPJ não encontrado")
+const data=await res.json()
+const resultado={
+nome:data.razao_social||"",
+fantasia:data.nome_fantasia||"",
+cidade:data.municipio||"",
+uf:data.uf||""
+}
+localStorage.setItem("cnpj_"+cnpjLimpo,JSON.stringify(resultado))
+return resultado
+}catch(e){
+console.warn("Erro CNPJ:",e)
+return null
+}
+}
+
+
 </script>
 </div>
 </body>
