@@ -85,7 +85,13 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 const db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
 let VID=null,chart=null,stream=null,dadosOCR=null
 function hojeISO(){const d=new Date();const l=new Date(d.getTime()-d.getTimezoneOffset()*60000);return l.toISOString().slice(0,10)}
-function brData(d){if(!d)return"-";const[a,m,dd]=d.split("-");return`${dd}/${m}/${a.slice(2)}`}
+function brData(d){
+if(!d)return"-"
+let data=d.split("T")[0]
+const[y,m,dd]=data.split("-")
+return`${dd}/${m}/${y.slice(2)}`
+}
+function safe(v){return v===undefined||v===null||v===""?"-":v}
 function moeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
 function parse(v){return parseFloat((v||"0").replace(/\./g,"").replace(",", "."))}
 if("serviceWorker" in navigator){
@@ -127,6 +133,8 @@ if(info){
 dadosOCR.posto=info.fantasia||info.nome
 dadosOCR.cidade=info.cidade
 dadosOCR.uf=info.uf
+dadosOCR.endereco=info.endereco
+dadosOCR.bairro=info.bairro
 }
 }
 }
@@ -160,12 +168,14 @@ veiculo_id:VID,
 valor_total:v,
 litros:l,
 quilometragem:k,
-valor_litro:vl,
+valor_litro:(l>0?(v/l):0),
 tanque:tanque.value,
 posto:dadosOCR?.posto||"",
 cidade:dadosOCR?.cidade||"",
 uf:dadosOCR?.uf||"",
 cnpj:dadosOCR?.cnpj||"",
+endereco:dadosOCR?.endereco||"",
+bairro:dadosOCR?.bairro||"",
 tipo_combustivel:dadosOCR?.tipo||"",
 data_abastecimento:hojeISO()
 })
@@ -189,20 +199,46 @@ return{media,custo:totalKm?totalValor/totalKm:0,fraude}
 }
 async function buscarCNPJ(cnpj){
 try{
-let cache=localStorage.getItem("cnpj_"+cnpj)
-if(cache)return JSON.parse(cache)
-const res=await fetch("https://brasilapi.com.br/api/cnpj/v1/"+cnpj)
-if(!res.ok)throw new Error()
-const data=await res.json()
-const obj={
-nome:data.razao_social||"",
-fantasia:data.nome_fantasia||"",
-cidade:data.municipio||"",
-uf:data.uf||""
+let limpo=cnpj.replace(/\D/g,"")
+/* 🔥 1. BUSCA NO SEU BANCO (PRIORIDADE) */
+let {data}=await db.from("postos").select("*").eq("cnpj",limpo).limit(1)
+if(data&&data.length){
+return{
+nome:data[0].nome_posto||"",
+fantasia:data[0].nome_posto||"",
+cidade:data[0].cidade||"",
+uf:data[0].uf||"",
+endereco:data[0].endereco||"",
+bairro:data[0].bairro||"",
+cep:data[0].cep||""
 }
-localStorage.setItem("cnpj_"+cnpj,JSON.stringify(obj))
-return obj
+}
+/* 🔥 2. FALLBACK: API EXTERNA */
+const res=await fetch("https://brasilapi.com.br/api/cnpj/v1/"+limpo)
+if(!res.ok)throw new Error()
+const api=await res.json()
+/* 🔥 3. SALVA NO SEU BANCO (AUTO-APRENDIZADO) */
+await db.from("postos").insert({
+cnpj:limpo,
+nome_posto:api.nome_fantasia||api.razao_social||"",
+cidade:api.municipio||"",
+uf:api.uf||"",
+endereco:api.logradouro||"",
+bairro:api.bairro||"",
+cep:api.cep||"",
+situacao:"Ativa"
+})
+return{
+nome:api.razao_social||"",
+fantasia:api.nome_fantasia||"",
+cidade:api.municipio||"",
+uf:api.uf||"",
+endereco:api.logradouro||"",
+bairro:api.bairro||"",
+cep:api.cep||""
+}
 }catch(e){
+console.warn("Erro CNPJ:",e)
 return null
 }
 }
@@ -212,11 +248,12 @@ lista.innerHTML=""
 data.forEach(a=>{
 lista.innerHTML+=`
 <div class="item">
-<div class="row"><span>${brData(a.data_abastecimento)}</span><span>${a.quilometragem}km</span></div>
-<div class="row"><span>${a.litros}L</span><span>${moeda(a.valor_total)}</span></div>
-<div class="row"><span>${a.tipo_combustivel||"-"}</span><span>${a.tanque}</span></div>
-<div class="row"><span>${a.posto||"-"}</span><span>${a.cidade||""}-${a.uf||""}</span></div>
-<div class="row"><span>${a.cnpj||"-"}</span><span>${(a.valor_litro||0).toFixed(2)}/L</span></div>
+<div class="row"><span>${brData(a.data_abastecimento)}</span><span>${safe(a.quilometragem)} km</span></div>
+<div class="row"><span>${safe(a.litros)} L</span><span>${moeda(a.valor_total)}</span></div>
+<div class="row"><span>${safe(a.tipo_combustivel)}</span><span>${safe(a.tanque)}</span></div>
+<div class="row"><span>${safe(a.posto)}</span><span>${safe(a.cidade)}-${safe(a.uf)}</span></div>
+<div class="row"><span>${safe(a.cnpj)}</span><span>${a.valor_litro?Number(a.valor_litro).toFixed(2):"-"}/L</span></div>
+<div class="row"><span>${safe(a.endereco)}</span><span>${safe(a.bairro)}</span></div>
 </div>`
 })
 let ia=IA(data)
