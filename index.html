@@ -130,9 +130,30 @@ function mostrarApp(){document.getElementById("telaLogin").style.display="none";
 async function init(){
 const uid=localStorage.getItem("uid")
 if(!uid)return mostrarLogin()
-let{data}=await db.from("veiculos").select("*").eq("empresa_id",localStorage.getItem("empresa"))
-if(!data||!data.length)return alert("Sem veículos")
-veiculoSel.innerHTML=data || []).map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
+let{data,error}=await db
+.from("veiculos")
+.select("*")
+.eq("empresa_id",localStorage.getItem("empresa"))
+
+if(error){
+console.error("Erro veículos:",error)
+alert("Erro ao carregar veículos")
+return
+}
+
+if(!data || !Array.isArray(data)){
+console.warn("Data inválido:",data)
+data=[]
+}
+
+if(!data.length){
+veiculoSel.innerHTML="<option>Nenhum veículo</option>"
+return
+}
+
+veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo||"-"} ${v.placa||""}</option>`).join("")
+
+VID=data[0].id
 VID=data[0].id
 await carregarCadastros()
 render()
@@ -421,13 +442,19 @@ data:{labels,datasets:[{data:vals}]}
 })
 }
 async function carregarCadastros(){
-let {data,error}=await db.from("veiculos").select("*")
+let{data,error}=await db.from("postos").select("*")
+
 if(error){
-console.error(error)
+console.error("Erro postos:",error)
 return
 }
+
 if(!data || !Array.isArray(data))data=[]
-veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo||"-"}</option>`).join("")
+
+// exemplo: preencher select de postos (se existir)
+if(window.postoSel){
+postoSel.innerHTML=data.map(p=>`<option value="${p.id}">${p.nome_posto||"-"}</option>`).join("")
+}
 }
 
   
