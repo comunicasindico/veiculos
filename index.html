@@ -27,14 +27,12 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 .item{background:#111827;padding:8px;border-radius:8px;margin-top:6px;font-size:12px}
 .row{display:flex;justify-content:space-between}
 .alerta{color:#f87171;font-weight:bold}
-/* ===== BACKGROUND SOMENTE LOGIN ===== */
-body.login{background:url("img/bancocomunicaveiculos.png") no-repeat center center fixed;background-size:cover;}
-/* ===== OVERLAY ESCURO PROFISSIONAL ===== */
-body.login::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.75);z-index:0;}
-/* ===== BOX LOGIN CENTRALIZADO ===== */
-#loginBox{position:relative;z-index:1;max-width:380px;margin:auto;padding:25px;border-radius:16px;background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,0.6);}
+#telaLogin{background:url("img/bancocomunicaveiculos.png") no-repeat center center fixed;background-size:cover;}
+#telaLogin::before{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.75);z-index:0;}
+#loginBox{position:relative;z-index:1;}
 /* ===== CENTRALIZA NA TELA ===== */
 .login-container{display:flex;justify-content:center;align-items:center;height:100vh;}
+#telaLogin{display:flex;justify-content:center;align-items:center;height:100vh;width:100%;}
 
   
 </style>
