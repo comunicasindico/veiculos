@@ -194,7 +194,7 @@ VID=data[0].id
 await carregarCadastros()
 /* AUTOPREENCHER POSTO */
 if(window.postoSel){
-postoSel.onchange=async function(){
+postoSel.addEventListener("change",async function(){
 let id=this.value
 if(!id)return
 let{data,error}=await db.from("postos").select("*").eq("id",id).single()
