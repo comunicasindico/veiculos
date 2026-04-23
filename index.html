@@ -10,86 +10,193 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5"></script>
 <style>
 body{margin:0;font-family:Arial;background:#020617;color:#fff}
-.container{max-width:600px;margin:auto;padding:10px}
-.card{background:linear-gradient(145deg,#111827,#0b1220);padding:12px;border-radius:12px;margin-top:10px;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
-h3{margin:0 0 6px 0}
+.container{max-width:700px;margin:auto;padding:10px}
+.card{background:linear-gradient(145deg,#111827,#0b1220);padding:12px;border-radius:12px;margin-top:10px}
 input,select{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:none;background:#020617;color:#fff}
 button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold}
 .kpiGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .kpiCard{background:#0b1220;padding:10px;border-radius:8px;text-align:center}
 .item{background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;margin:4px 0;font-size:12px}
 .row{display:flex;justify-content:space-between}
-#loginBox{max-width:300px;margin:50px auto}
-video,canvas{width:100%;border-radius:10px;margin-top:8px}
+.alerta{color:#f87171;font-weight:bold}
+.admin{background:#1f2937;padding:10px;border-radius:10px;margin-top:10px}
 </style>
 </head>
 <body>
-<div id="loginBox" class="card">
+
+<div id="loginBox" class="card" style="max-width:300px;margin:40px auto">
 <h3>Login</h3>
-<input id="user" placeholder="Usuário">
-<input id="pass" type="password" placeholder="Senha">
+<input id="user">
+<input id="pass" type="password">
 <button onclick="login()">Entrar</button>
 </div>
+
 <div id="app" class="container" style="display:none">
+
 <div class="card">
 <select id="veiculoSel"></select>
-<input type="date" id="dataInicio">
-<input type="date" id="dataFim">
-<button onclick="render()">Pesquisar</button>
+<button onclick="render()">Atualizar</button>
 </div>
+
 <div class="card">
 <div id="kpi" class="kpiGrid"></div>
-<div id="alerta"></div>
+<div id="alerta" class="alerta"></div>
 </div>
+
 <div class="card">
-<h3>📷 Ler Nota</h3>
-<video id="video" autoplay style="display:none"></video>
-<button onclick="capturar()">Capturar Nota</button>
-<canvas id="canvas"></canvas>
-<div id="ocr"></div>
-<button onclick="toggleManual()">Manual</button>
-<div id="manualBox" style="display:none">
-<input id="manual_valor" placeholder="Valor">
-<input id="manual_litros" placeholder="Litros">
-<button onclick="usarManual()">Usar</button>
-</div>
-</div>
-<div class="card">
-<h3>⛽ Abastecimento</h3>
-<input id="valor" placeholder="Valor R$">
-<input id="litros" placeholder="Litros">
-<input id="km" placeholder="KM">
+<h3>Abastecimento</h3>
+<input id="valor">
+<input id="litros">
+<input id="km">
 <button onclick="salvar()">Salvar</button>
 </div>
+
 <div class="card">
 <canvas id="grafico"></canvas>
 </div>
+
 <div class="card">
-<canvas id="graficoMensal"></canvas>
-</div>
-<div class="card">
-<h3>📋 Histórico</h3>
+<h3>Histórico</h3>
 <div id="lista"></div>
 </div>
+
+<div id="adminBox" class="admin" style="display:none">
+<h3>Painel Admin</h3>
+<div id="adminLista"></div>
 </div>
+
+</div>
+
 <script>
 const db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
-let VID=null,stream=null,chart=null,dadosOCR=null
-function hojeISO(){const d=new Date();const l=new Date(d.getTime()-d.getTimezoneOffset()*60000);return l.toISOString().slice(0,10)}
-function formatarMoeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
-function parseMoeda(v){return parseFloat((v||"0").replace(/\./g,"").replace(",", "."))}
-function formatarData(d){if(!d)return"-";const[a,m,dd]=d.split("-");return`${dd}/${m}/${a}`}
-async function login(){const u=user.value.toLowerCase();const p=pass.value;const{data}=await db.from("usuarios").select("*").eq("usuario_apelido",u);if(!data||!data.length)return alert("Usuário inválido");if(data[0].senha_hash!==p)return alert("Senha inválida");localStorage.setItem("uid",data[0].id);localStorage.setItem("empresa_id",data[0].empresa_id);loginBox.style.display="none";app.style.display="block";init()}
-async function init(){const emp=localStorage.getItem("empresa_id");let{data}=await db.from("veiculos").select("*").eq("empresa_id",emp);if(!data||!data.length){veiculoSel.innerHTML="<option>Sem veículos</option>";return}veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("");VID=data[0].id;render()}
-async function capturar(){if(!stream){stream=await navigator.mediaDevices.getUserMedia({video:true});video.srcObject=stream;video.style.display="block";await new Promise(r=>setTimeout(r,1500))}const ctx=canvas.getContext("2d");canvas.width=video.videoWidth;canvas.height=video.videoHeight;ctx.drawImage(video,0,0);ocr.innerText="Lendo...";const{data:{text}}=await Tesseract.recognize(canvas,"por");dadosOCR=extrair(text);ocr.innerHTML=`<input id="rev_valor" value="${dadosOCR.valor||""}"><input id="rev_litros" value="${dadosOCR.litros||""}"><button onclick="confirmarOCR()">OK</button>`}
-function extrair(txt){txt=txt.toUpperCase();let vals=[...txt.matchAll(/\d+,\d{2}/g)].map(v=>parseMoeda(v[0]));let valor=vals.length?Math.max(...vals):0;let lit=txt.match(/(\d+,\d{3})\s*L/);let litros=lit?parseFloat(lit[1].replace(",", ".")):0;return{valor,litros}}
-function confirmarOCR(){valor.value=dadosOCR.valor;litros.value=dadosOCR.litros;ocr.innerHTML="OK"}
-function toggleManual(){manualBox.style.display=manualBox.style.display==="none"?"block":"none"}
-function usarManual(){valor.value=parseMoeda(manual_valor.value);litros.value=parseFloat(manual_litros.value)}
-async function salvar(){const v=parseMoeda(valor.value);const l=parseFloat(litros.value);const k=parseFloat(km.value);await db.from("abastecimentos").insert({empresa_id:localStorage.getItem("empresa_id"),veiculo_id:VID,valor_total:v,litros:l,quilometragem:k,valor_litro:v/l,data_abastecimento:hojeISO()});render()}
-function renderGrafico(labels,data){const ctx=grafico.getContext("2d");if(chart)chart.destroy();chart=new Chart(ctx,{type:"line",data:{labels,datasets:[{data,tension:0.4}]}})}
-function renderGraficoMensal(data){let meses={};data.forEach((a,i)=>{let m=a.data_abastecimento?.slice(0,7);if(!m)return;if(!meses[m])meses[m]={km:0,litros:0};if(i>0){let km=a.quilometragem-data[i-1].quilometragem;let litros=a.litros;if(km>0&&litros>0){meses[m].km+=km;meses[m].litros+=litros}}});let labels=[],valores=[];Object.keys(meses).sort().forEach(m=>{labels.push(m);valores.push(meses[m].km/meses[m].litros)});new Chart(graficoMensal,{type:"bar",data:{labels,datasets:[{data:valores}]}})}
-async function render(){let{data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID);if(!data)data=[];lista.innerHTML="";let consumo=[],totalKm=0,totalValor=0;for(let i=1;i<data.length;i++){let km=data[i].quilometragem-data[i-1].quilometragem;let litros=data[i].litros;if(km>0&&litros>0){consumo.push(km/litros);totalKm+=km;totalValor+=data[i].valor_total}}let media=consumo.length?consumo.reduce((a,b)=>a+b,0)/consumo.length:0;let custoKm=totalKm?totalValor/totalKm:0;kpi.innerHTML=`<div class="kpiCard">${media.toFixed(2)}</div><div class="kpiCard">${custoKm.toFixed(2)}</div>`;data.forEach(a=>{lista.innerHTML+=`<div class="item"><div class="row"><span>${formatarData(a.data_abastecimento)}</span><span>${a.quilometragem} km</span></div><div class="row"><span>${a.litros}L</span><span>${formatarMoeda(a.valor_total)}</span></div></div>`});let labels=[],vals=[];for(let i=1;i<data.length;i++){let km=data[i].quilometragem-data[i-1].quilometragem;let litros=data[i].litros;if(km>0&&litros>0){labels.push(i);vals.push(km/litros)}}renderGrafico(labels,vals);renderGraficoMensal(data)}
+
+let VID=null
+let chart=null
+
+function hojeISO(){
+const d=new Date()
+const l=new Date(d.getTime()-d.getTimezoneOffset()*60000)
+return l.toISOString().slice(0,10)
+}
+
+function formatarMoeda(v){
+return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+}
+
+function parseMoeda(v){
+return parseFloat((v||"0").replace(/\./g,"").replace(",","."))
+}
+
+async function login(){
+const u=user.value.toLowerCase()
+const p=pass.value
+const {data}=await db.from("usuarios").select("*").eq("usuario_apelido",u)
+if(!data||!data.length){alert("Erro");return}
+if(data[0].senha_hash!==p){alert("Senha");return}
+localStorage.setItem("uid",data[0].id)
+localStorage.setItem("empresa",data[0].empresa_id)
+localStorage.setItem("tipo",data[0].perfil)
+loginBox.style.display="none"
+app.style.display="block"
+init()
+}
+
+async function init(){
+let emp=localStorage.getItem("empresa")
+let {data}=await db.from("veiculos").select("*").eq("empresa_id",emp)
+veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
+VID=data[0].id
+if(localStorage.getItem("tipo")==="admin"){adminBox.style.display="block"}
+render()
+}
+
+async function salvar(){
+const v=parseMoeda(valor.value)
+const l=parseFloat(litros.value)
+const k=parseFloat(km.value)
+const vl=v/l
+if(v>1000){alert("Valor suspeito")}
+if(l>150){alert("Litros suspeito")}
+await db.from("abastecimentos").insert({
+empresa_id:localStorage.getItem("empresa"),
+veiculo_id:VID,
+valor_total:v,
+litros:l,
+quilometragem:k,
+valor_litro:vl,
+data_abastecimento:hojeISO()
+})
+render()
+}
+
+function renderGrafico(labels,data){
+const ctx=grafico.getContext("2d")
+if(chart)chart.destroy()
+chart=new Chart(ctx,{type:"line",data:{labels,datasets:[{data,tension:0.4}]}})
+}
+
+async function render(){
+let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID)
+if(!data)data=[]
+lista.innerHTML=""
+let consumo=[],totalKm=0,totalValor=0
+for(let i=1;i<data.length;i++){
+let km=data[i].quilometragem-data[i-1].quilometragem
+let litros=data[i].litros
+if(km>0&&litros>0){
+consumo.push(km/litros)
+totalKm+=km
+totalValor+=data[i].valor_total
+}
+}
+let media=consumo.length?consumo.reduce((a,b)=>a+b,0)/consumo.length:0
+let custoKm=totalKm?totalValor/totalKm:0
+
+let alertaTxt=""
+if(media<6){alertaTxt="Consumo alto"}
+if(media>12){alertaTxt="Possível erro ou fraude"}
+
+kpi.innerHTML=`
+<div class="kpiCard">Média<br>${media.toFixed(2)}</div>
+<div class="kpiCard">Custo/km<br>${custoKm.toFixed(2)}</div>
+`
+
+alerta.innerHTML=alertaTxt
+
+data.forEach(a=>{
+lista.innerHTML+=`
+<div class="item">
+<div class="row"><span>${a.data_abastecimento}</span><span>${a.quilometragem} km</span></div>
+<div class="row"><span>${a.litros}L</span><span>${formatarMoeda(a.valor_total)}</span></div>
+</div>
+`
+})
+
+let labels=[],vals=[]
+for(let i=1;i<data.length;i++){
+let km=data[i].quilometragem-data[i-1].quilometragem
+let litros=data[i].litros
+if(km>0&&litros>0){
+labels.push(i)
+vals.push(km/litros)
+}
+}
+
+renderGrafico(labels,vals)
+
+if(localStorage.getItem("tipo")==="admin"){
+renderAdmin(data)
+}
+}
+
+function renderAdmin(data){
+let total=data.reduce((s,a)=>s+a.valor_total,0)
+adminLista.innerHTML=`
+<div>Total gasto: ${formatarMoeda(total)}</div>
+<div>Registros: ${data.length}</div>
+`
+}
 </script>
+
 </body>
 </html>
