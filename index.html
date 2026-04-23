@@ -5,10 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#020617">
+<!-- 🔥 FAVICON (REMOVE ERRO 404) -->
+<link rel="icon" href="img/192x192.png">
+<!-- 🍎 APPLE (IPHONE) -->
+<link rel="apple-touch-icon" href="img/192x192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>IA Frota Master</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5"></script>
+
 <style>
 body{margin:0;font-family:Arial;background:#020617;color:#fff}
 .container{max-width:720px;margin:auto;padding:10px}
@@ -19,14 +27,26 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 .item{background:#111827;padding:8px;border-radius:8px;margin-top:6px;font-size:12px}
 .row{display:flex;justify-content:space-between}
 .alerta{color:#f87171;font-weight:bold}
+/* ===== BACKGROUND SOMENTE LOGIN ===== */
+body.login{background:url("img/bancocomunicaveiculos.png") no-repeat center center fixed;background-size:cover;}
+/* ===== OVERLAY ESCURO PROFISSIONAL ===== */
+body.login::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.75);z-index:0;}
+/* ===== BOX LOGIN CENTRALIZADO ===== */
+#loginBox{position:relative;z-index:1;max-width:380px;margin:auto;padding:25px;border-radius:16px;background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,0.6);}
+/* ===== CENTRALIZA NA TELA ===== */
+.login-container{display:flex;justify-content:center;align-items:center;height:100vh;}
+
+  
 </style>
 </head>
 <body>
 
-<div id="loginBox" class="card" style="max-width:300px;margin:40px auto">
+<div id="telaLogin" class="login-container">
+<div id="loginBox">
 <input id="user" placeholder="Usuário">
 <input id="pass" type="password" placeholder="Senha">
 <button onclick="login()">Entrar</button>
+</div>
 </div>
 
 <div id="app" class="container" style="display:none">
@@ -106,11 +126,30 @@ localStorage.setItem("empresa",data[0].empresa_id)
 loginBox.style.display="none"
 app.style.display="block"
 init()
+mostrarApp()
+}
+function mostrarLogin(){
+document.body.classList.add("login")
+document.getElementById("telaLogin").style.display="flex"
+document.getElementById("app").style.display="none"
+}
+
+function mostrarApp(){
+document.body.classList.remove("login")
+document.getElementById("telaLogin").style.display="none"
+document.getElementById("app").style.display="block"
 }
 async function init(){
 let{data}=await db.from("veiculos").select("*").eq("empresa_id",localStorage.getItem("empresa"))
 veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
 VID=data[0].id
+const uid=localStorage.getItem("uid")
+if(!uid){
+mostrarLogin()
+return
+}else{
+mostrarApp()
+}
 render()
 }
 async function capturar(){
