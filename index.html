@@ -179,11 +179,10 @@ await init()
 async function init(){
 let uid=localStorage.getItem("uid")
 if(!uid)return mostrarLogin()
-
 mostrarApp()
-
-let{data,error}=await db.from("veiculos").select("*").eq("empresa_id",localStorage.getItem("empresa"))
-if(error)return alert("Erro veículos")
+let empresa=localStorage.getItem("empresa")
+let{data,error}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
+if(error){console.error("Erro veículos:",error);return alert("Erro veículos")}
 if(!data||!Array.isArray(data))data=[]
 if(!data.length){
 veiculoSel.innerHTML="<option>Nenhum veículo</option>"
@@ -199,31 +198,50 @@ render()
 
 function mostrarLogin(){telaLogin.style.display="flex";app.style.display="none"}
 function mostrarApp(){telaLogin.style.display="none";app.style.display="block"}
+
 function abrirTela(t){
 localStorage.setItem("tela_ativa",t)
 document.querySelectorAll(".tela").forEach(el=>el.style.display="none")
 document.querySelectorAll(".menuTabs button").forEach(b=>b.classList.remove("active"))
-document.getElementById("tela_"+t).style.display="block"
-document.getElementById("tab_"+t).classList.add("active")
+let tela=document.getElementById("tela_"+t)
+let btn=document.getElementById("tab_"+t)
+if(tela)tela.style.display="block"
+if(btn)btn.classList.add("active")
 }
+
 /* CADASTROS */
 async function carregarCadastros(){
 const empresa=localStorage.getItem("empresa")
+
 function montarTabela(lista){
 if(!lista||!lista.length)return"<div>Sem dados</div>"
-let colunas=Object.keys(lista[0])
+let colunas=Object.keys(lista[0]||{})
 return lista.map(l=>{
 return `<div class="item">`+
 colunas.map(c=>`<div class="row"><span>${c}</span><span>${l[c]??"-"}</span></div>`).join("")+
 `</div>`
 }).join("")
 }
-let{data:veiculos}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
-listaVeiculos.innerHTML=montarTabela(veiculos)
-let{data:motoristas}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
-listaMotoristas.innerHTML=montarTabela(motoristas)
-let{data:postos}=await db.from("postos").select("*").eq("empresa_id",empresa)
-listaPostos.innerHTML=montarTabela(postos)
+
+/* VEICULOS */
+let{data:veiculos,error:e1}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
+if(e1)console.error("Erro veiculos:",e1)
+veiculos=veiculos||[]
+if(window.listaVeiculos)listaVeiculos.innerHTML=montarTabela(veiculos)
+
+/* MOTORISTAS */
+let{data:motoristas,error:e2}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
+if(e2)console.error("Erro motoristas:",e2)
+motoristas=motoristas||[]
+if(window.listaMotoristas)listaMotoristas.innerHTML=montarTabela(motoristas)
+
+/* POSTOS */
+let{data:postos,error:e3}=await db.from("postos").select("*").eq("empresa_id",empresa)
+if(e3)console.error("Erro postos:",e3)
+postos=postos||[]
+if(window.listaPostos)listaPostos.innerHTML=montarTabela(postos)
+
+/* SELECTS */
 if(window.postoSel)postoSel.innerHTML=postos.map(p=>`<option value="${p.id}">${p.nome_posto||"-"}</option>`).join("")
 if(window.motoristaSel)motoristaSel.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome||"-"}</option>`).join("")
 }
@@ -261,12 +279,10 @@ async function salvar(){
 const v=parse(valor.value)
 const l=parseFloat(litros.value)
 const k=parseFloat(km.value)
-const posto_id=postoSel.value
-const motorista_id=motoristaSel.value
-
+const posto_id=postoSel?.value||null
+const motorista_id=motoristaSel?.value||null
 if(!v||!l||!k)return alert("Preencha tudo")
-
-await db.from("abastecimentos").insert({
+let{error}=await db.from("abastecimentos").insert({
 empresa_id:localStorage.getItem("empresa"),
 veiculo_id:VID,
 motorista_id,
@@ -278,7 +294,7 @@ quilometragem:k,
 tanque:tanque.value,
 data_abastecimento:hojeISO()
 })
-
+if(error){console.error(error);return alert("Erro ao salvar")}
 render()
 }
 
@@ -298,7 +314,7 @@ totalValor+=data[i].valor_total
 return{media:cons.length?cons.reduce((a,b)=>a+b,0)/cons.length:0,custo:totalKm?totalValor/totalKm:0}
 }
 
-/* HISTÓRICO */
+/* HISTORICO */
 function renderHistorico(data){
 let html=""
 for(let i=data.length-1;i>=0;i--){
@@ -312,48 +328,48 @@ if(km>0)kmRodado=km+" km"
 let valorLitro=a.valor_litro?Number(a.valor_litro).toFixed(2):"-"
 html+=`
 <div class="item">
-<div class="row">
-<span>📅 ${brData(a.data_abastecimento)}</span>
-<span>⛽ ${a.tipo_combustivel||"-"}</span>
-</div>
-<div class="row">
-<span>🏪 ${a.postos?.nome_posto||"-"}</span>
-<span>⛽ ${a.litros||"-"} L</span>
-</div>
-<div class="row">
-<span>💲 R$ ${valorLitro}/L</span>
-<span>💰 ${moeda(a.valor_total)}</span>
-</div>
-<div class="row">
-<span>📍 ${a.quilometragem||"-"} km</span>
-<span>🚗 ${kmRodado}</span>
-</div>
+<div class="row"><span>${brData(a.data_abastecimento)}</span><span>${a.tipo_combustivel||"-"}</span></div>
+<div class="row"><span>${a.postos?.nome_posto||"-"}</span><span>${a.litros||"-"} L</span></div>
+<div class="row"><span>R$ ${valorLitro}/L</span><span>${moeda(a.valor_total)}</span></div>
+<div class="row"><span>${a.quilometragem||"-"} km</span><span>${kmRodado}</span></div>
 </div>`
 }
 lista.innerHTML=html
 }
 
-function logout(){
-localStorage.clear()
-location.reload()
-}
+function logout(){localStorage.clear();location.reload()}
 
 /* RENDER */
 async function render(){
 let empresa=localStorage.getItem("empresa")
-let{data,error}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).eq("empresa_id",empresa).order("data_abastecimento",{ascending:true})
-if(error)return console.error(error)
+let{data,error}=await db
+.from("abastecimentos")
+.select(`
+*,
+postos(nome_posto),
+motoristas(nome),
+veiculos(modelo)
+`)
+.eq("veiculo_id",VID)
+.eq("empresa_id",empresa)
+.order("data_abastecimento",{ascending:true})
+
+if(error){console.error("Erro render:",error);return}
+
 if(!data||!Array.isArray(data))data=[]
 if(!data.length){
 lista.innerHTML="<div>Sem dados</div>"
 return
 }
+
 renderHistorico(data)
+
 let ia=IA(data)
 kpi.innerHTML=`
 <div>Média ${ia.media.toFixed(2)}</div>
 <div>Custo/km ${ia.custo.toFixed(2)}</div>
 `
+
 let labels=[],vals=[]
 for(let i=1;i<data.length;i++){
 let km=data[i].quilometragem-data[i-1].quilometragem
@@ -363,22 +379,23 @@ labels.push(i)
 vals.push(km/l)
 }
 }
+
 if(chart)chart.destroy()
 chart=new Chart(grafico,{type:"line",data:{labels,datasets:[{data:vals}]}})
 }
 
+/* INIT DOM */
 document.addEventListener("DOMContentLoaded",async()=>{
 const uid=localStorage.getItem("uid")
 if(uid){
-document.getElementById("telaLogin").style.display="none"
-document.getElementById("app").style.display="block"
+telaLogin.style.display="none"
+app.style.display="block"
 await init()
 }else{
-document.getElementById("telaLogin").style.display="flex"
-document.getElementById("app").style.display="none"
+telaLogin.style.display="flex"
+app.style.display="none"
 }
 })
-
 
 </script>
 
