@@ -93,6 +93,7 @@ canvas{max-height:260px}
 <canvas id="canvas"></canvas>
 <button onclick="capturar()">📸 Capturar Agora</button>
 <button onclick="toggleModoNota()">✍️ Inserção Manual</button>
+<button onclick="toggleModoNota()">✍️ Corrigir manualmente</button>
 <div id="ocr"></div>
 </div>
 
@@ -406,16 +407,19 @@ if(window.dadosOCR_manual)return
 /* 🔥 RESULTADO PROFISSIONAL */
 ocr.innerHTML=`
 <div style="font-size:14px">
-💰 <b>R$ ${dados.valor||"-"}</b><br>
-🏪 ${dados.posto||"-"}<br>
-📍 ${dados.cidade||""} ${dados.uf||""}<br>
-🏢 ${dados.cnpj||"-"}<br>
-⛽ ${dados.tipo||"-"}<br>
-⛽ ${dados.litros||"-"} L
+💰 <input id="rev_valor" value="${dados.valor||""}" style="width:100px"><br>
+⛽ <input id="rev_tipo" value="${dados.tipo||""}" style="width:120px"><br>
+⛽ <input id="rev_litros" value="${dados.litros||""}" style="width:100px"><br>
+🏪 <input id="rev_posto" value="${dados.posto||""}" style="width:150px"><br>
+<button onclick="confirmarOCR()">✅ Confirmar Dados</button>
 </div>
 `
 if(dados.valor)valor.value=dados.valor
 window.dadosOCR=dados
+if(dados.valor && parseFloat(dados.valor)>1000){
+ocr.innerHTML="⚠ Valor detectado parece incorreto, revise manualmente"
+return
+}
 fecharCamera()
 }
 /* ======================================CALCULAR MEDIA POSTO============================================== */
@@ -488,6 +492,10 @@ quilometragem:parseFloat(km.value)
 }).eq("id",window.EDIT_ID)
 window.EDIT_ID=null
 }else{
+if(!window.dadosOCR){
+alert("⚠ Confirme ou insira manualmente os dados da nota")
+return
+}
 await db.from("abastecimentos").insert({
 veiculo_id:VID,
 empresa_id:localStorage.getItem("empresa_id"),
@@ -1153,9 +1161,34 @@ if(l)litros.value=l
 ocr.innerHTML="✅ Dados manuais aplicados"
 window.dadosOCR_manual=true
 }
+/* ===============FUNCTION CONFIRMAR OCR============= */
+function confirmarOCR(){
+const v=document.getElementById("rev_valor").value
+const l=document.getElementById("rev_litros").value
+const t=document.getElementById("rev_tipo").value
+const p=document.getElementById("rev_posto").value
+/* 🔥 VALIDAÇÃO FORTE */
+if(!v||parseFloat(v)<=0||parseFloat(v)>1000){
+alert("⚠ Valor suspeito, confira antes de continuar")
+return
+}
+if(l&&parseFloat(l)>150){
+alert("⚠ Litros muito alto, confira")
+return
+}
+window.dadosOCR={
+valor:v,
+litros:l,
+tipo:t,
+posto:p
+}
+if(v)valor.value=v
+if(l)litros.value=l
+ocr.innerHTML="✅ Dados confirmados"
+}
+
 
   
-
 </script>
 </div>
 </body>
