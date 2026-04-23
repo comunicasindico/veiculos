@@ -203,11 +203,12 @@ if(!v||!l||!k)return alert("Preencha tudo")
 await db.from("abastecimentos").insert({
 empresa_id:localStorage.getItem("empresa"),
 veiculo_id:VID,
+usuario_id:localStorage.getItem("uid"),
 valor_total:v,
 litros:l,
 quilometragem:k,
 valor_litro:(l>0?(v/l):0),
-tanque:tanque.value,
+tanque:tanque.value||"cheio",
 posto:dadosOCR?.posto||"",
 cidade:dadosOCR?.cidade||"",
 uf:dadosOCR?.uf||"",
@@ -261,45 +262,104 @@ return api
 
 /* ===== HISTÓRICO PROFISSIONAL ===== */
 function renderHistorico(data){
-data.sort((a,b)=>a.data_abastecimento.localeCompare(b.data_abastecimento))
 let html=""
 for(let i=data.length-1;i>=0;i--){
 let a=data[i]
 let ant=data[i-1]
+
 let kmRodado=0
 let consumo="-"
+
 if(ant){
 kmRodado=a.quilometragem-ant.quilometragem
-if(kmRodado>0&&a.litros>0)consumo=(kmRodado/a.litros).toFixed(2)+" km/L"
+if(kmRodado>0&&a.litros>0){
+if(a.tanque==="cheio"){
+consumo=(kmRodado/a.litros).toFixed(2)+" km/L"
+}else{
+consumo="~ "+(kmRodado/a.litros).toFixed(2)+" km/L"
 }
+}
+}
+
 html+=`
 <div class="item">
-<div class="row"><span>${brData(a.data_abastecimento)}</span><span>${a.quilometragem} km</span></div>
-<div class="row"><span>${a.litros} L</span><span>${moeda(a.valor_total)}</span></div>
-<div class="row"><span>${a.tipo_combustivel||"-"}</span><span>${a.tanque}</span></div>
-<div class="row"><span>${a.posto||"-"}</span><span>${a.cidade||"-"}-${a.uf||""}</span></div>
-<div class="row"><span>${consumo}</span><span>${a.valor_litro?Number(a.valor_litro).toFixed(2):"-"}/L</span></div>
+<div class="row">
+<span>${brData(a.data_abastecimento)}</span>
+<span>${safe(a.quilometragem)} km</span>
+</div>
+
+<div class="row">
+<span>${safe(a.litros)} L</span>
+<span>${moeda(a.valor_total)}</span>
+</div>
+
+<div class="row">
+<span>${safe(a.tipo_combustivel)}</span>
+<span>${safe(a.tanque)}</span>
+</div>
+
+<div class="row">
+<span>${safe(a.posto)}</span>
+<span>${safe(a.cidade)}-${safe(a.uf)}</span>
+</div>
+
+<div class="row">
+<span>${safe(a.cnpj)}</span>
+<span>${a.valor_litro?Number(a.valor_litro).toFixed(2):"-"}/L</span>
+</div>
+
+<div class="row">
+<span>${safe(a.endereco)}</span>
+<span>${safe(a.bairro)}</span>
+</div>
+
+<div class="row">
+<span>${consumo}</span>
+<span>${kmRodado>0?kmRodado+" km":"-"}</span>
+</div>
+
 </div>`
 }
+
 lista.innerHTML=html
 }
 
 /* ===== RENDER ===== */
 async function render(){
-let{data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID)
-if(!data)return
+let empresa=localStorage.getItem("empresa")
+let{data,error}=await db
+.from("abastecimentos")
+.select("*")
+.eq("veiculo_id",VID)
+.eq("empresa_id",empresa)
+.order("data_abastecimento",{ascending:true})
+if(error){console.error(error);return}
+if(!data||!data.length){
+lista.innerHTML="<div style='padding:10px'>Sem dados</div>"
+return
+}
 renderHistorico(data)
 let ia=IA(data)
-kpi.innerHTML=`<div>Média ${ia.media.toFixed(2)}</div><div>Custo/km ${ia.custo.toFixed(2)}</div><div>Fraudes ${ia.fraude}</div>`
+kpi.innerHTML=`
+<div>Média ${ia.media.toFixed(2)}</div>
+<div>Custo/km ${ia.custo.toFixed(2)}</div>
+<div>Fraudes ${ia.fraude}</div>
+`
 alerta.innerHTML=ia.fraude?"🚨 possível fraude":""
 let labels=[],vals=[]
 for(let i=1;i<data.length;i++){
 let km=data[i].quilometragem-data[i-1].quilometragem
 let l=data[i].litros
-if(km>0&&l>0){labels.push(i);vals.push(km/l)}
+if(km>0&&l>0){
+labels.push(i)
+vals.push(km/l)
+}
 }
 if(chart)chart.destroy()
-chart=new Chart(grafico,{type:"line",data:{labels,datasets:[{data:vals}]}})
+chart=new Chart(grafico,{
+type:"line",
+data:{labels,datasets:[{data:vals}]}
+})
 }
 </script>
 
