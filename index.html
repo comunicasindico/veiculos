@@ -35,7 +35,10 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 .menuTabs{display:flex;gap:6px}
 .menuTabs button{flex:1;background:#111827;color:#9ca3af;border:none;border-radius:10px;padding:10px}
 .menuTabs button.active{background:#22c55e;color:#000}
+.footerBar{position:fixed;bottom:0;left:0;width:100%;background:#020617;border-top:1px solid #111;padding:8px;display:flex;justify-content:flex-end;z-index:999}
+.btnLogout{background:#dc2626;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:bold}
 
+  
 </style>
 </head>
 
@@ -62,6 +65,9 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <button onclick="abrirTela('motorista')" id="tab_motorista">👨</button>
 <button onclick="abrirTela('veiculo')" id="tab_veiculo">🚗</button>
 <button onclick="abrirTela('posto')" id="tab_posto">🏪</button>
+</div>
+<div class="footerBar">
+<button onclick="logout()" class="btnLogout">🚪 Sair</button>
 </div>
 </div>
 
@@ -202,7 +208,7 @@ if(!data||!data.length)return alert("Usuário não encontrado")
 if(data[0].senha_hash!==pass.value)return alert("Senha incorreta")
 localStorage.setItem("empresa",data[0].empresa_id)
 localStorage.setItem("uid",data[0].id)
-init()
+await init()
 }
 
 /* INIT */
@@ -211,7 +217,8 @@ let uid=localStorage.getItem("uid")
 if(!uid)return mostrarLogin()
 
 mostrarApp()
-
+const telaSalva=localStorage.getItem("tela_ativa")||"combustivel"
+abrirTela(telaSalva)
 let{data,error}=await db.from("veiculos").select("*").eq("empresa_id",localStorage.getItem("empresa"))
 if(error)return alert("Erro veículos")
 
@@ -226,12 +233,15 @@ veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo||"-"}</opti
 VID=data[0].id
 
 await carregarCadastros()
+const telaSalva=localStorage.getItem("tela_ativa")||"combustivel"
+abrirTela(telaSalva)
 render()
 }
 
 function mostrarLogin(){telaLogin.style.display="flex";app.style.display="none"}
 function mostrarApp(){telaLogin.style.display="none";app.style.display="block"}
 function abrirTela(t){
+localStorage.setItem("tela_ativa",t)
 document.querySelectorAll(".tela").forEach(el=>el.style.display="none")
 document.querySelectorAll(".menuTabs button").forEach(b=>b.classList.remove("active"))
 document.getElementById("tela_"+t).style.display="block"
@@ -335,30 +345,27 @@ html+=`
 }
 lista.innerHTML=html
 }
+function logout(){
+localStorage.clear()
+location.reload()
+}
 
 /* RENDER */
 async function render(){
 let empresa=localStorage.getItem("empresa")
 let{data,error}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).eq("empresa_id",empresa).order("data_abastecimento",{ascending:true})
-
 if(error)return console.error(error)
-
 if(!data||!Array.isArray(data))data=[]
-
 if(!data.length){
 lista.innerHTML="<div>Sem dados</div>"
 return
 }
-
 renderHistorico(data)
-
 let ia=IA(data)
-
 kpi.innerHTML=`
 <div>Média ${ia.media.toFixed(2)}</div>
 <div>Custo/km ${ia.custo.toFixed(2)}</div>
 `
-
 let labels=[],vals=[]
 for(let i=1;i<data.length;i++){
 let km=data[i].quilometragem-data[i-1].quilometragem
@@ -368,10 +375,23 @@ labels.push(i)
 vals.push(km/l)
 }
 }
-
 if(chart)chart.destroy()
 chart=new Chart(grafico,{type:"line",data:{labels,datasets:[{data:vals}]}})
 }
+
+document.addEventListener("DOMContentLoaded",async()=>{
+const uid=localStorage.getItem("uid")
+if(uid){
+document.getElementById("telaLogin").style.display="none"
+document.getElementById("app").style.display="block"
+await init()
+}else{
+document.getElementById("telaLogin").style.display="flex"
+document.getElementById("app").style.display="none"
+}
+})
+
+
 </script>
 
 </body>
