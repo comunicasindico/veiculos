@@ -69,30 +69,16 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 
 <script>
 const db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
-
-let VID=null
-let chart=null
-
-function hojeISO(){
-const d=new Date()
-const l=new Date(d.getTime()-d.getTimezoneOffset()*60000)
-return l.toISOString().slice(0,10)
-}
-
-function formatarMoeda(v){
-return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-}
-
-function parseMoeda(v){
-return parseFloat((v||"0").replace(/\./g,"").replace(",","."))
-}
-
+let VID=null,chart=null
+function hojeISO(){const d=new Date();const l=new Date(d.getTime()-d.getTimezoneOffset()*60000);return l.toISOString().slice(0,10)}
+function formatarMoeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+function parseMoeda(v){return parseFloat((v||"0").replace(/\./g,"").replace(",", "."))}
 async function login(){
 const u=user.value.toLowerCase()
 const p=pass.value
 const {data}=await db.from("usuarios").select("*").eq("usuario_apelido",u)
-if(!data||!data.length){alert("Erro");return}
-if(data[0].senha_hash!==p){alert("Senha");return}
+if(!data||!data.length){alert("Usuário inválido");return}
+if(data[0].senha_hash!==p){alert("Senha inválida");return}
 localStorage.setItem("uid",data[0].id)
 localStorage.setItem("empresa",data[0].empresa_id)
 localStorage.setItem("tipo",data[0].perfil)
@@ -100,25 +86,23 @@ loginBox.style.display="none"
 app.style.display="block"
 init()
 }
-
 async function init(){
 let emp=localStorage.getItem("empresa")
 let {data}=await db.from("veiculos").select("*").eq("empresa_id",emp)
 veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
 VID=data[0].id
-if(localStorage.getItem("tipo")==="admin"){adminBox.style.display="block"}
 render()
 }
-
 async function salvar(){
 const v=parseMoeda(valor.value)
 const l=parseFloat(litros.value)
 const k=parseFloat(km.value)
 const vl=v/l
-if(v>1000){alert("Valor suspeito")}
-if(l>150){alert("Litros suspeito")}
+if(v>1000&&!confirm("Valor alto, confirmar?"))return
+if(l>150){alert("Litros suspeito");return}
 await db.from("abastecimentos").insert({
 empresa_id:localStorage.getItem("empresa"),
+usuario_id:localStorage.getItem("uid"),
 veiculo_id:VID,
 valor_total:v,
 litros:l,
@@ -128,41 +112,50 @@ data_abastecimento:hojeISO()
 })
 render()
 }
-
 function renderGrafico(labels,data){
 const ctx=grafico.getContext("2d")
 if(chart)chart.destroy()
 chart=new Chart(ctx,{type:"line",data:{labels,datasets:[{data,tension:0.4}]}})
 }
-
-async function render(){
-let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID)
-if(!data)data=[]
-lista.innerHTML=""
-let consumo=[],totalKm=0,totalValor=0
+function calcularIA(data){
+let consumo=[],fraudes=[],previsao=0,totalKm=0,totalValor=0
 for(let i=1;i<data.length;i++){
 let km=data[i].quilometragem-data[i-1].quilometragem
 let litros=data[i].litros
 if(km>0&&litros>0){
-consumo.push(km/litros)
+let cons=km/litros
+consumo.push(cons)
 totalKm+=km
 totalValor+=data[i].valor_total
+if(cons<4||cons>15){
+fraudes.push({i,cons})
+}
 }
 }
 let media=consumo.length?consumo.reduce((a,b)=>a+b,0)/consumo.length:0
-let custoKm=totalKm?totalValor/totalKm:0
-
-let alertaTxt=""
-if(media<6){alertaTxt="Consumo alto"}
-if(media>12){alertaTxt="Possível erro ou fraude"}
-
-kpi.innerHTML=`
-<div class="kpiCard">Média<br>${media.toFixed(2)}</div>
-<div class="kpiCard">Custo/km<br>${custoKm.toFixed(2)}</div>
-`
-
-alerta.innerHTML=alertaTxt
-
+let tendencia=consumo.slice(-3)
+if(tendencia.length){
+previsao=tendencia.reduce((a,b)=>a+b,0)/tendencia.length
+}
+return{
+media,
+custoKm:totalKm?totalValor/totalKm:0,
+fraudes,
+previsao
+}
+}
+function gerarInsights(ia){
+let txt=""
+if(ia.media<6)txt+="⚠ Consumo alto<br>"
+if(ia.media>12)txt+="🚨 Possível erro/fraude<br>"
+if(ia.fraudes.length)txt+="🚨 "+ia.fraudes.length+" abastecimentos fora do padrão<br>"
+if(ia.previsao)txt+="📈 Tendência: "+ia.previsao.toFixed(2)+" km/l<br>"
+return txt
+}
+async function render(){
+let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID)
+if(!data)data=[]
+lista.innerHTML=""
 data.forEach(a=>{
 lista.innerHTML+=`
 <div class="item">
@@ -171,7 +164,14 @@ lista.innerHTML+=`
 </div>
 `
 })
-
+let ia=calcularIA(data)
+kpi.innerHTML=`
+<div class="kpiCard">Média<br>${ia.media.toFixed(2)}</div>
+<div class="kpiCard">Custo/km<br>${ia.custoKm.toFixed(2)}</div>
+<div class="kpiCard">Previsão<br>${ia.previsao.toFixed(2)}</div>
+<div class="kpiCard">Fraudes<br>${ia.fraudes.length}</div>
+`
+alerta.innerHTML=gerarInsights(ia)
 let labels=[],vals=[]
 for(let i=1;i<data.length;i++){
 let km=data[i].quilometragem-data[i-1].quilometragem
@@ -181,20 +181,22 @@ labels.push(i)
 vals.push(km/litros)
 }
 }
-
 renderGrafico(labels,vals)
-
 if(localStorage.getItem("tipo")==="admin"){
-renderAdmin(data)
+renderRanking()
 }
 }
-
-function renderAdmin(data){
-let total=data.reduce((s,a)=>s+a.valor_total,0)
-adminLista.innerHTML=`
-<div>Total gasto: ${formatarMoeda(total)}</div>
-<div>Registros: ${data.length}</div>
-`
+async function renderRanking(){
+let {data}=await db.from("abastecimentos").select("*")
+let ranking={}
+data.forEach(a=>{
+if(!ranking[a.usuario_id])ranking[a.usuario_id]={km:0,litros:0}
+ranking[a.usuario_id].litros+=a.litros||0
+})
+let arr=Object.entries(ranking).map(([u,v])=>{
+return{usuario:u,cons:v.litros}
+}).sort((a,b)=>a.cons-b.cons)
+adminLista.innerHTML=arr.map(x=>`<div>${x.usuario}: ${x.cons.toFixed(2)}L</div>`).join("")
 }
 </script>
 
