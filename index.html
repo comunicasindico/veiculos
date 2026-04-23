@@ -14,6 +14,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5"></script>
+
 <style>
 body{margin:0;font-family:Arial;background:#020617;color:#fff}
 .container{max-width:720px;margin:auto;padding:10px}
@@ -27,20 +28,45 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 #telaLogin{background:url("img/bancocomunicaveiculos.png") no-repeat center center fixed;background-size:cover;display:flex;justify-content:center;align-items:center;height:100vh}
 #telaLogin::before{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.75)}
 #loginBox{position:relative;z-index:1;width:280px}
+.headerApp{position:sticky;top:0;z-index:10;background:linear-gradient(135deg,#020617,#0f172a);padding:10px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.logoArea{font-size:18px;font-weight:bold;text-align:center;margin-bottom:6px;color:#22c55e}
+.headerApp{position:sticky;top:0;background:#020617;padding:10px;border-bottom:1px solid #111}
+.logoArea{text-align:center;font-weight:bold;color:#22c55e;margin-bottom:6px}
+.menuTabs{display:flex;gap:6px}
+.menuTabs button{flex:1;background:#111827;color:#9ca3af;border:none;border-radius:10px;padding:10px}
+.menuTabs button.active{background:#22c55e;color:#000}
+
 </style>
 </head>
 
 <body>
 
+<!-- ================= LOGIN ================= -->
 <div id="telaLogin">
 <div id="loginBox">
+<h2 style="text-align:center">🚗 IA Frota Master</h2>
 <input id="user" placeholder="Usuário">
 <input id="pass" type="password" placeholder="Senha">
 <button onclick="login()">Entrar</button>
 </div>
 </div>
 
+<!-- ================= APP ================= -->
 <div id="app" class="container" style="display:none">
+
+<!-- HEADER -->
+<div class="headerApp">
+<div class="logoArea">🚗 IA Frota</div>
+<div class="menuTabs">
+<button onclick="abrirTela('combustivel')" id="tab_combustivel">⛽</button>
+<button onclick="abrirTela('motorista')" id="tab_motorista">👨</button>
+<button onclick="abrirTela('veiculo')" id="tab_veiculo">🚗</button>
+<button onclick="abrirTela('posto')" id="tab_posto">🏪</button>
+</div>
+</div>
+
+<!-- ================= COMBUSTÍVEL ================= -->
+<div id="tela_combustivel" class="tela">
 
 <div class="card">
 <select id="veiculoSel"></select>
@@ -55,6 +81,7 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <button onclick="capturar()">Capturar</button>
 <canvas id="canvas"></canvas>
 <div id="ocr"></div>
+
 <button onclick="toggleManual()">Manual</button>
 
 <div id="manualBox" style="display:none">
@@ -94,11 +121,69 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 </div>
 
 <div class="card">
-<h3>Histórico Completo</h3>
+<h3>📊 Histórico Completo</h3>
 <div id="lista"></div>
 </div>
 
 </div>
+
+<!-- ================= MOTORISTAS ================= -->
+<div id="tela_motorista" class="tela" style="display:none">
+
+<div class="card">
+<h3>👨 Cadastro Motorista</h3>
+<input id="m_nome" placeholder="Nome">
+<button onclick="salvarMotorista()">Salvar</button>
+</div>
+
+<div class="card">
+<h3>📋 Lista</h3>
+<div id="listaMotoristas"></div>
+</div>
+
+</div>
+
+<!-- ================= VEÍCULOS ================= -->
+<div id="tela_veiculo" class="tela" style="display:none">
+
+<div class="card">
+<h3>🚗 Cadastro Veículo</h3>
+<input id="v_modelo" placeholder="Modelo">
+<input id="v_placa" placeholder="Placa">
+<button onclick="salvarVeiculo()">Salvar</button>
+</div>
+
+<div class="card">
+<h3>📋 Lista</h3>
+<div id="listaVeiculos"></div>
+</div>
+
+</div>
+
+<!-- ================= POSTOS ================= -->
+<div id="tela_posto" class="tela" style="display:none">
+
+<div class="card">
+<h3>🏪 Cadastro Posto</h3>
+<input id="p_nome" placeholder="Nome">
+<input id="p_cnpj" placeholder="CNPJ">
+<input id="p_cidade" placeholder="Cidade">
+<input id="p_uf" placeholder="UF">
+<input id="p_endereco" placeholder="Endereço">
+<input id="p_bairro" placeholder="Bairro">
+<button onclick="salvarPosto()">Salvar</button>
+</div>
+
+<div class="card">
+<h3>📋 Lista</h3>
+<div id="listaPostos"></div>
+</div>
+
+</div>
+
+</div>
+
+</body>
 
 <script>
 const db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
@@ -146,7 +231,12 @@ render()
 
 function mostrarLogin(){telaLogin.style.display="flex";app.style.display="none"}
 function mostrarApp(){telaLogin.style.display="none";app.style.display="block"}
-
+function abrirTela(t){
+document.querySelectorAll(".tela").forEach(el=>el.style.display="none")
+document.querySelectorAll(".menuTabs button").forEach(b=>b.classList.remove("active"))
+document.getElementById("tela_"+t).style.display="block"
+document.getElementById("tab_"+t).classList.add("active")
+}
 /* CADASTROS */
 async function carregarCadastros(){
 let{data:postos}=await db.from("postos").select("*")
