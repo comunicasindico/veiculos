@@ -43,8 +43,6 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 </head>
 
 <body>
-
-<!-- ================= LOGIN ================= -->
 <div id="telaLogin">
 <div id="loginBox">
 <h2 style="text-align:center">🚗 IA Veículo(s) Master</h2>
@@ -53,11 +51,7 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <button onclick="login()">Entrar</button>
 </div>
 </div>
-
-<!-- ================= APP ================= -->
 <div id="app" class="container" style="display:none">
-
-<!-- HEADER -->
 <div class="headerApp">
 <div class="logoArea">🚗 IA Veículo(s)</div>
 <div class="menuTabs">
@@ -66,109 +60,77 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <button onclick="abrirTela('veiculo')" id="tab_veiculo">🚗</button>
 <button onclick="abrirTela('posto')" id="tab_posto">🏪</button>
 </div>
-<div class="footerBar">
-<button onclick="logout()" class="btnLogout">🚪 Sair</button>
 </div>
-</div>
-
-<!-- ================= COMBUSTÍVEL ================= -->
 <div id="tela_combustivel" class="tela">
-
 <div class="card">
 <select id="veiculoSel"></select>
 </div>
-
 <div class="card kpi" id="kpi"></div>
 <div id="alerta" class="alerta"></div>
-
 <div class="card">
 <h3>📷 OCR Cupom</h3>
 <video id="video" autoplay style="display:none"></video>
 <button onclick="capturar()">Capturar</button>
 <canvas id="canvas"></canvas>
 <div id="ocr"></div>
-
 <button onclick="toggleManual()">Manual</button>
-
 <div id="manualBox" style="display:none">
 <input id="m_valor" placeholder="Valor">
 <input id="m_litros" placeholder="Litros">
 <input id="m_tipo" placeholder="Combustível">
 <input id="m_posto" placeholder="Posto">
-
 <select id="motoristaSel"></select>
 <select id="postoSel"></select>
-
 <select id="m_tanque">
 <option value="cheio">Tanque Cheio</option>
 <option value="parcial">Parcial</option>
 </select>
-
 <button onclick="usarManual()">Aplicar</button>
 </div>
 </div>
-
 <div class="card">
 <h3>⛽ Abastecimento</h3>
 <input id="valor" placeholder="Valor">
 <input id="litros" placeholder="Litros">
 <input id="km" placeholder="KM">
-
 <select id="tanque">
 <option value="cheio">Tanque Cheio</option>
 <option value="parcial">Parcial</option>
 </select>
-
 <button onclick="salvar()">Salvar</button>
 </div>
-
 <div class="card">
 <canvas id="grafico"></canvas>
 </div>
-
 <div class="card">
 <h3>📊 Histórico Completo</h3>
 <div id="lista"></div>
 </div>
-
 </div>
-
-<!-- ================= MOTORISTAS ================= -->
 <div id="tela_motorista" class="tela" style="display:none">
-
 <div class="card">
 <h3>👨 Cadastro Motorista</h3>
 <input id="m_nome" placeholder="Nome">
 <button onclick="salvarMotorista()">Salvar</button>
 </div>
-
 <div class="card">
-<h3>📋 Lista</h3>
+<h3>📋 Lista Completa</h3>
 <div id="listaMotoristas"></div>
 </div>
-
 </div>
-
-<!-- ================= VEÍCULOS ================= -->
 <div id="tela_veiculo" class="tela" style="display:none">
-
 <div class="card">
 <h3>🚗 Cadastro Veículo</h3>
 <input id="v_modelo" placeholder="Modelo">
 <input id="v_placa" placeholder="Placa">
 <button onclick="salvarVeiculo()">Salvar</button>
 </div>
-
 <div class="card">
-<h3>📋 Lista</h3>
+<h3>📋 Lista Completa</h3>
 <div id="listaVeiculos"></div>
 </div>
-
 </div>
-
-<!-- ================= POSTOS ================= -->
 <div id="tela_posto" class="tela" style="display:none">
-
 <div class="card">
 <h3>🏪 Cadastro Posto</h3>
 <input id="p_nome" placeholder="Nome">
@@ -179,16 +141,15 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <input id="p_bairro" placeholder="Bairro">
 <button onclick="salvarPosto()">Salvar</button>
 </div>
-
 <div class="card">
-<h3>📋 Lista</h3>
+<h3>📋 Lista Completa</h3>
 <div id="listaPostos"></div>
 </div>
-
 </div>
-
+<div class="footerBar">
+<button onclick="logout()" class="btnLogout">🚪 Sair</button>
 </div>
-
+</div>
 </body>
 
 <script>
@@ -220,22 +181,16 @@ mostrarApp()
 
 let{data,error}=await db.from("veiculos").select("*").eq("empresa_id",localStorage.getItem("empresa"))
 if(error)return alert("Erro veículos")
-
 if(!data||!Array.isArray(data))data=[]
-
 if(!data.length){
 veiculoSel.innerHTML="<option>Nenhum veículo</option>"
 return
 }
-
 veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo||"-"}</option>`).join("")
 VID=data[0].id
-
 await carregarCadastros()
-
 const telaSalva=localStorage.getItem("tela_ativa")||"combustivel"
 abrirTela(telaSalva)
-
 render()
 }
 
@@ -250,13 +205,24 @@ document.getElementById("tab_"+t).classList.add("active")
 }
 /* CADASTROS */
 async function carregarCadastros(){
-let{data:postos}=await db.from("postos").select("*")
-if(!Array.isArray(postos))postos=[]
-postoSel.innerHTML=postos.map(p=>`<option value="${p.id}">${p.nome_posto||"-"}</option>`).join("")
-
-let{data:motoristas}=await db.from("motoristas").select("*")
-if(!Array.isArray(motoristas))motoristas=[]
-motoristaSel.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome||"-"}</option>`).join("")
+const empresa=localStorage.getItem("empresa")
+function montarTabela(lista){
+if(!lista||!lista.length)return"<div>Sem dados</div>"
+let colunas=Object.keys(lista[0])
+return lista.map(l=>{
+return `<div class="item">`+
+colunas.map(c=>`<div class="row"><span>${c}</span><span>${l[c]??"-"}</span></div>`).join("")+
+`</div>`
+}).join("")
+}
+let{data:veiculos}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
+listaVeiculos.innerHTML=montarTabela(veiculos)
+let{data:motoristas}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
+listaMotoristas.innerHTML=montarTabela(motoristas)
+let{data:postos}=await db.from("postos").select("*").eq("empresa_id",empresa)
+listaPostos.innerHTML=montarTabela(postos)
+if(window.postoSel)postoSel.innerHTML=postos.map(p=>`<option value="${p.id}">${p.nome_posto||"-"}</option>`).join("")
+if(window.motoristaSel)motoristaSel.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome||"-"}</option>`).join("")
 }
 
 /* OCR */
@@ -271,12 +237,9 @@ canvas.height=video.videoHeight
 ctx.drawImage(video,0,0)
 const{data:{text}}=await Tesseract.recognize(canvas,"por")
 dadosOCR=extrair(text)
-
 if(dadosOCR.valor>1000||dadosOCR.litros>150)alert("⚠ OCR suspeito")
-
 valor.value=dadosOCR.valor||""
 litros.value=dadosOCR.litros||""
-
 ocr.innerHTML=`💰 ${dadosOCR.valor} | ⛽ ${dadosOCR.litros}`
 }
 
