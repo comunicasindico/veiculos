@@ -217,8 +217,7 @@ let uid=localStorage.getItem("uid")
 if(!uid)return mostrarLogin()
 
 mostrarApp()
-const telaSalva=localStorage.getItem("tela_ativa")||"combustivel"
-abrirTela(telaSalva)
+
 let{data,error}=await db.from("veiculos").select("*").eq("empresa_id",localStorage.getItem("empresa"))
 if(error)return alert("Erro veículos")
 
@@ -233,8 +232,10 @@ veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo||"-"}</opti
 VID=data[0].id
 
 await carregarCadastros()
+
 const telaSalva=localStorage.getItem("tela_ativa")||"combustivel"
 abrirTela(telaSalva)
+
 render()
 }
 
