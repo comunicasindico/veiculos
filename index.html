@@ -92,7 +92,16 @@ canvas{max-height:260px}
 <button onclick="capturar()">Capturar Nota</button>
 <canvas id="canvas"></canvas>
 <button onclick="capturar()">📸 Capturar Agora</button>
+<button onclick="toggleModoNota()">✍️ Inserção Manual</button>
 <div id="ocr"></div>
+</div>
+
+<div id="manualBox" style="display:none;margin-top:10px">
+<input id="manual_valor" placeholder="Valor total">
+<input id="manual_litros" placeholder="Litros">
+<input id="manual_tipo" placeholder="Combustível">
+<input id="manual_posto" placeholder="Posto">
+<button onclick="usarManual()">Usar Dados Manuais</button>
 </div>
 
 <div class="card">
@@ -393,6 +402,7 @@ dados.cidade=info.cidade
 dados.uf=info.uf
 }
 }
+if(window.dadosOCR_manual)return
 /* 🔥 RESULTADO PROFISSIONAL */
 ocr.innerHTML=`
 <div style="font-size:14px">
@@ -497,6 +507,7 @@ litros.value=""
 valor.value=""
 km.value=""
 render()
+window.dadosOCR_manual=false
 }
 /* =============FUNÇÃO FECHAR CAMERA================================================== */
 function fecharCamera(){
@@ -1111,7 +1122,39 @@ console.warn("Erro CNPJ:",e)
 return null
 }
 }
+/* ===============FUNCTION TOGGLE MODO NOTA============= */
+function toggleModoNota(){
+const box=document.getElementById("manualBox")
+const videoEl=document.getElementById("video")
+if(box.style.display==="none"){
+box.style.display="block"
+videoEl.style.display="none"
+ocr.innerHTML="Modo manual ativo"
+}else{
+box.style.display="none"
+videoEl.style.display="block"
+ocr.innerHTML=""
+}
+}
+/* ===============FUNCTION USAR MANUAL============= */
+function usarManual(){
+const v=document.getElementById("manual_valor").value
+const l=document.getElementById("manual_litros").value
+const t=document.getElementById("manual_tipo").value
+const p=document.getElementById("manual_posto").value
+window.dadosOCR={
+valor:v,
+litros:l,
+tipo:t,
+posto:p
+}
+if(v)valor.value=v
+if(l)litros.value=l
+ocr.innerHTML="✅ Dados manuais aplicados"
+window.dadosOCR_manual=true
+}
 
+  
 
 </script>
 </div>
