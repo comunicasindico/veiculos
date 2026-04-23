@@ -72,6 +72,9 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <option value="cheio">Tanque Cheio</option>
 <option value="parcial">Parcial</option>
 </select>
+<select id="motoristaSel"></select>
+<select id="postoSel"></select>
+<select id="veiculoSel"></select>
 <button onclick="usarManual()">Aplicar</button>
 </div>
 </div>
@@ -131,7 +134,38 @@ let{data}=await db.from("veiculos").select("*").eq("empresa_id",localStorage.get
 if(!data||!data.length)return alert("Sem veículos")
 veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
 VID=data[0].id
+await carregarCadastros()
 render()
+}
+
+async function salvarPosto(){
+await db.from("postos").insert({
+empresa_id:localStorage.getItem("empresa"),
+nome_posto:p_nome.value,
+cnpj:p_cnpj.value,
+cidade:p_cidade.value,
+uf:p_uf.value,
+endereco:p_endereco.value,
+bairro:p_bairro.value
+})
+carregarCadastros()
+}
+
+async function salvarMotorista(){
+await db.from("motoristas").insert({
+empresa_id:localStorage.getItem("empresa"),
+nome:m_nome.value
+})
+carregarCadastros()
+}
+
+async function salvarVeiculo(){
+await db.from("veiculos").insert({
+empresa_id:localStorage.getItem("empresa"),
+modelo:v_modelo.value,
+placa:v_placa.value
+})
+init()
 }
 
 /* ===== OCR ===== */
@@ -199,25 +233,26 @@ async function salvar(){
 const v=parse(valor.value)
 const l=parseFloat(litros.value)
 const k=parseFloat(km.value)
+
+const posto_id=document.getElementById("postoSel").value
+const motorista_id=document.getElementById("motoristaSel").value
+
 if(!v||!l||!k)return alert("Preencha tudo")
+
 await db.from("abastecimentos").insert({
 empresa_id:localStorage.getItem("empresa"),
 veiculo_id:VID,
-usuario_id:localStorage.getItem("uid"),
+motorista_id:motorista_id,
+posto_id:posto_id,
 valor_total:v,
 litros:l,
-quilometragem:k,
 valor_litro:(l>0?(v/l):0),
-tanque:tanque.value||"cheio",
-posto:dadosOCR?.posto||"",
-cidade:dadosOCR?.cidade||"",
-uf:dadosOCR?.uf||"",
-cnpj:dadosOCR?.cnpj||"",
-endereco:dadosOCR?.endereco||"",
-bairro:dadosOCR?.bairro||"",
+quilometragem:k,
 tipo_combustivel:dadosOCR?.tipo||"",
+tanque:tanque.value||"cheio",
 data_abastecimento:hojeISO()
 })
+
 render()
 }
 
@@ -263,6 +298,7 @@ return api
 /* ===== HISTÓRICO PROFISSIONAL ===== */
 function renderHistorico(data){
 let html=""
+
 for(let i=data.length-1;i>=0;i--){
 let a=data[i]
 let ant=data[i-1]
@@ -283,34 +319,35 @@ consumo="~ "+(kmRodado/a.litros).toFixed(2)+" km/L"
 
 html+=`
 <div class="item">
+
 <div class="row">
-<span>${brData(a.data_abastecimento)}</span>
-<span>${safe(a.quilometragem)} km</span>
+<span>📅 ${brData(a.data_abastecimento)}</span>
+<span>🚗 ${safe(a.veiculos?.modelo)} ${safe(a.veiculos?.placa)}</span>
 </div>
 
 <div class="row">
-<span>${safe(a.litros)} L</span>
-<span>${moeda(a.valor_total)}</span>
+<span>⛽ ${safe(a.tipo_combustivel)}</span>
+<span>👨 ${safe(a.motoristas?.nome)}</span>
 </div>
 
 <div class="row">
-<span>${safe(a.tipo_combustivel)}</span>
-<span>${safe(a.tanque)}</span>
+<span>🏪 ${safe(a.postos?.nome_posto)}</span>
+<span>${safe(a.postos?.cidade)}-${safe(a.postos?.uf)}</span>
 </div>
 
 <div class="row">
-<span>${safe(a.posto)}</span>
-<span>${safe(a.cidade)}-${safe(a.uf)}</span>
+<span>📄 ${safe(a.postos?.cnpj)}</span>
+<span>${safe(a.postos?.endereco)}</span>
 </div>
 
 <div class="row">
-<span>${safe(a.cnpj)}</span>
-<span>${a.valor_litro?Number(a.valor_litro).toFixed(2):"-"}/L</span>
+<span>⛽ ${safe(a.litros)} L</span>
+<span>💰 ${moeda(a.valor_total)}</span>
 </div>
 
 <div class="row">
-<span>${safe(a.endereco)}</span>
-<span>${safe(a.bairro)}</span>
+<span>💲 ${a.valor_litro?Number(a.valor_litro).toFixed(2):"-"}/L</span>
+<span>📍 ${safe(a.quilometragem)} km</span>
 </div>
 
 <div class="row">
@@ -327,26 +364,40 @@ lista.innerHTML=html
 /* ===== RENDER ===== */
 async function render(){
 let empresa=localStorage.getItem("empresa")
+
 let{data,error}=await db
 .from("abastecimentos")
-.select("*")
+.select(`
+*,
+postos(nome_posto,cnpj,cidade,uf,endereco,bairro),
+motoristas(nome),
+veiculos(modelo,placa)
+`)
 .eq("veiculo_id",VID)
 .eq("empresa_id",empresa)
 .order("data_abastecimento",{ascending:true})
+
 if(error){console.error(error);return}
+
 if(!data||!data.length){
 lista.innerHTML="<div style='padding:10px'>Sem dados</div>"
 return
 }
+
 renderHistorico(data)
+
 let ia=IA(data)
+
 kpi.innerHTML=`
 <div>Média ${ia.media.toFixed(2)}</div>
 <div>Custo/km ${ia.custo.toFixed(2)}</div>
 <div>Fraudes ${ia.fraude}</div>
 `
+
 alerta.innerHTML=ia.fraude?"🚨 possível fraude":""
+
 let labels=[],vals=[]
+
 for(let i=1;i<data.length;i++){
 let km=data[i].quilometragem-data[i-1].quilometragem
 let l=data[i].litros
@@ -355,12 +406,22 @@ labels.push(i)
 vals.push(km/l)
 }
 }
+
 if(chart)chart.destroy()
+
 chart=new Chart(grafico,{
 type:"line",
 data:{labels,datasets:[{data:vals}]}
 })
 }
+async function carregarCadastros(){
+let empresa=localStorage.getItem("empresa")
+let{data:postos}=await db.from("postos").select("*").eq("empresa_id",empresa)
+postoSel.innerHTML=postos.map(p=>`<option value="${p.id}">${p.nome_posto}</option>`).join("")
+let{data:motoristas}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
+motoristaSel.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome}</option>`).join("")
+}
+
 </script>
 
 </body>
