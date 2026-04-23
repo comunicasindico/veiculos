@@ -192,6 +192,21 @@ return
 veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo||"-"}</option>`).join("")
 VID=data[0].id
 await carregarCadastros()
+/* AUTOPREENCHER POSTO */
+if(window.postoSel){
+postoSel.onchange=async function(){
+let id=this.value
+if(!id)return
+let{data,error}=await db.from("postos").select("*").eq("id",id).single()
+if(error||!data)return
+p_nome.value=data.nome_posto||""
+p_cnpj.value=data.cnpj||""
+p_cidade.value=data.cidade||""
+p_uf.value=data.uf||""
+p_endereco.value=data.endereco||""
+p_bairro.value=data.bairro||""
+}
+}
 const telaSalva=localStorage.getItem("tela_ativa")||"combustivel"
 abrirTela(telaSalva)
 render()
@@ -209,7 +224,6 @@ let btn=document.getElementById("tab_"+t)
 if(tela)tela.style.display="block"
 if(btn)btn.classList.add("active")
 }
-
 /* CRUD */
 async function excluirRegistro(tabela,id){
 if(!confirm("Excluir registro?"))return
@@ -222,7 +236,6 @@ async function editarRegistro(tabela,id,campo,valor){
 let{error}=await db.from(tabela).update({[campo]:valor}).eq("id",id)
 if(error)console.error("Erro editar:",error)
 }
-
 /* CADASTROS */
 async function carregarCadastros(){
 const empresa=localStorage.getItem("empresa")
@@ -241,7 +254,6 @@ colunas.map(c=>`
 </div>`
 }).join("")
 }
-
 /* VEICULOS */
 let{data:veiculos,error:e1}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
 if(e1)console.error("Erro veiculos:",e1)
@@ -260,22 +272,6 @@ if(window.listaPostos)listaPostos.innerHTML=montarTabela(postos,"postos")
 /* SELECTS */
 if(window.postoSel)postoSel.innerHTML=postos.map(p=>`<option value="${p.id}">${p.nome_posto||"-"}</option>`).join("")
 if(window.motoristaSel)motoristaSel.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome||"-"}</option>`).join("")
-}
-
-/* AUTOPREENCHER POSTO */
-if(window.postoSel){
-postoSel.addEventListener("change",async()=>{
-let id=postoSel.value
-if(!id)return
-let{data,error}=await db.from("postos").select("*").eq("id",id).single()
-if(error||!data)return
-p_nome.value=data.nome_posto||""
-p_cnpj.value=data.cnpj||""
-p_cidade.value=data.cidade||""
-p_uf.value=data.uf||""
-p_endereco.value=data.endereco||""
-p_bairro.value=data.bairro||""
-})
 }
 /* OCR */
 async function capturar(){
