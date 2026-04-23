@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#020617">
 <title>IA Frota Master</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -86,6 +88,10 @@ function hojeISO(){const d=new Date();const l=new Date(d.getTime()-d.getTimezone
 function brData(d){if(!d)return"-";const[a,m,dd]=d.split("-");return`${dd}/${m}/${a.slice(2)}`}
 function moeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
 function parse(v){return parseFloat((v||"0").replace(/\./g,"").replace(",", "."))}
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("service-worker.js")
+}
+
 async function login(){
 const{data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
 if(!data||!data.length)return alert("Erro")
@@ -115,14 +121,25 @@ dadosOCR=extrair(text)
 ocr.innerHTML=`Valor:${dadosOCR.valor} Litros:${dadosOCR.litros}`
 valor.value=dadosOCR.valor
 litros.value=dadosOCR.litros
+if(dadosOCR.cnpjLimpo){
+const info=await buscarCNPJ(dadosOCR.cnpjLimpo)
+if(info){
+dadosOCR.posto=info.fantasia||info.nome
+dadosOCR.cidade=info.cidade
+dadosOCR.uf=info.uf
 }
-function extrair(t){
-t=t.toUpperCase()
-let vals=[...t.matchAll(/\d+,\d{2}/g)].map(v=>parse(v[0]))
-let valor=vals.length?Math.max(...vals):0
-let l=t.match(/(\d+,\d{3})\s*L/)
+}
+}
+function extrair(txt){
+txt=txt.toUpperCase().replace(/\s+/g," ")
+let valores=[...txt.matchAll(/\d{1,3}(\.\d{3})*,\d{2}/g)]
+let valor=valores.length?Math.max(...valores.map(v=>parse(v[0]))):0
+let l=txt.match(/(\d+,\d{3})\s*L/)
 let litros=l?parseFloat(l[1].replace(",", ".")):0
-return{valor,litros}
+let cnpjMatch=txt.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/)
+let cnpj=cnpjMatch?cnpjMatch[0]:null
+let cnpjLimpo=cnpj?cnpj.replace(/\D/g,""):null
+return{valor,litros,cnpj,cnpjLimpo}
 }
 function toggleManual(){
 manualBox.style.display=manualBox.style.display==="none"?"block":"none"
@@ -146,6 +163,9 @@ quilometragem:k,
 valor_litro:vl,
 tanque:tanque.value,
 posto:dadosOCR?.posto||"",
+cidade:dadosOCR?.cidade||"",
+uf:dadosOCR?.uf||"",
+cnpj:dadosOCR?.cnpj||"",
 tipo_combustivel:dadosOCR?.tipo||"",
 data_abastecimento:hojeISO()
 })
@@ -167,6 +187,25 @@ totalValor+=data[i].valor_total
 let media=consumo.length?consumo.reduce((a,b)=>a+b,0)/consumo.length:0
 return{media,custo:totalKm?totalValor/totalKm:0,fraude}
 }
+async function buscarCNPJ(cnpj){
+try{
+let cache=localStorage.getItem("cnpj_"+cnpj)
+if(cache)return JSON.parse(cache)
+const res=await fetch("https://brasilapi.com.br/api/cnpj/v1/"+cnpj)
+if(!res.ok)throw new Error()
+const data=await res.json()
+const obj={
+nome:data.razao_social||"",
+fantasia:data.nome_fantasia||"",
+cidade:data.municipio||"",
+uf:data.uf||""
+}
+localStorage.setItem("cnpj_"+cnpj,JSON.stringify(obj))
+return obj
+}catch(e){
+return null
+}
+}
 async function render(){
 let{data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID)
 lista.innerHTML=""
@@ -176,7 +215,8 @@ lista.innerHTML+=`
 <div class="row"><span>${brData(a.data_abastecimento)}</span><span>${a.quilometragem}km</span></div>
 <div class="row"><span>${a.litros}L</span><span>${moeda(a.valor_total)}</span></div>
 <div class="row"><span>${a.tipo_combustivel||"-"}</span><span>${a.tanque}</span></div>
-<div class="row"><span>${a.posto||"-"}</span><span>${(a.valor_litro||0).toFixed(2)}/L</span></div>
+<div class="row"><span>${a.posto||"-"}</span><span>${a.cidade||""}-${a.uf||""}</span></div>
+<div class="row"><span>${a.cnpj||"-"}</span><span>${(a.valor_litro||0).toFixed(2)}/L</span></div>
 </div>`
 })
 let ia=IA(data)
@@ -198,6 +238,7 @@ vals.push(km/l)
 if(chart)chart.destroy()
 chart=new Chart(grafico,{type:"line",data:{labels,datasets:[{data:vals}]}})
 }
+
 </script>
 
 </body>
