@@ -139,6 +139,15 @@ canvas{max-height:260px}
 </div>
 
 <script>
+/* ====================================================002 – FORMATADORES==================================================== */
+function formatarMoedaBR(v){
+if(!v)return"R$ 0,00"
+return Number(v).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+}
+function parseMoeda(v){
+if(!v)return 0
+return parseFloat(v.replace(/\./g,"").replace(",","."))
+}
 /* ====================================================000 – VAR GLOBAL==================================================== */
 let chart=null
 let chartMensal=null
@@ -482,40 +491,48 @@ cnpj,
 tipo
 }
 }
-/* ====================================================040 SALVAR==================================================== */
+/* ====================================================040 – SALVAR COMPLETO PROFISSIONAL==================================================== */
 async function salvar(){
-if(window.EDIT_ID){
-await db.from("abastecimentos").update({
-litros:parseFloat(litros.value),
-valor_total:parseFloat(valor.value),
-quilometragem:parseFloat(km.value)
-}).eq("id",window.EDIT_ID)
-window.EDIT_ID=null
-}else{
-if(!window.dadosOCR){
-alert("⚠ Confirme ou insira manualmente os dados da nota")
+
+const valorNum=parseMoeda(valor.value)
+const litrosNum=parseFloat(litros.value||0)
+const kmNum=parseFloat(km.value||0)
+
+if(!valorNum||!litrosNum||!kmNum){
+alert("Preencha valor, litros e KM")
 return
 }
+
+const valorLitro=valorNum/litrosNum
+
 await db.from("abastecimentos").insert({
-veiculo_id:VID,
 empresa_id:localStorage.getItem("empresa_id"),
 usuario_id:localStorage.getItem("uid"),
-litros:parseFloat(litros.value),
-valor_total:parseFloat(valor.value),
-valor_litro:(parseFloat(valor.value)/parseFloat(litros.value)),
-quilometragem:parseFloat(km.value),
+veiculo_id:VID,
+data_abastecimento:window.dadosOCR?.data?converterDataBR(window.dadosOCR.data):hojeISO(),
+quilometragem:kmNum,
+litros:litrosNum,
+valor_total:valorNum,
+valor_litro:valorLitro,
+tipo_combustivel:window.dadosOCR?.tipo||"",
 posto:window.dadosOCR?.posto||"",
 cidade:window.dadosOCR?.cidade||"",
 uf:window.dadosOCR?.uf||"",
-data_abastecimento:hojeISO()
+cnpj:window.dadosOCR?.cnpj||"",
+placa:window.dadosOCR?.placa||""
 })
-}
-await db.from("veiculos").update({km_atual:parseFloat(km.value)}).eq("id",VID)
+
+await db.from("veiculos")
+.update({km_atual:kmNum})
+.eq("id",VID)
+
 litros.value=""
 valor.value=""
 km.value=""
+
+window.dadosOCR=null
+
 render()
-window.dadosOCR_manual=false
 }
 /* =============FUNÇÃO FECHAR CAMERA================================================== */
 function fecharCamera(){
@@ -647,7 +664,31 @@ totalLitros+=litros
 let mediaMes=totalLitros>0?(totalKmMes/totalLitros).toFixed(2):"-"
 html+=`<div style="margin-top:10px;padding:6px 10px;background:rgba(34,197,94,0.08);border-radius:8px;font-size:13px;font-weight:bold">📊 ${formatarMes(m)} • 💰 R$ ${totalMes.toFixed(0)} • 📍 ${totalKmMes} km • ⛽ ${mediaMes} km/l</div>`
 arr.slice().reverse().forEach(a=>{
-html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;margin:2px 0;background:rgba(255,255,255,0.02);border-radius:6px;font-size:12px"><div style="min-width:90px">📅 ${formatarData(a.data_abastecimento)}</div><div style="display:flex;gap:8px;flex:1;justify-content:center"><span>⛽ ${a.litros||0}L</span><span>💰 ${(a.valor_total||0).toFixed(0)}</span><span>📍 ${a.quilometragem||0}</span></div></div>`
+html+=`
+<div style="display:flex;flex-direction:column;padding:6px 8px;margin:4px 0;background:rgba(255,255,255,0.03);border-radius:8px;font-size:12px">
+
+<div style="display:flex;justify-content:space-between">
+<span>📅 ${formatarData(a.data_abastecimento)}</span>
+<span>📍 ${a.quilometragem||0} km</span>
+</div>
+
+<div style="display:flex;justify-content:space-between">
+<span>⛽ ${a.litros||0} L</span>
+<span>💰 ${formatarMoedaBR(a.valor_total)}</span>
+</div>
+
+<div style="display:flex;justify-content:space-between">
+<span>🏪 ${a.posto||"-"}</span>
+<span>📊 ${(a.valor_litro||0).toFixed(2)} /L</span>
+</div>
+
+<div style="display:flex;justify-content:space-between">
+<span>📍 ${a.cidade||"-"}-${a.uf||""}</span>
+<span>🧾 ${a.cnpj||"-"}</span>
+</div>
+
+</div>
+`
 })
 })
 lista.innerHTML=html
@@ -793,6 +834,11 @@ render()
 }
 /* =============FORMATAR DATA================================================== */
 function formatarData(d){return fromISOToBR(d)}
+/* =============CONVERTER DATA================================================== */
+function converterDataBR(d){
+const [dia,mes,ano]=d.split("/")
+return `${ano}-${mes}-${dia}`
+}
 /* =============FORMATAR MÊS================================================== */
 function formatarMes(m){
 const d=new Date(m+"-01")
@@ -1024,10 +1070,12 @@ ctx.putImageData(imgData,0,0)
 /* ===============FUNCTION OCR COMPLETA PROFISSIONAL============= */
 function extrairDadosNota(txt){
 txt=txt.toUpperCase().replace(/\s+/g," ")
-/* ================= CNPJ ================= */
+/* ================= CNPJ E KM================= */
 let cnpjMatch=txt.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/)
 let cnpj=cnpjMatch?cnpjMatch[0]:null
 let cnpjLimpo=cnpj?cnpj.replace(/\D/g,""):null
+let kmMatch=txt.match(/KM[:\s]*([\d\.]+)/)
+let km=kmMatch?parseFloat(kmMatch[1].replace(/\./g,"")):null
 /* ================= BASE DE POSTOS POR CNPJ ================= */
 const POSTOS={
 "17483693000113":"POSTO LLX",
@@ -1106,6 +1154,7 @@ litros,
 valorLitro,
 data,
 placa,
+quilometragem:km,
 buscarPosto:true
 }
 }
