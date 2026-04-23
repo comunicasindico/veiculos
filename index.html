@@ -132,6 +132,7 @@ canvas{max-height:260px}
 /* ====================================================000 – VAR GLOBAL==================================================== */
 let chart=null
 let chartMensal=null
+let stream=null
 /* ====================================================000 RESET==================================================== */
 if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()))}
 if('caches'in window){caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)))}
@@ -142,6 +143,9 @@ window.lista=document.getElementById("lista")
 window.kpi=document.getElementById("kpi")
 window.alerta=document.getElementById("alerta")
 window.grafico=document.getElementById("grafico")
+window.video=document.getElementById("video")
+window.canvas=document.getElementById("canvas")
+window.ocr=document.getElementById("ocr")
 const select=document.getElementById("veiculoSel")
 init()
 })
@@ -336,7 +340,10 @@ dfInput.value=p.hoje
 /* ====================================================020 CAMERA CONTROL==================================================== */
 async function abrirCamera(){
 try{
-stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}})
+if(stream)return
+stream=await navigator.mediaDevices.getUserMedia({
+video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}
+})
 video.srcObject=stream
 video.style.display="block"
 await video.play()
@@ -445,6 +452,17 @@ litros.value=""
 valor.value=""
 km.value=""
 render()
+}
+/* =============FUNÇÃO FECHAR CAMERA================================================== */
+function fecharCamera(){
+if(stream){
+stream.getTracks().forEach(t=>t.stop())
+stream=null
+}
+if(video){
+video.srcObject=null
+video.style.display="none"
+}
 }
 /* =============FUNÇÃO EDITAR================================================== */
 function editar(id,litrosVal,valorVal,kmVal){
