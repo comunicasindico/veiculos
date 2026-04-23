@@ -3,31 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Veículos PRO SaaS</title>
-<link rel="icon" href="data:,">
+<title>IA Frota Master</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5"></script>
 <style>
 body{margin:0;font-family:Arial;background:#020617;color:#fff}
-.container{max-width:700px;margin:auto;padding:10px}
-.card{background:linear-gradient(145deg,#111827,#0b1220);padding:12px;border-radius:12px;margin-top:10px}
+.container{max-width:720px;margin:auto;padding:10px}
+.card{background:#0b1220;padding:12px;border-radius:12px;margin-top:10px}
 input,select{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:none;background:#020617;color:#fff}
 button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold}
-.kpiGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.kpiCard{background:#0b1220;padding:10px;border-radius:8px;text-align:center}
-.item{background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;margin:4px 0;font-size:12px}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.item{background:#111827;padding:8px;border-radius:8px;margin-top:6px;font-size:12px}
 .row{display:flex;justify-content:space-between}
 .alerta{color:#f87171;font-weight:bold}
-.admin{background:#1f2937;padding:10px;border-radius:10px;margin-top:10px}
 </style>
 </head>
 <body>
 
 <div id="loginBox" class="card" style="max-width:300px;margin:40px auto">
-<h3>Login</h3>
-<input id="user">
-<input id="pass" type="password">
+<input id="user" placeholder="Usuário">
+<input id="pass" type="password" placeholder="Senha">
 <button onclick="login()">Entrar</button>
 </div>
 
@@ -35,19 +31,40 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 
 <div class="card">
 <select id="veiculoSel"></select>
-<button onclick="render()">Atualizar</button>
 </div>
 
-<div class="card">
-<div id="kpi" class="kpiGrid"></div>
+<div class="card kpi" id="kpi"></div>
 <div id="alerta" class="alerta"></div>
+
+<div class="card">
+<h3>📷 OCR Cupom</h3>
+<video id="video" autoplay style="display:none"></video>
+<button onclick="capturar()">Capturar</button>
+<canvas id="canvas"></canvas>
+<div id="ocr"></div>
+<button onclick="toggleManual()">Manual</button>
+<div id="manualBox" style="display:none">
+<input id="m_valor" placeholder="Valor">
+<input id="m_litros" placeholder="Litros">
+<input id="m_tipo" placeholder="Combustível">
+<input id="m_posto" placeholder="Posto">
+<select id="m_tanque">
+<option value="cheio">Tanque Cheio</option>
+<option value="parcial">Parcial</option>
+</select>
+<button onclick="usarManual()">Aplicar</button>
+</div>
 </div>
 
 <div class="card">
-<h3>Abastecimento</h3>
+<h3>⛽ Abastecimento</h3>
 <input id="valor">
 <input id="litros">
 <input id="km">
+<select id="tanque">
+<option value="cheio">Tanque Cheio</option>
+<option value="parcial">Parcial</option>
+</select>
 <button onclick="salvar()">Salvar</button>
 </div>
 
@@ -56,147 +73,130 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 </div>
 
 <div class="card">
-<h3>Histórico</h3>
+<h3>Histórico Completo</h3>
 <div id="lista"></div>
-</div>
-
-<div id="adminBox" class="admin" style="display:none">
-<h3>Painel Admin</h3>
-<div id="adminLista"></div>
 </div>
 
 </div>
 
 <script>
 const db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
-let VID=null,chart=null
+let VID=null,chart=null,stream=null,dadosOCR=null
 function hojeISO(){const d=new Date();const l=new Date(d.getTime()-d.getTimezoneOffset()*60000);return l.toISOString().slice(0,10)}
-function formatarMoeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
-function parseMoeda(v){return parseFloat((v||"0").replace(/\./g,"").replace(",", "."))}
+function brData(d){if(!d)return"-";const[a,m,dd]=d.split("-");return`${dd}/${m}/${a.slice(2)}`}
+function moeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+function parse(v){return parseFloat((v||"0").replace(/\./g,"").replace(",", "."))}
 async function login(){
-const u=user.value.toLowerCase()
-const p=pass.value
-const {data}=await db.from("usuarios").select("*").eq("usuario_apelido",u)
-if(!data||!data.length){alert("Usuário inválido");return}
-if(data[0].senha_hash!==p){alert("Senha inválida");return}
-localStorage.setItem("uid",data[0].id)
+const{data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
+if(!data||!data.length)return alert("Erro")
+if(data[0].senha_hash!==pass.value)return alert("Senha")
 localStorage.setItem("empresa",data[0].empresa_id)
-localStorage.setItem("tipo",data[0].perfil)
 loginBox.style.display="none"
 app.style.display="block"
 init()
 }
 async function init(){
-let emp=localStorage.getItem("empresa")
-let {data}=await db.from("veiculos").select("*").eq("empresa_id",emp)
+let{data}=await db.from("veiculos").select("*").eq("empresa_id",localStorage.getItem("empresa"))
 veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
 VID=data[0].id
 render()
 }
+async function capturar(){
+stream=await navigator.mediaDevices.getUserMedia({video:true})
+video.srcObject=stream
+video.style.display="block"
+await new Promise(r=>setTimeout(r,1500))
+const ctx=canvas.getContext("2d")
+canvas.width=video.videoWidth
+canvas.height=video.videoHeight
+ctx.drawImage(video,0,0)
+const{data:{text}}=await Tesseract.recognize(canvas,"por")
+dadosOCR=extrair(text)
+ocr.innerHTML=`Valor:${dadosOCR.valor} Litros:${dadosOCR.litros}`
+valor.value=dadosOCR.valor
+litros.value=dadosOCR.litros
+}
+function extrair(t){
+t=t.toUpperCase()
+let vals=[...t.matchAll(/\d+,\d{2}/g)].map(v=>parse(v[0]))
+let valor=vals.length?Math.max(...vals):0
+let l=t.match(/(\d+,\d{3})\s*L/)
+let litros=l?parseFloat(l[1].replace(",", ".")):0
+return{valor,litros}
+}
+function toggleManual(){
+manualBox.style.display=manualBox.style.display==="none"?"block":"none"
+}
+function usarManual(){
+valor.value=parse(m_valor.value)
+litros.value=parseFloat(m_litros.value)
+dadosOCR={tipo:m_tipo.value,posto:m_posto.value}
+}
 async function salvar(){
-const v=parseMoeda(valor.value)
+const v=parse(valor.value)
 const l=parseFloat(litros.value)
 const k=parseFloat(km.value)
 const vl=v/l
-if(v>1000&&!confirm("Valor alto, confirmar?"))return
-if(l>150){alert("Litros suspeito");return}
 await db.from("abastecimentos").insert({
 empresa_id:localStorage.getItem("empresa"),
-usuario_id:localStorage.getItem("uid"),
 veiculo_id:VID,
 valor_total:v,
 litros:l,
 quilometragem:k,
 valor_litro:vl,
+tanque:tanque.value,
+posto:dadosOCR?.posto||"",
+tipo_combustivel:dadosOCR?.tipo||"",
 data_abastecimento:hojeISO()
 })
 render()
 }
-function renderGrafico(labels,data){
-const ctx=grafico.getContext("2d")
-if(chart)chart.destroy()
-chart=new Chart(ctx,{type:"line",data:{labels,datasets:[{data,tension:0.4}]}})
-}
-function calcularIA(data){
-let consumo=[],fraudes=[],previsao=0,totalKm=0,totalValor=0
+function IA(data){
+let consumo=[],fraude=0,totalKm=0,totalValor=0
 for(let i=1;i<data.length;i++){
 let km=data[i].quilometragem-data[i-1].quilometragem
-let litros=data[i].litros
-if(km>0&&litros>0){
-let cons=km/litros
-consumo.push(cons)
+let l=data[i].litros
+if(km>0&&l>0){
+let c=km/l
+if(data[i].tanque==="cheio")consumo.push(c)
+if(c<4||c>15)fraude++
 totalKm+=km
 totalValor+=data[i].valor_total
-if(cons<4||cons>15){
-fraudes.push({i,cons})
-}
 }
 }
 let media=consumo.length?consumo.reduce((a,b)=>a+b,0)/consumo.length:0
-let tendencia=consumo.slice(-3)
-if(tendencia.length){
-previsao=tendencia.reduce((a,b)=>a+b,0)/tendencia.length
-}
-return{
-media,
-custoKm:totalKm?totalValor/totalKm:0,
-fraudes,
-previsao
-}
-}
-function gerarInsights(ia){
-let txt=""
-if(ia.media<6)txt+="⚠ Consumo alto<br>"
-if(ia.media>12)txt+="🚨 Possível erro/fraude<br>"
-if(ia.fraudes.length)txt+="🚨 "+ia.fraudes.length+" abastecimentos fora do padrão<br>"
-if(ia.previsao)txt+="📈 Tendência: "+ia.previsao.toFixed(2)+" km/l<br>"
-return txt
+return{media,custo:totalKm?totalValor/totalKm:0,fraude}
 }
 async function render(){
-let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID)
-if(!data)data=[]
+let{data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID)
 lista.innerHTML=""
 data.forEach(a=>{
 lista.innerHTML+=`
 <div class="item">
-<div class="row"><span>${a.data_abastecimento}</span><span>${a.quilometragem} km</span></div>
-<div class="row"><span>${a.litros}L</span><span>${formatarMoeda(a.valor_total)}</span></div>
-</div>
-`
+<div class="row"><span>${brData(a.data_abastecimento)}</span><span>${a.quilometragem}km</span></div>
+<div class="row"><span>${a.litros}L</span><span>${moeda(a.valor_total)}</span></div>
+<div class="row"><span>${a.tipo_combustivel||"-"}</span><span>${a.tanque}</span></div>
+<div class="row"><span>${a.posto||"-"}</span><span>${(a.valor_litro||0).toFixed(2)}/L</span></div>
+</div>`
 })
-let ia=calcularIA(data)
+let ia=IA(data)
 kpi.innerHTML=`
-<div class="kpiCard">Média<br>${ia.media.toFixed(2)}</div>
-<div class="kpiCard">Custo/km<br>${ia.custoKm.toFixed(2)}</div>
-<div class="kpiCard">Previsão<br>${ia.previsao.toFixed(2)}</div>
-<div class="kpiCard">Fraudes<br>${ia.fraudes.length}</div>
+<div>Média ${ia.media.toFixed(2)}</div>
+<div>Custo/km ${ia.custo.toFixed(2)}</div>
+<div>Fraudes ${ia.fraude}</div>
 `
-alerta.innerHTML=gerarInsights(ia)
+alerta.innerHTML=ia.fraude?"🚨 possível fraude detectada":""
 let labels=[],vals=[]
 for(let i=1;i<data.length;i++){
 let km=data[i].quilometragem-data[i-1].quilometragem
-let litros=data[i].litros
-if(km>0&&litros>0){
+let l=data[i].litros
+if(km>0&&l>0){
 labels.push(i)
-vals.push(km/litros)
+vals.push(km/l)
 }
 }
-renderGrafico(labels,vals)
-if(localStorage.getItem("tipo")==="admin"){
-renderRanking()
-}
-}
-async function renderRanking(){
-let {data}=await db.from("abastecimentos").select("*")
-let ranking={}
-data.forEach(a=>{
-if(!ranking[a.usuario_id])ranking[a.usuario_id]={km:0,litros:0}
-ranking[a.usuario_id].litros+=a.litros||0
-})
-let arr=Object.entries(ranking).map(([u,v])=>{
-return{usuario:u,cons:v.litros}
-}).sort((a,b)=>a.cons-b.cons)
-adminLista.innerHTML=arr.map(x=>`<div>${x.usuario}: ${x.cons.toFixed(2)}L</div>`).join("")
+if(chart)chart.destroy()
+chart=new Chart(grafico,{type:"line",data:{labels,datasets:[{data:vals}]}})
 }
 </script>
 
