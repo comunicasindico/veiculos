@@ -132,7 +132,7 @@ const uid=localStorage.getItem("uid")
 if(!uid)return mostrarLogin()
 let{data}=await db.from("veiculos").select("*").eq("empresa_id",localStorage.getItem("empresa"))
 if(!data||!data.length)return alert("Sem veículos")
-veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
+veiculoSel.innerHTML=data || []).map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
 VID=data[0].id
 await carregarCadastros()
 render()
@@ -367,15 +367,21 @@ let empresa=localStorage.getItem("empresa")
 
 let{data,error}=await db
 .from("abastecimentos")
-.select(`
-*,
-postos(nome_posto,cnpj,cidade,uf,endereco,bairro),
-motoristas(nome),
-veiculos(modelo,placa)
-`)
+.select("*")
 .eq("veiculo_id",VID)
 .eq("empresa_id",empresa)
 .order("data_abastecimento",{ascending:true})
+
+if(error){
+console.error("Erro Supabase:",error)
+lista.innerHTML="<div style='padding:10px'>Erro ao carregar dados</div>"
+return
+}
+
+if(!data || !Array.isArray(data)){
+console.warn("Data inválido:",data)
+data=[]
+}
 
 if(error){console.error(error);return}
 
@@ -415,13 +421,16 @@ data:{labels,datasets:[{data:vals}]}
 })
 }
 async function carregarCadastros(){
-let empresa=localStorage.getItem("empresa")
-let{data:postos}=await db.from("postos").select("*").eq("empresa_id",empresa)
-postoSel.innerHTML=postos.map(p=>`<option value="${p.id}">${p.nome_posto}</option>`).join("")
-let{data:motoristas}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
-motoristaSel.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome}</option>`).join("")
+let {data,error}=await db.from("veiculos").select("*")
+if(error){
+console.error(error)
+return
+}
+if(!data || !Array.isArray(data))data=[]
+veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo||"-"}</option>`).join("")
 }
 
+  
 </script>
 
 </body>
