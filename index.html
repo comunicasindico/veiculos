@@ -131,29 +131,20 @@ background:#1e293b;
 padding:15px;
 border-radius:12px;
 }
-.actions{
-display:flex;
-gap:6px;
-margin-left:auto;
-}
+
 .btnEdit,.btnDel{
 padding:6px 10px;
 font-size:12px;
 width:auto;
 min-width:40px;
 }
-.item{
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:10px;
-}
-.itemContent{
-flex:1;
-display:flex;
-flex-direction:column;
-gap:2px;
-}
+.actions{display:flex;gap:6px;margin-left:auto}
+.actions button{width:34px;height:34px;padding:0;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.item{display:flex;align-items:center;gap:10px}
+.itemContent{flex:1;min-width:0}
+#tela_veiculo input,#tela_veiculo select{font-size:13px}
+
+  
 </style>
 
 <body>
@@ -465,20 +456,36 @@ listaVeiculos.innerHTML=v.map(x=>{
 let mot=mapMotoristas[x.motorista_id]||{}
 return `
 <div class="item">
+
 <div class="itemContent">
+
 <div><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div>
+
 <div style="font-size:11px;color:#94a3b8">
-${x.marca||"-"} | ${x.ano||"-"} | KM ${x.km_atual||"-"}
+${x.marca||"-"} | ${x.ano||"-"} | ${x.cor||"-"}
 </div>
+
+<div style="font-size:11px;color:#94a3b8">
+KM ${x.km_atual||"-"} | Comb: ${x.combustivel_principal||"-"}
+</div>
+
 <div style="font-size:11px;color:#94a3b8">
 Motorista: ${mot.nome||"-"}
 </div>
+
+<div style="font-size:11px;color:#64748b">
+IPVA: ${x.vencimento_ipva?fData(x.vencimento_ipva):"-"} | Lic: ${x.vencimento_licenciamento?fData(x.vencimento_licenciamento):"-"}
 </div>
+
+</div>
+
 <div class="actions">
 <button class="btnEdit" onclick="editarVeiculo('${x.id}','${x.placa||""}','${x.marca||""}','${x.modelo||""}','${x.ano||""}','${x.cor||""}','${x.renavam||""}','${x.combustivel_principal||""}','${x.km_atual||""}','${x.vencimento_ipva||""}','${x.vencimento_licenciamento||""}','${x.motorista_id||""}')">✏️</button>
 <button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button>
 </div>
-</div>`
+
+</div>
+`
 }).join("")
 }
 }
