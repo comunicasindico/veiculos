@@ -335,14 +335,43 @@ tension:0.3
 }
 })
 
+const cores=[
+"#22c55e","#3b82f6","#f59e0b","#ef4444","#a855f7",
+"#06b6d4","#84cc16","#f97316","#e11d48","#14b8a6"
+]
+let labels=d.map(x=>fData(x.data_abastecimento)) // já está dd/mm
+let valores=d.map(x=>Number(x.valor_total||0))
+let ano=""
+if(d.length){
+ano=d[0].data_abastecimento.split("-")[0]
+}
+if(graficoGasto)graficoGasto.destroy()
 graficoGasto=new Chart(graficoGastoEl,{
 type:"bar",
 data:{
-labels,
+labels:labels,
 datasets:[{
-label:"R$",
-data:gasto
+label:"Gastos R$ ("+ano+")",
+data:valores,
+backgroundColor:valores.map((_,i)=>cores[i%cores.length]),
+borderRadius:6
 }]
+},
+options:{
+plugins:{
+legend:{display:false},
+title:{
+display:true,
+text:"Gastos por Data - "+ano
+}
+},
+scales:{
+y:{
+ticks:{
+callback:(v)=>"R$ "+v.toFixed(0)
+}
+}
+}
 }
 })
 
@@ -364,7 +393,7 @@ let VID=null,graficoConsumo,graficoGasto
 function fData(d){
 if(!d)return "-"
 let x=d.split("T")[0].split("-")
-return x[2]+"/"+x[1]+"/"+x[0].slice(2)
+return x[2]+"/"+x[1]
 }
 
 /* 006 LOGIN */
