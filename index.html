@@ -17,7 +17,7 @@
 body{margin:0;font-family:Arial;background:#fff;color:#000}
 .container{max-width:720px;margin:auto;padding:10px}
 .card{background:#f1f5f9;padding:12px;border-radius:12px;margin-top:10px}
-input,select{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#000}
+input,select{wlet consumo=(kmRodado>0&&a.litros>0)?(kmRodado/a.litros).toFixed(2):"-"idth:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#000}
 button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold}
 .item{background:#fff;padding:10px;border-radius:10px;margin-top:6px;border:1px solid #e2e8f0}
 .row{display:flex;justify-content:space-between;font-size:12px}
@@ -293,13 +293,22 @@ return
 }
 lista.innerHTML=data.map((a,i)=>{
 let ant=data[i-1]
-let kmRodado=ant?(a.quilometragem-ant.quilometragem):0
-let consumo=(kmRodado>0&&a.litros>0)?(kmRodado/a.litros).toFixed(2):"-"
+let kmRodado=(ant && a.quilometragem && ant.quilometragem)
+?(a.quilometragem-ant.quilometragem)
+:0
+let consumo=(kmRodado>0 && a.litros>0)
+?(kmRodado/a.litros).toFixed(2)
+:"-"
+let valorUnitario = a.valor_litro
+?Number(a.valor_litro).toLocaleString("pt-BR",{minimumFractionDigits:3})
+:(a.valor_total && a.litros)
+?Number(a.valor_total/a.litros).toLocaleString("pt-BR",{minimumFractionDigits:3})
+:"-"
 return `<div class="item">
 <div class="row"><span>Data</span><span>${formatarData(a.data_abastecimento)}</span></div>
 <div class="row"><span>Posto</span><span>${a.postos?.nome_posto||"POSTO NÃO IDENTIFICADO"}</span></div>
 <div class="row"><span>Litros</span><span>${a.litros}</span></div>
-<div class="row"><span>Valor Unitário</span><span>${a.valor_litro?Number(a.valor_litro).toFixed(2):"-"}</span></div>
+<div class="row"><span>Valor Unitário</span><span>${valorUnitario}</span></div>
 <div class="row"><span>Total</span><span>${moeda(a.valor_total)}</span></div>
 <div class="row"><span>KM Atual</span><span>${a.quilometragem}</span></div>
 <div class="row"><span>Tanque</span><span>${a.tanque||"-"}</span></div>
