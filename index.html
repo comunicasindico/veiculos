@@ -234,6 +234,7 @@ async function init(){
 if(!localStorage.getItem("uid"))return mostrarLogin()
 mostrarApp()
 verificarExpiracao()
+autoCalc("valor","litros","valor_litro")
 let empresa=localStorage.getItem("empresa")
 let{data}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
 veiculoSel.innerHTML=(data||[]).map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
@@ -334,6 +335,7 @@ ed_info_vl.innerText=vl||"-"
 ed_info_total.innerText=moeda(v)
 ed_info_km.innerText=k
 ed_info_tanque.innerText=tanqueVal||"-"
+autoCalc("e_valor","e_litros","e_valor_litro")
 }
 
 async function salvarEdicao(){
@@ -349,7 +351,13 @@ data_abastecimento:e_data.value
 fecharModal()
 render()
 }
-function abrirInserir(){modalInserir.style.display="flex"}
+function abrirInserir(){
+modalInserir.style.display="flex"
+if(!modalInserir.dataset.calc){
+autoCalc("i_valor","i_litros","i_valor_litro")
+modalInserir.dataset.calc="1"
+}
+}
 function fecharInserir(){modalInserir.style.display="none"}
 
 async function salvarInsercao(){
@@ -372,6 +380,29 @@ data_abastecimento:i_data.value||hojeISO()
 
 fecharInserir()
 render()
+}
+function autoCalc(valorId,litrosId,vlId){
+const v=document.getElementById(valorId)
+const l=document.getElementById(litrosId)
+const vl=document.getElementById(vlId)
+let lock=false
+function calc(from){
+if(lock)return
+lock=true
+let valor=parseFloat(v.value)
+let litros=parseFloat(l.value)
+let valorL=parseFloat(vl.value)
+if(from==="valor"||from==="litros"){
+if(valor && litros){vl.value=(valor/litros).toFixed(3)}
+}
+if(from==="vl"){
+if(valorL && litros){v.value=(valorL*litros).toFixed(2)}
+}
+lock=false
+}
+v.addEventListener("input",()=>calc("valor"))
+l.addEventListener("input",()=>calc("litros"))
+vl.addEventListener("input",()=>calc("vl"))
 }
 
 </script>
