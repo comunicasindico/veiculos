@@ -66,10 +66,16 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <div id="tela_combustivel" class="tela">
 <div class="card"><select id="veiculoSel"></select></div>
 <div class="card">
-<input id="valor" placeholder="Valor">
+<input id="data" type="date">
+<select id="postoSel"></select>
+<input id="valor" placeholder="Valor Total">
 <input id="litros" placeholder="Litros">
+<input id="valor_litro" placeholder="Valor Unitário">
 <input id="km" placeholder="KM Atual">
-<select id="tanque"><option value="cheio">Tanque Cheio</option><option value="parcial">Parcial</option></select>
+<select id="tanque">
+<option value="cheio">Tanque Cheio</option>
+<option value="parcial">Parcial</option>
+</select>
 <div style="display:flex;gap:6px">
 <button onclick="abrirInserir()" style="flex:1;background:#3b82f6;color:#fff">Inserir</button>
 <button onclick="salvar()" style="flex:1">Salvar</button>
@@ -86,9 +92,16 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <div id="modalInserir" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;justify-content:center;align-items:center">
 <div style="background:#fff;padding:20px;border-radius:12px;width:300px">
 <h3>Novo Abastecimento</h3>
-<input id="i_valor" placeholder="Valor">
+<input id="i_data" type="date">
+<select id="i_posto"></select>
+<input id="i_valor" placeholder="Valor Total">
 <input id="i_litros" placeholder="Litros">
-<input id="i_km" placeholder="KM">
+<input id="i_valor_litro" placeholder="Valor Unitário">
+<input id="i_km" placeholder="KM Atual">
+<select id="i_tanque">
+<option value="cheio">Tanque Cheio</option>
+<option value="parcial">Parcial</option>
+</select>
 <button onclick="salvarInsercao()">Inserir</button>
 <button onclick="fecharInserir()" style="background:#ef4444;color:#fff">Cancelar</button>
 </div>
@@ -190,6 +203,8 @@ listaPostos.innerHTML=botaoInserir+(postos||[]).map(p=>`
 <button onclick="excluirRegistro('postos','${p.id}')" style="background:#ef4444;color:#fff">Excluir</button>
 </div>
 </div>`).join("")
+postoSel.innerHTML=(postos||[]).map(p=>`<option value="${p.id}">${p.nome_posto||p.nome}</option>`).join("")
+i_posto.innerHTML=postoSel.innerHTML
 }
 async function login(){
 const{data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
@@ -231,7 +246,25 @@ function editarRegistro(tabela,id,campo,valor){db.from(tabela).update({[campo]:v
 function mostrarLogin(){telaLogin.style.display="block";app.style.display="none"}
 function mostrarApp(){telaLogin.style.display="none";app.style.display="block"}
 function abrirTela(t){document.querySelectorAll(".tela").forEach(e=>e.style.display="none");document.getElementById("tela_"+t).style.display="block"}
-async function salvar(){let v=parseFloat(valor.value);let l=parseFloat(litros.value);let k=parseFloat(km.value);await db.from("abastecimentos").insert({empresa_id:localStorage.getItem("empresa"),veiculo_id:VID,valor_total:v,litros:l,valor_litro:(v/l),quilometragem:k,tanque:tanque.value,data_abastecimento:hojeISO()});render()}
+async function salvar(){
+let v=parseFloat(valor.value)
+let l=parseFloat(litros.value)
+let k=parseFloat(km.value)
+let vl=parseFloat(valor_litro.value)|| (v/l)
+
+await db.from("abastecimentos").insert({
+empresa_id:localStorage.getItem("empresa"),
+veiculo_id:VID,
+posto_id:postoSel.value||null,
+valor_total:v,
+litros:l,
+valor_litro:vl,
+quilometragem:k,
+tanque:tanque.value,
+data_abastecimento:data.value||hojeISO()
+})
+render()
+}
 async function render(){
 const exp=localStorage.getItem("expira_em")
 const isAdmin=localStorage.getItem("admin")==="1"
@@ -260,20 +293,16 @@ let ant=data[i-1]
 let kmRodado=ant?(a.quilometragem-ant.quilometragem):0
 let consumo=(kmRodado>0&&a.litros>0)?(kmRodado/a.litros).toFixed(2):"-"
 return `<div class="item">
-<div class="row">
-<span>${formatarData(a.data_abastecimento)}</span>
-<span>${a.postos?.nome_posto||"POSTO NÃO IDENTIFICADO"}</span>
-</div>
-<div class="row">
-<span>${a.litros} L</span>
-<span>${moeda(a.valor_total)}</span>
-</div>
-<div class="row">
-<span>Km/L</span>
-<span>${consumo}</span>
-</div>
+<div class="row"><span>Data</span><span>${formatarData(a.data_abastecimento)}</span></div>
+<div class="row"><span>Posto</span><span>${a.postos?.nome_posto||"POSTO NÃO IDENTIFICADO"}</span></div>
+<div class="row"><span>Litros</span><span>${a.litros}</span></div>
+<div class="row"><span>Valor Unitário</span><span>${a.valor_litro?Number(a.valor_litro).toFixed(2):"-"}</span></div>
+<div class="row"><span>Total</span><span>${moeda(a.valor_total)}</span></div>
+<div class="row"><span>KM Atual</span><span>${a.quilometragem}</span></div>
+<div class="row"><span>Tanque</span><span>${a.tanque||"-"}</span></div>
+<div class="row"><span>Km/L</span><span>${consumo}</span></div>
 <div class="row" style="justify-content:flex-end;gap:6px;margin-top:6px">
-<button onclick="abrirEditar('${a.id}','${a.valor_total}','${a.litros}','${a.quilometragem}')" style="background:#f59e0b;color:#000;padding:6px 10px;font-size:11px">✏️</button>
+<button onclick="abrirEditar('${a.id}','${a.valor_total}','${a.litros}','${a.quilometragem}','${a.data_abastecimento}','${a.valor_litro}','${a.posto_id}','${a.tanque}')" style="background:#f59e0b;color:#000;padding:6px 10px;font-size:11px">✏️</button>
 <button onclick="excluirRegistro('abastecimentos','${a.id}')" style="background:#ef4444;color:#fff;padding:6px 10px;font-size:11px">🗑</button>
 </div>
 </div>`
@@ -283,24 +312,30 @@ function logout(){localStorage.clear();location.reload()}
 document.addEventListener("DOMContentLoaded",()=>{if(localStorage.getItem("uid"))init();else mostrarLogin()})
 let editId=null
 
-function abrirEditar(id,v,l,k){
+function fecharModal(){
+modalEditar.style.display="none"
+}
+function abrirEditar(id,v,l,k,data,vl,posto,tanqueVal){
 editId=id
 modalEditar.style.display="flex"
 e_valor.value=v
 e_litros.value=l
 e_km.value=k
-}
-
-function fecharModal(){
-modalEditar.style.display="none"
+e_data.value=data?.split("T")[0]||""
+e_valor_litro.value=vl||""
+e_posto.value=posto||""
+e_tanque.value=tanqueVal||"cheio"
 }
 
 async function salvarEdicao(){
 await db.from("abastecimentos").update({
 valor_total:parseFloat(e_valor.value),
 litros:parseFloat(e_litros.value),
+valor_litro:parseFloat(e_valor_litro.value),
 quilometragem:parseFloat(e_km.value),
-valor_litro:(parseFloat(e_valor.value)/parseFloat(e_litros.value))
+posto_id:e_posto.value||null,
+tanque:e_tanque.value,
+data_abastecimento:e_data.value
 }).eq("id",editId)
 fecharModal()
 render()
@@ -312,31 +347,43 @@ async function salvarInsercao(){
 let v=parseFloat(i_valor.value)
 let l=parseFloat(i_litros.value)
 let k=parseFloat(i_km.value)
+let vl=parseFloat(i_valor_litro.value)||(v/l)
 
 await db.from("abastecimentos").insert({
 empresa_id:localStorage.getItem("empresa"),
 veiculo_id:VID,
+posto_id:i_posto.value||null,
 valor_total:v,
 litros:l,
-valor_litro:(v/l),
+valor_litro:vl,
 quilometragem:k,
-data_abastecimento:hojeISO()
+tanque:i_tanque.value,
+data_abastecimento:i_data.value||hojeISO()
 })
 
 fecharInserir()
 render()
 }
+
 </script>
 
 <div id="modalEditar" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;justify-content:center;align-items:center">
-<div style="background:#fff;padding:20px;border-radius:12px;width:300px">
+<div style="background:#fff;padding:20px;border-radius:12px;width:320px">
 <h3>Editar</h3>
-<input id="e_valor" placeholder="Valor">
-<input id="e_litros" placeholder="Litros">
-<input id="e_km" placeholder="KM">
+<input id="e_data" type="date">
+<select id="e_posto"></select>
+<input id="e_valor">
+<input id="e_litros">
+<input id="e_valor_litro">
+<input id="e_km">
+<select id="e_tanque">
+<option value="cheio">Tanque Cheio</option>
+<option value="parcial">Parcial</option>
+</select>
 <button onclick="salvarEdicao()">Salvar</button>
 <button onclick="fecharModal()" style="background:#ef4444;color:#fff">Cancelar</button>
 </div>
 </div>
+
 </body>
 </html>
