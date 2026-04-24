@@ -447,24 +447,31 @@ m_email.value=""
 m_obs.value=""
 }
 async function salvarMotorista(){
-
 let payload={
 empresa_id:localStorage.getItem("empresa"),
-nome:m_nome.value,
-cpf:m_cpf.value,
-cnh:m_cnh.value,
-validade_cnh:m_validade.value,
-telefone:m_tel.value,
-email:m_email.value,
-obs:m_obs.value
+usuario_id:localStorage.getItem("uid"),
+nome:(m_nome.value||"").trim(),
+cpf:(m_cpf.value||"").trim(),
+numero_cnh:(m_cnh.value||"").trim(),
+categoria_cnh:"B",
+validade_cnh:(m_validade.value||"").trim(),
+telefone:(m_tel.value||"").trim(),
+email:(m_email.value||"").trim(),
+observacoes:(m_obs.value||"").trim()
 }
-
+console.log("Payload:",payload)
+let resp
 if(editMotoristaId){
-await db.from("motoristas").update(payload).eq("id",editMotoristaId)
+resp=await db.from("motoristas").update(payload).eq("id",editMotoristaId)
 }else{
-await db.from("motoristas").insert(payload)
+resp=await db.from("motoristas").insert(payload)
 }
-
+if(resp.error){
+console.error(resp.error)
+alert("Erro: "+resp.error.message)
+return
+}
+editMotoristaId=null
 novoMotorista()
 carregarCadastros()
 }
