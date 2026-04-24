@@ -36,6 +36,12 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 #boxCriar:hover{background:#b91c1c}
 .badgePro{background:#22c55e;color:#000;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold}
 .alertaExpira{color:#dc2626;font-weight:bold;font-size:12px;text-align:center;margin-top:6px}
+.row{display:flex;align-items:center;gap:8px;margin-top:6px}
+.row span{width:120px;font-size:12px;color:#64748b}
+.row input{flex:1}
+
+
+  
 </style>
 <body>
 <div id="telaLogin">
@@ -81,10 +87,21 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <button onclick="salvar()" style="flex:1">Salvar</button>
 </div>
 </div>
-<div class="card"><canvas id="grafico"></canvas></div>
-<div class="card"><h3>Histórico Completo</h3><div id="lista"></div></div>
+
+<div class="card">
+<div class="row"><span>Nome</span><input id="m_nome"></div>
+<div class="row"><span>CPF</span><input id="m_cpf"></div>
+<div class="row"><span>CNH</span><input id="m_cnh"></div>
+<div class="row"><span>Validade CNH</span><input id="m_validade"></div>
+<div class="row"><span>Telefone</span><input id="m_tel"></div>
+<div class="row"><span>Email</span><input id="m_email"></div>
+<div class="row"><span>Observações</span><input id="m_obs"></div>
+<div style="display:flex;gap:6px">
+<button onclick="salvarMotorista()" style="flex:1;background:#22c55e">Salvar</button>
+<button onclick="novoMotorista()" style="flex:1;background:#64748b;color:#fff">Cancelar</button>
 </div>
-<div id="tela_motorista" class="tela" style="display:none"><div class="card"><input id="m_nome" placeholder="Nome"><input id="m_cpf" placeholder="CPF"><input id="m_cnh" placeholder="CNH"><input id="m_validade" placeholder="Validade CNH"><input id="m_tel" placeholder="Telefone"><input id="m_email" placeholder="E-mail"><input id="m_obs" placeholder="Observações"><button onclick="salvarMotorista()">Salvar</button></div><div id="listaMotoristas"></div></div>
+</div>
+  
 <div id="tela_veiculo" class="tela" style="display:none"><div class="card"><input id="v_placa" placeholder="Placa"><input id="v_marca" placeholder="Marca"><input id="v_modelo" placeholder="Modelo"><input id="v_ano" placeholder="Ano"><input id="v_cor" placeholder="Cor"><input id="v_renavam" placeholder="Renavam"><input id="v_comb" placeholder="Combustível Principal"><input id="v_km" placeholder="KM Atual"><input id="v_ipva" placeholder="IPVA Vencimento"><input id="v_lic" placeholder="Licenciamento"><input id="v_obs" placeholder="Observações"><button onclick="salvarVeiculo()">Salvar</button></div><div id="listaVeiculos"></div></div>
 <div id="tela_posto" class="tela" style="display:none"><div class="card"><input id="p_nome" placeholder="Nome do Posto"><input id="p_cnpj" placeholder="CNPJ"><input id="p_cidade" placeholder="Cidade"><input id="p_uf" placeholder="UF"><input id="p_endereco" placeholder="Endereço"><input id="p_bairro" placeholder="Bairro"><button onclick="salvarPosto()">Salvar</button></div><div id="listaPostos"></div></div>
 <div id="tela_admin" class="tela" style="display:none"><div class="card"><h3>Painel Admin</h3><div id="listaUsuarios"></div></div></div>
@@ -183,8 +200,16 @@ listaMotoristas.innerHTML=botaoInserir+(motoristas||[]).map(m=>`
 <div class="row"><span>Nome</span><span>${m.nome||"-"}</span></div>
 <div class="row"><span>CPF</span><span>${m.cpf||"-"}</span></div>
 <div class="row" style="justify-content:flex-end;gap:6px;margin-top:6px">
-<button onclick="editarMotorista('${m.id}','${m.nome||""}','${m.cpf||""}','${m.cnh||""}','${m.validade_cnh||""}','${m.telefone||""}','${m.email||""}','${m.obs||""}')" style="background:#f59e0b;color:#000;padding:6px 10px;font-size:11px">✏️</button>
-<button onclick="excluirRegistro('motoristas','${m.id}')" style="background:#ef4444;color:#fff;padding:6px 10px;font-size:11px">🗑</button>
+<button onclick="editarMotorista(
+'${m.id}',
+'${m.nome||""}',
+'${m.cpf||""}',
+'${m.numero_cnh||""}',
+'${m.validade_cnh||""}',
+'${m.telefone||""}',
+'${m.email||""}',
+'${m.observacoes||""}'
+)" style="background:#f59e0b;color:#000;padding:6px 10px;font-size:11px">✏️</button><button onclick="excluirRegistro('motoristas','${m.id}')" style="background:#ef4444;color:#fff;padding:6px 10px;font-size:11px">🗑</button>
 </div>
 </div>`).join("")
 
@@ -423,19 +448,19 @@ v.addEventListener("input",()=>calc("valor"))
 l.addEventListener("input",()=>calc("litros"))
 vl.addEventListener("input",()=>calc("vl"))
 }
+
 function editarMotorista(id,nome,cpf,cnh,validade,tel,email,obs){
 editMotoristaId=id
-
-m_nome.value=nome
-m_cpf.value=cpf
-m_cnh.value=cnh
-m_validade.value=validade
-m_tel.value=tel
-m_email.value=email
-m_obs.value=obs
-
+m_nome.value=nome||""
+m_cpf.value=cpf||""
+m_cnh.value=cnh||""
+m_validade.value=validade||""
+m_tel.value=tel||""
+m_email.value=email||""
+m_obs.value=obs||""
 window.scrollTo({top:0,behavior:"smooth"})
 }
+
 function novoMotorista(){
 editMotoristaId=null
 m_nome.value=""
@@ -446,6 +471,7 @@ m_tel.value=""
 m_email.value=""
 m_obs.value=""
 }
+
 async function salvarMotorista(){
 let payload={
 empresa_id:localStorage.getItem("empresa"),
