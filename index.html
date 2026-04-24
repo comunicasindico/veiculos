@@ -635,16 +635,7 @@ vs._bind=true
 }
 
 /* 012 DASHBOARD */
-function renderDashboard(d){
-let labels=d.map(x=>fData(x.data_abastecimento))
-let gastos=d.map(x=>x.valor_total)
 
-if(graficoConsumo)graficoConsumo.destroy()
-if(graficoGasto)graficoGasto.destroy()
-
-graficoConsumo=new Chart(graficoConsumoEl,{type:"line",data:{labels,datasets:[{label:"Consumo",data:gastos}]}})
-graficoGasto=new Chart(graficoGastoEl,{type:"bar",data:{labels,datasets:[{label:"Gastos",data:gastos}]}})
-}
 
 /* CRUD */
 async function salvarMotorista(){
