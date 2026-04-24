@@ -144,6 +144,17 @@ min-width:40px;
 .itemContent{flex:1;min-width:0}
 #tela_veiculo input,#tela_veiculo select{font-size:13px}
 .btnEye{background:#64748b;color:#fff;width:34px;height:34px;display:flex;align-items:center;justify-content:center}
+.field{
+margin-top:8px;
+display:flex;
+flex-direction:column;
+}
+.field label{
+font-size:11px;
+color:#94a3b8;
+margin-bottom:2px;
+}
+
   
 </style>
 
@@ -185,18 +196,45 @@ min-width:40px;
 </div>
 
 <!-- ABASTECIMENTO -->
-<div id="tela_combustivel" class="tela">
 <div class="card">
+
+<div class="field">
+<label>🚗 Veículo</label>
 <select id="veiculoSel"></select>
-<input id="data" type="date">
-<select id="postoSel"></select>
-<input id="valor">
-<input id="litros">
-<input id="valor_litro">
-<input id="km">
-<button class="btnSave" onclick="salvar()">Salvar</button>
 </div>
-<div id="lista"></div>
+
+<div class="field">
+<label>📅 Data</label>
+<input id="data" type="date">
+</div>
+
+<div class="field">
+<label>🏪 Posto</label>
+<select id="postoSel"></select>
+</div>
+
+<div class="field">
+<label>💰 Valor Total (R$)</label>
+<input id="valor" placeholder="Ex: 250.00">
+</div>
+
+<div class="field">
+<label>⛽ Litros</label>
+<input id="litros" placeholder="Ex: 40.5">
+</div>
+
+<div class="field">
+<label>💲 Valor por Litro</label>
+<input id="valor_litro" placeholder="Automático ou manual">
+</div>
+
+<div class="field">
+<label>📏 KM Atual</label>
+<input id="km" placeholder="Ex: 52340">
+</div>
+
+<button class="btnSave" onclick="salvar()">Salvar</button>
+
 </div>
 
 <!-- MOTORISTA -->
