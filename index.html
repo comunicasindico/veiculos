@@ -714,29 +714,31 @@ window.tipoModal="posto"
 async function salvarModal(){
 if(window.tipoModal==="motorista"){
 await db.from("motoristas").update({
-nome:em_nome.value,
-cpf:em_cpf.value,
-numero_cnh:em_cnh.value,
-validade_cnh:em_validade.value,
-telefone:em_tel.value,
-email:em_email.value,
-observacoes:em_obs.value
+nome:document.getElementById("em_nome").value,
+cpf:document.getElementById("em_cpf").value,
+numero_cnh:document.getElementById("em_cnh").value,
+validade_cnh:document.getElementById("em_validade").value,
+telefone:document.getElementById("em_tel").value,
+email:document.getElementById("em_email").value,
+observacoes:document.getElementById("em_obs").value
 }).eq("id",editMotoristaId)
 }
 if(window.tipoModal==="veiculo"){
 await db.from("veiculos").update({
-placa:ev_placa.value,
-modelo:ev_modelo.value
+placa:document.getElementById("ev_placa").value,
+modelo:document.getElementById("ev_modelo").value
 }).eq("id",editId)
 }
 if(window.tipoModal==="posto"){
 await db.from("postos").update({
-nome_posto:ep_nome.value
+nome_posto:document.getElementById("ep_nome").value
 }).eq("id",editId)
 }
+/* 🔥 FECHAMENTO CORRETO */
 fecharModalPadrao()
 carregarCadastros()
 render()
+
 }
 function fecharModalPadrao(){
 modalPadrao.style.display="none"
