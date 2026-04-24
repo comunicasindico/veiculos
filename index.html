@@ -10,7 +10,7 @@
 </head>
 
 <style>
-/* 002 STYLE */
+*{box-sizing:border-box}
 body{
 margin:0;
 font-family:Arial;
@@ -20,6 +20,7 @@ background-image:url("img/bancocomunicaveiculos.png"),radial-gradient(circle at 
 background-size:cover,auto,auto;
 background-position:center;
 background-repeat:no-repeat;
+overflow-x:hidden;
 }
 body::before{
 content:"";
@@ -31,22 +32,128 @@ height:100%;
 background:rgba(2,6,23,0.75);
 z-index:-1;
 }
-.container{max-width:720px;margin:auto;padding:12px}
-.card{background:#1e293b;padding:12px;border-radius:12px;margin-top:10px}
-input,select{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:none;background:#334155;color:#fff}
-button{padding:10px;border:none;border-radius:8px;font-weight:bold}
-.btnSave{background:#22c55e;color:#000;width:100%;margin-top:6px}
-.btnEdit{background:#f59e0b;color:#000}
-.btnDel{background:#ef4444;color:#fff}
-.item{background:#020617;padding:10px;border-radius:10px;margin-top:6px;border:1px solid #1e293b}
-.row{display:flex;justify-content:space-between;font-size:12px;margin-top:4px}
-.actions{display:flex;gap:6px;margin-top:6px}
-.headerApp{position:sticky;top:0;background:#020617;padding:10px;border-bottom:1px solid #1e293b}
-.menuTabs{display:flex;gap:6px}
-.menuTabs button{flex:1;background:#1e293b;color:#fff}
-.footerBar{position:fixed;bottom:0;width:100%;display:flex;justify-content:center;padding:10px;background:#020617}
-.btnLogout{background:#dc2626;color:#fff;width:200px}
-canvas{background:#fff;border-radius:10px;margin-top:10px}
+.container{
+max-width:720px;
+width:100%;
+margin:auto;
+padding:10px;
+}
+.card{
+width:100%;
+background:#1e293b;
+padding:10px;
+border-radius:12px;
+margin-top:10px;
+}
+input,select{
+width:100%;
+max-width:100%;
+padding:10px;
+margin-top:6px;
+border-radius:8px;
+border:none;
+background:#334155;
+color:#fff;
+}
+button{
+padding:10px;
+border:none;
+border-radius:8px;
+font-weight:bold;
+}
+.btnSave{
+background:#22c55e;
+color:#000;
+width:100%;
+}
+.btnEdit{
+background:#f59e0b;
+color:#000;
+flex:1;
+}
+.btnDel{
+background:#ef4444;
+color:#fff;
+flex:1;
+}
+.item{
+width:100%;
+background:#020617;
+padding:10px;
+border-radius:10px;
+margin-top:6px;
+border:1px solid #1e293b;
+}
+.row{
+display:flex;
+justify-content:space-between;
+gap:6px;
+font-size:12px;
+flex-wrap:wrap;
+}
+.actions{
+display:flex;
+gap:6px;
+margin-top:6px;
+}
+.headerApp{
+position:sticky;
+top:0;
+background:#020617;
+padding:10px;
+border-bottom:1px solid #1e293b;
+z-index:10;
+}
+.menuTabs{
+display:flex;
+gap:6px;
+}
+.menuTabs button{
+flex:1;
+background:#1e293b;
+color:#fff;
+}
+.footerBar{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+display:flex;
+justify-content:center;
+padding:10px;
+background:#020617;
+}
+.btnLogout{
+background:#dc2626;
+color:#fff;
+width:180px;
+}
+canvas{
+width:100%!important;
+max-width:100%;
+border-radius:10px;
+margin-top:10px;
+background:#fff;
+}
+.modal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+justify-content:center;
+align-items:center;
+z-index:999;
+}
+.modalBox{
+width:95%;
+max-width:420px;
+background:#1e293b;
+padding:15px;
+border-radius:12px;
+}
 </style>
 
 <body>
@@ -98,19 +205,29 @@ canvas{background:#fff;border-radius:10px;margin-top:10px}
 <!-- MOTORISTA -->
 <div id="tela_motorista" class="tela" style="display:none">
 <div class="card">
+<button class="btnEdit" onclick="editarMotorista('${x.id}','${x.nome}','${x.telefone}','${x.cpf}')">✏️</button>
 <input id="m_nome" placeholder="Nome">
 <input id="m_cpf" placeholder="CPF">
 <input id="m_tel" placeholder="Telefone">
 <button class="btnSave" onclick="salvarMotorista()">Salvar</button>
 </div>
 <div id="listaMotoristas"></div>
+<button onclick="cancelarMotorista()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar</button>
 </div>
 
 <!-- VEICULO -->
 <div id="tela_veiculo" class="tela" style="display:none">
 <div class="card">
 <input id="v_placa" placeholder="Placa">
+<input id="v_marca" placeholder="Marca">
 <input id="v_modelo" placeholder="Modelo">
+<input id="v_ano" placeholder="Ano">
+<input id="v_cor" placeholder="Cor">
+<input id="v_renavam" placeholder="Renavam">
+<input id="v_combustivel" placeholder="Combustível">
+<input id="v_km" placeholder="KM Atual">
+<input id="v_ipva" type="date">
+<input id="v_licenciamento" type="date">
 <select id="v_motorista"></select>
 <button class="btnSave" onclick="salvarVeiculo()">Salvar</button>
 </div>
@@ -205,11 +322,37 @@ veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo}</option>`).jo
 VID=v?.[0]?.id
 listaVeiculos.innerHTML=v.map(x=>`
 <div class="item">
-<div>${x.modelo} | ${x.placa}</div>
+<div><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div>
+<div class="row"><span>Marca</span><span>${x.marca||"-"}</span></div>
+<div class="row"><span>Ano</span><span>${x.ano||"-"}</span></div>
+<div class="row"><span>Cor</span><span>${x.cor||"-"}</span></div>
+<div class="row"><span>Renavam</span><span>${x.renavam||"-"}</span></div>
+<div class="row"><span>Combustível</span><span>${x.combustivel_principal||"-"}</span></div>
+<div class="row"><span>KM</span><span>${x.km_atual||"-"}</span></div>
+<div class="row"><span>IPVA</span><span>${x.vencimento_ipva||"-"}</span></div>
+<div class="row"><span>Licenciamento</span><span>${x.vencimento_licenciamento||"-"}</span></div>
+
 <div class="actions">
-<button class="btnEdit" onclick="abrirEditar('${a.id}','${a.valor_total}','${a.litros}','${a.quilometragem}','${a.data_abastecimento}','${a.posto_id}')">✏️</button>
+<button class="btnEdit" onclick="editarVeiculo(
+'${x.id}',
+'${x.placa||""}',
+'${x.marca||""}',
+'${x.modelo||""}',
+'${x.ano||""}',
+'${x.cor||""}',
+'${x.renavam||""}',
+'${x.combustivel_principal||""}',
+'${x.km_atual||""}',
+'${x.vencimento_ipva||""}',
+'${x.vencimento_licenciamento||""}',
+'${x.motorista_id||""}'
+)">✏️</button>
+
 <button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button>
-</div></div>`).join("")
+</div>
+
+</div>
+`).join("")
 }
 
 /* 010 SALVAR */
@@ -262,56 +405,67 @@ graficoGasto=new Chart(graficoGastoEl,{type:"bar",data:{labels,datasets:[{label:
 async function salvarMotorista(){
 let payload={
 empresa_id:localStorage.getItem("empresa"),
-nome:m_nome.value,
-telefone:m_tel.value
+nome:m_nome.value||"",
+telefone:m_tel.value||"",
+cpf:(typeof m_cpf!=="undefined" && m_cpf)?m_cpf.value:""
 }
 if(window.editMotoristaId){
-await db.from("motoristas").update(payload).eq("id",editMotoristaId)
-editMotoristaId=null
+await db.from("motoristas").update(payload).eq("id",window.editMotoristaId)
+window.editMotoristaId=null
 }else{
 await db.from("motoristas").insert(payload)
 }
-carregarTudo()
-}
-let editAbastecimentoId=null
-function editarAbastecimento(id,valor,litros,km,data,posto){
-editAbastecimentoId=id
-modalEditar.style.display="flex"
-e_valor.value=valor||""
-e_litros.value=litros||""
-e_km.value=km||""
-e_data.value=(data||"").split("T")[0]
-e_posto.value=posto||""
+m_nome.value=""
+m_tel.value=""
+if(typeof m_cpf!=="undefined" && m_cpf)m_cpf.value=""
+await carregarTudo()
 }
 
-function editarMotorista(id,nome,tel){
-m_nome.value=nome||""
-m_tel.value=tel||""
-window.editMotoristaId=id
+function cancelarMotorista(){
+window.editMotoristaId=null
+m_nome.value=""
+m_tel.value=""
+m_cpf.value=""
 }
+
 async function salvarVeiculo(){
 let payload={
 empresa_id:localStorage.getItem("empresa"),
 placa:v_placa.value,
+marca:v_marca.value,
 modelo:v_modelo.value,
+ano:parseInt(v_ano.value)||null,
+cor:v_cor.value,
+renavam:v_renavam.value,
+combustivel_principal:v_combustivel.value,
+km_atual:parseFloat(v_km.value)||0,
+vencimento_ipva:v_ipva.value||null,
+vencimento_licenciamento:v_licenciamento.value||null,
 motorista_id:v_motorista.value||null
 }
-if(editVeiculoId){
-await db.from("veiculos").update(payload).eq("id",editVeiculoId)
-editVeiculoId=null
+/* UPDATE */
+if(window.editVeiculoId){
+await db.from("veiculos").update(payload).eq("id",window.editVeiculoId)
+window.editVeiculoId=null
 }else{
+/* INSERT */
 await db.from("veiculos").insert(payload)
 }
-carregarTudo()
+/* LIMPA */
+v_placa.value=""
+v_marca.value=""
+v_modelo.value=""
+v_ano.value=""
+v_cor.value=""
+v_renavam.value=""
+v_combustivel.value=""
+v_km.value=""
+v_ipva.value=""
+v_licenciamento.value=""
+/* RELOAD */
+await carregarTudo()
 }
-let editVeiculoId=null
-function editarVeiculo(id,placa,modelo,motorista){
-editVeiculoId=id
-v_placa.value=placa||""
-v_modelo.value=modelo||""
-v_motorista.value=motorista||""
-}
-  
+
 async function salvarPosto(){
 let payload={
 empresa_id:localStorage.getItem("empresa"),
@@ -327,13 +481,52 @@ await db.from("postos").insert(payload)
 }
 carregarTudo()
 }
-
-let editPostoId=null
-function editarPosto(id,nome,cidade,cnpj){
-editPostoId=id
+window.editarPosto=function(id,nome,cidade,cnpj){
+window.editPostoId=id
 p_nome.value=nome||""
 p_cidade.value=cidade||""
 p_cnpj.value=cnpj||""
+}
+
+window.editVeiculoId=null
+window.editarVeiculo=function(
+id,placa,marca,modelo,ano,cor,renavam,comb,kilometragem,ipva,lic,motorista){
+window.editVeiculoId=id
+v_placa.value=placa||""
+v_marca.value=marca||""
+v_modelo.value=modelo||""
+v_ano.value=ano||""
+v_cor.value=cor||""
+v_renavam.value=renavam||""
+v_combustivel.value=comb||""
+v_km.value=kilometragem||""
+v_ipva.value=(ipva||"").split("T")[0]
+v_licenciamento.value=(lic||"").split("T")[0]
+v_motorista.value=motorista||""
+}
+
+window.editarAbastecimento=function(id,valor,litros,km,data,posto){
+window.editAbastecimentoId=id
+modalEditar.style.display="flex"
+e_valor.value=valor||""
+e_litros.value=litros||""
+e_km.value=km||""
+e_data.value=(data||"").split("T")[0]
+e_posto.value=posto||""
+}
+
+window.editMotoristaId=null
+window.editarMotorista=function(id,nome,tel,cpf){
+window.editMotoristaId=id
+if(typeof m_nome!=="undefined" && m_nome){
+m_nome.value=nome||""
+}
+if(typeof m_tel!=="undefined" && m_tel){
+m_tel.value=tel||""
+}
+if(typeof m_cpf!=="undefined" && m_cpf){
+m_cpf.value=cpf||""
+}
 }
 
 async function excluir(t,id){
