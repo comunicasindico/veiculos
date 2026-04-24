@@ -237,75 +237,75 @@ color:#fff;
 <!-- 🔥 TELA COMBUSTÍVEL -->
 <!-- ========================= -->
 <div id="tela_combustivel" class="tela">
-
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<button onclick="document.getElementById('data').focus()" style="flex:1;background:#22c55e">
+⛽ Novo Abastecimento
+</button>
+</div>
 <div class="card">
-
 <div class="field">
 <label>🚗 Veículo</label>
 <select id="veiculoSel"></select>
 </div>
-
 <div class="field">
 <label>📅 Data</label>
 <input id="data" type="date">
 </div>
-
 <div class="field">
 <label>🏪 Posto</label>
 <select id="postoSel"></select>
 </div>
-
 <div class="field">
 <label>💰 Valor Total (R$)</label>
 <input id="valor" placeholder="Ex: 250.00">
 </div>
-
 <div class="field">
 <label>⛽ Litros</label>
 <input id="litros" placeholder="Ex: 40.5">
 </div>
-
 <div class="field">
 <label>💲 Valor por Litro</label>
 <input id="valor_litro" placeholder="Automático ou manual">
 </div>
-
 <div class="field">
 <label>📏 KM Atual</label>
 <input id="km" placeholder="Ex: 52340">
 </div>
-
 <button class="btnSave" onclick="salvar()">Salvar Abastecimento</button>
-
 </div>
-
 <div id="lista"></div>
-
 </div>
 
 <!-- ========================= -->
 <!-- 👨 MOTORISTA -->
 <!-- ========================= -->
 <div id="tela_motorista" class="tela">
-
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<button onclick="toggleForm('formMotorista')" style="flex:1;background:#3b82f6;color:#fff">
+➕ Novo Motorista
+</button>
+</div>
+<div id="formMotorista" class="card" style="display:none">
 <div class="card">
 <input id="m_nome" placeholder="Nome do motorista">
 <input id="m_cpf" placeholder="CPF">
 <input id="m_tel" placeholder="Telefone">
 <button class="btnSave" onclick="salvarMotorista()">Salvar Motorista</button>
 </div>
-
 <div id="listaMotoristas"></div>
-
 <button onclick="cancelarMotorista()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
-
 </div>
-
+</div>
 <!-- ========================= -->
 <!-- 🚗 VEÍCULO -->
 <!-- ========================= -->
 <div id="tela_veiculo" class="tela">
-
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<button onclick="toggleForm('formVeiculo')" style="flex:1;background:#3b82f6;color:#fff">
+➕ Novo Veículo
+</button>
+</div>
+<div id="formVeiculo" class="card" style="display:none">
 <div class="card">
 
 <input id="v_placa" placeholder="Placa">
@@ -333,26 +333,31 @@ color:#fff;
 <div id="listaVeiculos"></div>
 
 </div>
+</div>
 
 <!-- ========================= -->
 <!-- 🏪 POSTO -->
 <!-- ========================= -->
 <div id="tela_posto" class="tela">
-
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<button onclick="toggleForm('formPosto')" style="flex:1;background:#3b82f6;color:#fff">
+➕ Novo Posto
+</button>
+</div>
+<div id="formPosto" class="card" style="display:none">
 <div class="card">
 <input id="p_nome" placeholder="Nome do posto">
 <input id="p_cnpj" placeholder="CNPJ">
 <input id="p_cidade" placeholder="Cidade">
 <button class="btnSave" onclick="salvarPosto()">Salvar Posto</button>
 </div>
-
 <div id="listaPostos"></div>
-
 </div>
 
 <!-- FOOTER -->
 <div class="footerBar">
 <button onclick="logout()" class="btnLogout">🚪 Sair</button>
+</div>
 </div>
 
 </div>
@@ -631,16 +636,53 @@ render()
 }
 /* 010 SALVAR */
 async function salvar(){
-await db.from("abastecimentos").insert({
-empresa_id:localStorage.getItem("empresa"),
+if(!data.value){
+data.value=new Date().toISOString().slice(0,10)
+}
+if(!VID)return alert("Selecione um veículo")
+
+let emp=localStorage.getItem("empresa")
+
+let v_total=parseFloat(valor.value)||0
+let v_litros=parseFloat(litros.value)||0
+let v_km=parseFloat(km.value)||0
+let v_data=data.value
+
+if(!v_data)return alert("Informe a data")
+if(v_total<=0)return alert("Valor inválido")
+if(v_litros<=0)return alert("Litros inválido")
+
+/* 🔥 CALCULA VALOR/LITRO AUTOMÁTICO */
+let v_valorLitro=v_litros>0?(v_total/v_litros):0
+
+/* 🔥 INSERT */
+let {error}=await db.from("abastecimentos").insert({
+empresa_id:emp,
 veiculo_id:VID,
 posto_id:postoSel?.value||null,
-valor_total:valor.value,
-litros:litros.value,
-quilometragem:km.value,
-data_abastecimento:data.value
+valor_total:parseFloat(v_total.toFixed(2)),
+litros:parseFloat(v_litros.toFixed(3)),
+quilometragem:v_km,
+data_abastecimento:v_data,
+valor_litro:parseFloat(v_valorLitro.toFixed(3))
 })
+
+if(error){
+console.error(error)
+return alert("Erro ao salvar")
+}
+
+/* 🔥 LIMPA FORM */
+valor.value=""
+litros.value=""
+km.value=""
+
+/* 🔥 FEEDBACK */
+alert("✅ Abastecimento salvo")
+
+/* 🔥 ATUALIZA TELA */
 render()
+
 }
 
 /* 011 RENDER */
@@ -713,21 +755,44 @@ vs._bind=true
 
 /* CRUD */
 async function salvarMotorista(){
+
+let emp=localStorage.getItem("empresa")
+
+let nome=(m_nome.value||"").trim()
+let tel=(m_tel.value||"").trim()
+let cpf=(typeof m_cpf!=="undefined" && m_cpf)?(m_cpf.value||"").trim():""
+
+if(!nome)return alert("Informe o nome")
+
 let payload={
-empresa_id:localStorage.getItem("empresa"),
-nome:m_nome.value||"",
-telefone:m_tel.value||"",
-cpf:(typeof m_cpf!=="undefined" && m_cpf)?m_cpf.value:""
+empresa_id:emp,
+nome:nome,
+telefone:tel,
+cpf:cpf
 }
+
+let error=null
+
 if(window.editMotoristaId){
-await db.from("motoristas").update(payload).eq("id",window.editMotoristaId)
+({error}=await db.from("motoristas").update(payload).eq("id",window.editMotoristaId))
 window.editMotoristaId=null
 }else{
-await db.from("motoristas").insert(payload)
+({error}=await db.from("motoristas").insert(payload))
 }
+
+if(error){
+console.error(error)
+return alert("Erro ao salvar motorista")
+}
+
+/* LIMPA */
 m_nome.value=""
 m_tel.value=""
 if(typeof m_cpf!=="undefined" && m_cpf)m_cpf.value=""
+
+/* FEEDBACK */
+alert("✅ Motorista salvo")
+
 await carregarTudo()
 }
 
@@ -739,28 +804,44 @@ m_cpf.value=""
 }
 
 async function salvarVeiculo(){
+
+let emp=localStorage.getItem("empresa")
+
+let placa=(v_placa.value||"").toUpperCase().trim()
+let modelo=(v_modelo.value||"").trim()
+
+if(!placa)return alert("Informe a placa")
+if(!modelo)return alert("Informe o modelo")
+
 let payload={
-empresa_id:localStorage.getItem("empresa"),
-placa:v_placa.value,
-marca:v_marca.value,
-modelo:v_modelo.value,
+empresa_id:emp,
+placa:placa,
+marca:(v_marca.value||"").trim(),
+modelo:modelo,
 ano:parseInt(v_ano.value)||null,
-cor:v_cor.value,
-renavam:v_renavam.value,
-combustivel_principal:v_combustivel.value,
+cor:(v_cor.value||"").trim(),
+renavam:(v_renavam.value||"").trim(),
+combustivel_principal:(v_combustivel.value||"").trim(),
 km_atual:parseFloat(v_km.value)||0,
 vencimento_ipva:v_ipva.value||null,
 vencimento_licenciamento:v_licenciamento.value||null,
 motorista_id:v_motorista.value||null
 }
-/* UPDATE */
+
+let error=null
+
 if(window.editVeiculoId){
-await db.from("veiculos").update(payload).eq("id",window.editVeiculoId)
+({error}=await db.from("veiculos").update(payload).eq("id",window.editVeiculoId))
 window.editVeiculoId=null
 }else{
-/* INSERT */
-await db.from("veiculos").insert(payload)
+({error}=await db.from("veiculos").insert(payload))
 }
+
+if(error){
+console.error(error)
+return alert("Erro ao salvar veículo")
+}
+
 /* LIMPA */
 v_placa.value=""
 v_marca.value=""
@@ -772,25 +853,53 @@ v_combustivel.value=""
 v_km.value=""
 v_ipva.value=""
 v_licenciamento.value=""
-/* RELOAD */
+
+/* FEEDBACK */
+alert("✅ Veículo salvo")
+
 await carregarTudo()
 }
 
 async function salvarPosto(){
+
+let emp=localStorage.getItem("empresa")
+
+let nome=(p_nome.value||"").trim()
+
+if(!nome)return alert("Informe o nome do posto")
+
 let payload={
-empresa_id:localStorage.getItem("empresa"),
-nome_posto:p_nome.value,
-cidade:p_cidade.value,
-cnpj:p_cnpj.value
+empresa_id:emp,
+nome_posto:nome,
+cidade:(p_cidade.value||"").trim(),
+cnpj:(p_cnpj.value||"").trim()
 }
-if(editPostoId){
-await db.from("postos").update(payload).eq("id",editPostoId)
-editPostoId=null
+
+let error=null
+
+if(window.editPostoId){
+({error}=await db.from("postos").update(payload).eq("id",window.editPostoId))
+window.editPostoId=null
 }else{
-await db.from("postos").insert(payload)
+({error}=await db.from("postos").insert(payload))
 }
-carregarTudo()
+
+if(error){
+console.error(error)
+return alert("Erro ao salvar posto")
 }
+
+/* LIMPA */
+p_nome.value=""
+p_cidade.value=""
+p_cnpj.value=""
+
+/* FEEDBACK */
+alert("✅ Posto salvo")
+
+await carregarTudo()
+}
+
 window.editarPosto=function(id,nome,cidade,cnpj){
 window.editPostoId=id
 p_nome.value=nome||""
@@ -819,8 +928,8 @@ window.editarAbastecimento=function(id,valor,litros,km,data,posto){
 window.editAbastecimentoId=id
 modalEditar.style.display="flex"
 e_valor.value=Number(valor||0).toFixed(2)
-e_litros.value=litros||""
-e_km.value=km||""
+e_litros.value=Number(litros||0)
+e_km.value=Number(km||0)
 e_data.value=(data||"").split("T")[0]
 e_posto.value=posto||""
 }
@@ -913,7 +1022,11 @@ let el=document.getElementById("cpf_"+id)
 if(!el)return
 el.innerText=el.innerText==="***"?valor||"-":"***"
 }
-
+function toggleForm(id){
+let el=document.getElementById(id)
+if(!el)return
+el.style.display=(el.style.display==="none")?"block":"none"
+}
 function toggleRenavam(id,valor){
 let el=document.getElementById("renavam_"+id)
 if(!el)return
