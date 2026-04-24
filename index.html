@@ -88,7 +88,17 @@ async function carregarAdmin(){let{data}=await db.from("usuarios").select("*");l
 async function ativarPlano(id){let f=new Date();f.setMonth(f.getMonth()+6);await db.from("usuarios").update({expira_em:f.toISOString()}).eq("id",id);carregarAdmin()}
 function atualizarStatusPlano(){let exp=localStorage.getItem("expira_em");if(!exp)return;let ativo=new Date(exp)>new Date();statusPlano.innerHTML=ativo?`<span class="badgePro">PRO até ${formatarData(exp)}</span>`:`<div class="alertaExpira">Plano expirado</div>`}
 async function login(){
-if(user.value==="admin"&&pass.value==="1234"){localStorage.setItem("admin","1");localStorage.setItem("uid","admin");mostrarApp();abrirTela("admin");carregarAdmin();return}
+const{data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
+if(!data||!data.length)return alert("Usuário não encontrado")
+if(data[0].senha_hash!==pass.value)return alert("Senha incorreta")
+if(data[0].tipo==="admin"){
+localStorage.setItem("admin","1")
+localStorage.setItem("uid",data[0].id)
+mostrarApp()
+abrirTela("admin")
+carregarAdmin()
+return
+}
 const{data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
 if(!data||!data.length)return alert("Usuário não encontrado")
 if(data[0].senha_hash!==pass.value)return alert("Senha incorreta")
