@@ -175,6 +175,9 @@ document.getElementById("tela_"+t).style.display="block"
 
 /* 009 CARREGAR */
 async function carregarTudo(){
+if(window.e_posto){
+e_posto.innerHTML=postoSel.innerHTML
+}
 let emp=localStorage.getItem("empresa")
 
 let {data:m=[]}=await db.from("motoristas").select("*").eq("empresa_id",emp)
@@ -204,7 +207,7 @@ listaVeiculos.innerHTML=v.map(x=>`
 <div class="item">
 <div>${x.modelo} | ${x.placa}</div>
 <div class="actions">
-<button class="btnEdit">✏️</button>
+<button class="btnEdit" onclick="abrirEditar('${a.id}','${a.valor_total}','${a.litros}','${a.quilometragem}','${a.data_abastecimento}','${a.posto_id}')">✏️</button>
 <button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button>
 </div></div>`).join("")
 }
@@ -256,9 +259,83 @@ graficoGasto=new Chart(graficoGastoEl,{type:"bar",data:{labels,datasets:[{label:
 }
 
 /* CRUD */
-async function salvarMotorista(){await db.from("motoristas").insert({empresa_id:localStorage.getItem("empresa"),nome:m_nome.value,telefone:m_tel.value});carregarTudo()}
-async function salvarVeiculo(){await db.from("veiculos").insert({empresa_id:localStorage.getItem("empresa"),placa:v_placa.value,modelo:v_modelo.value,motorista_id:v_motorista.value});carregarTudo()}
-async function salvarPosto(){await db.from("postos").insert({empresa_id:localStorage.getItem("empresa"),nome_posto:p_nome.value,cnpj:p_cnpj.value,cidade:p_cidade.value});carregarTudo()}
+async function salvarMotorista(){
+let payload={
+empresa_id:localStorage.getItem("empresa"),
+nome:m_nome.value,
+telefone:m_tel.value
+}
+if(window.editMotoristaId){
+await db.from("motoristas").update(payload).eq("id",editMotoristaId)
+editMotoristaId=null
+}else{
+await db.from("motoristas").insert(payload)
+}
+carregarTudo()
+}
+let editAbastecimentoId=null
+function editarAbastecimento(id,valor,litros,km,data,posto){
+editAbastecimentoId=id
+modalEditar.style.display="flex"
+e_valor.value=valor||""
+e_litros.value=litros||""
+e_km.value=km||""
+e_data.value=(data||"").split("T")[0]
+e_posto.value=posto||""
+}
+
+function editarMotorista(id,nome,tel){
+m_nome.value=nome||""
+m_tel.value=tel||""
+window.editMotoristaId=id
+}
+async function salvarVeiculo(){
+let payload={
+empresa_id:localStorage.getItem("empresa"),
+placa:v_placa.value,
+modelo:v_modelo.value,
+motorista_id:v_motorista.value||null
+}
+if(editVeiculoId){
+await db.from("veiculos").update(payload).eq("id",editVeiculoId)
+editVeiculoId=null
+}else{
+await db.from("veiculos").insert(payload)
+}
+carregarTudo()
+}
+let editVeiculoId=null
+function editarVeiculo(id,placa,modelo,motorista){
+editVeiculoId=id
+v_placa.value=placa||""
+v_modelo.value=modelo||""
+v_motorista.value=motorista||""
+}
+  
+async function salvarPosto(){
+let payload={
+empresa_id:localStorage.getItem("empresa"),
+nome_posto:p_nome.value,
+cidade:p_cidade.value,
+cnpj:p_cnpj.value
+}
+if(editPostoId){
+await db.from("postos").update(payload).eq("id",editPostoId)
+editPostoId=null
+}else{
+await db.from("postos").insert(payload)
+}
+carregarTudo()
+}
+
+let editPostoId=null
+function editarPosto(id,nome,cidade,cnpj){
+editPostoId=id
+p_nome.value=nome||""
+p_cidade.value=cidade||""
+p_cnpj.value=cnpj||""
+}
+
 async function excluir(t,id){
 if(!confirm("Excluir?"))return
 /* 🔒 NÃO APAGAR ABASTECIMENTOS (DADOS CONSOLIDADOS) */
@@ -285,7 +362,54 @@ window.graficoConsumoEl=document.getElementById("graficoConsumo")
 window.graficoGastoEl=document.getElementById("graficoGasto")
 if(localStorage.getItem("empresa"))init()
 })
+let editId=null
+
+function abrirEditar(id,valor,litros,km,data,posto){
+editId=id
+modalEditar.style.display="flex"
+
+/* preenche */
+e_valor.value=valor||""
+e_litros.value=litros||""
+e_km.value=km||""
+e_data.value=(data||"").split("T")[0]||""
+e_posto.value=posto||""
+}
+
+
+async function salvarEdicao(){
+await db.from("abastecimentos").update({
+valor_total:parseFloat(e_valor.value)||0,
+litros:parseFloat(e_litros.value)||0,
+quilometragem:parseFloat(e_km.value)||0,
+posto_id:e_posto.value||null,
+data_abastecimento:e_data.value
+}).eq("id",editAbastecimentoId)
+
+modalEditar.style.display="none"
+render()
+}
+
+function fecharEditar(){
+modalEditar.style.display="none"
+}
+
+  
 </script>
 
+<div id="modalEditar" class="modal">
+<div class="modalBox">
+<h3>Editar Abastecimento</h3>
+<input id="e_data" type="date">
+<select id="e_posto"></select>
+<input id="e_valor">
+<input id="e_litros">
+<input id="e_km">
+<div class="actions">
+<button class="btnSave" onclick="salvarEdicao()">Salvar</button>
+<button class="btnDel" onclick="fecharEditar()">Cancelar</button>
+</div>
+</div>
+</div>
 </body>
 </html>
