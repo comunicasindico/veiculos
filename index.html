@@ -66,35 +66,12 @@ background:#22c55e;
 color:#000;
 width:100%;
 }
-.btnEdit{
-background:#f59e0b;
-color:#000;
-flex:1;
-}
-.btnDel{
-background:#ef4444;
-color:#fff;
-flex:1;
-}
-.item{
-width:100%;
-background:#020617;
-padding:10px;
-border-radius:10px;
-margin-top:6px;
-border:1px solid #1e293b;
-}
 .row{
 display:flex;
 justify-content:space-between;
 gap:6px;
 font-size:12px;
 flex-wrap:wrap;
-}
-.actions{
-display:flex;
-gap:6px;
-margin-top:6px;
 }
 .headerApp{
 position:sticky;
@@ -154,6 +131,29 @@ background:#1e293b;
 padding:15px;
 border-radius:12px;
 }
+.actions{
+display:flex;
+gap:6px;
+margin-left:auto;
+}
+.btnEdit,.btnDel{
+padding:6px 10px;
+font-size:12px;
+width:auto;
+min-width:40px;
+}
+.item{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+}
+.itemContent{
+flex:1;
+display:flex;
+flex-direction:column;
+gap:2px;
+}
 </style>
 
 <body>
@@ -206,7 +206,6 @@ border-radius:12px;
 <!-- MOTORISTA -->
 <div id="tela_motorista" class="tela" style="display:none">
 <div class="card">
-<button class="btnEdit" onclick="editarMotorista('${x.id}','${x.nome}','${x.telefone}','${x.cpf}')">✏️</button>
 <input id="m_nome" placeholder="Nome">
 <input id="m_cpf" placeholder="CPF">
 <input id="m_tel" placeholder="Telefone">
@@ -404,11 +403,21 @@ let emp=localStorage.getItem("empresa")
 let {data:m=[]}=await db.from("motoristas").select("*").eq("empresa_id",emp)
 listaMotoristas.innerHTML=m.map(x=>`
 <div class="item">
-<div>${x.nome} | ${x.telefone||"-"}</div>
+
+<div class="itemContent">
+<div><b>${x.nome||"-"}</b></div>
+<div style="font-size:11px;color:#94a3b8">
+CPF: ${x.cpf||"-"} | Tel: ${x.telefone||"-"}
+</div>
+</div>
+
 <div class="actions">
-<button class="btnEdit" onclick="editarMotorista('${x.id}','${x.nome}','${x.telefone}')">✏️</button>
+<button class="btnEdit" onclick="editarMotorista('${x.id}','${x.nome}','${x.telefone}','${x.cpf}')">✏️</button>
 <button class="btnDel" onclick="excluir('motoristas','${x.id}')">🗑</button>
-</div></div>`).join("")
+</div>
+
+</div>
+`).join("")
 v_motorista.innerHTML=m.map(x=>`<option value="${x.id}">${x.nome}</option>`).join("")
 
 let {data:p=[]}=await db.from("postos").select("*").eq("empresa_id",emp)
@@ -481,58 +490,26 @@ render()
 
 /* 011 RENDER */
 async function render(){
-let {data=[]}=await db.from("abastecimentos")
-.select("*,postos(nome_posto)")
-.eq("veiculo_id",VID)
-.order("data_abastecimento",{ascending:false})
-
-listaVeiculos.innerHTML=v.map(x=>`
+if(!VID)return
+let {data=[]}=await db.from("abastecimentos").select("*,postos(nome_posto)").eq("veiculo_id",VID).order("data_abastecimento",{ascending:false})
+if(!Array.isArray(data)||!data.length){lista.innerHTML="<div class='item'>Sem dados</div>";return}
+lista.innerHTML=data.map(a=>`
 <div class="item">
-
-<div><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div>
-
-<div class="row">
-<span>Motorista</span>
-<span>${x.motoristas?.nome||"Sem motorista"}</span>
+<div class="itemContent">
+<div><b>${fData(a.data_abastecimento)}</b> | ${a.postos?.nome_posto||"-"}</div>
+<div style="font-size:11px;color:#94a3b8">R$ ${Number(a.valor_total||0).toFixed(2)} | ${a.litros||0}L | KM ${a.quilometragem||0}</div>
 </div>
-
-<div class="row">
-<span>CPF</span>
-<span>${x.motoristas?.cpf||"-"}</span>
-</div>
-
-<div class="row">
-<span>Telefone</span>
-<span>${x.motoristas?.telefone||"-"}</span>
-</div>
-
 <div class="actions">
-<button class="btnEdit" onclick="editarVeiculo(
-'${x.id}',
-'${x.placa||""}',
-'${x.marca||""}',
-'${x.modelo||""}',
-'${x.ano||""}',
-'${x.cor||""}',
-'${x.renavam||""}',
-'${x.combustivel_principal||""}',
-'${x.km_atual||""}',
-'${x.vencimento_ipva||""}',
-'${x.vencimento_licenciamento||""}',
-'${x.motorista_id||""}'
-)">✏️</button>
-
-<button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button>
+<button class="btnEdit" onclick="editarAbastecimento('${a.id}','${a.valor_total}','${a.litros}','${a.quilometragem}','${a.data_abastecimento}','${a.posto_id}')">✏️</button>
+<button class="btnDel" onclick="excluir('abastecimentos','${a.id}')">🗑</button>
 </div>
-
 </div>
 `).join("")
-
 renderDashboard(data)
-veiculoSel.addEventListener("change",()=>{
-VID=veiculoSel.value
-render()
-})
+if(!veiculoSel.dataset.bind){
+veiculoSel.addEventListener("change",()=>{VID=veiculoSel.value;render()})
+veiculoSel.dataset.bind="1"
+}
 }
 
 /* 012 DASHBOARD */
