@@ -316,11 +316,14 @@ listaVeiculos.innerHTML=botaoInserir+(veiculos||[]).map(v=>`
 <div class="item">
 <div class="row"><span>Placa</span><span>${v.placa||"-"}</span></div>
 <div class="row"><span>Modelo</span><span>${v.modelo||"-"}</span></div>
-<div class="row" style="justify-content:flex-end">
-<button onclick="excluirRegistro('veiculos','${v.id}')" style="background:#ef4444;color:#fff">🗑</button>
+<div class="row" style="justify-content:flex-end;gap:6px">
+<button onclick="editarVeiculo('${v.id}','${v.placa||""}','${v.modelo||""}')"
+style="background:#f59e0b;color:#000;padding:6px 10px;font-size:11px">✏️</button>
+<button onclick="excluirRegistro('veiculos','${v.id}')"
+style="background:#ef4444;color:#fff;padding:6px 10px;font-size:11px">🗑</button>
 </div>
 </div>`).join("")
-}
+  
 /* POSTOS */
 let {data:postos,error:e3}=await db.from("postos").select("id,nome_posto,empresa_id")
 if(e3)console.error(e3)
@@ -328,8 +331,11 @@ if(window.listaPostos){
 listaPostos.innerHTML=botaoInserir+(postos||[]).map(p=>`
 <div class="item">
 <div class="row"><span>Posto</span><span>${p.nome_posto||"-"}</span></div>
-<div class="row" style="justify-content:flex-end">
-<button onclick="excluirRegistro('postos','${p.id}')" style="background:#ef4444;color:#fff">🗑</button>
+<div class="row" style="justify-content:flex-end;gap:6px">
+<button onclick="editarPosto('${p.id}','${p.nome_posto||""}')"
+style="background:#f59e0b;color:#000;padding:6px 10px;font-size:11px">✏️</button>
+<button onclick="excluirRegistro('postos','${p.id}')"
+style="background:#ef4444;color:#fff;padding:6px 10px;font-size:11px">🗑</button>
 </div>
 </div>`).join("")
 }
@@ -632,14 +638,18 @@ vl.addEventListener("input",()=>calc("vl"))
 
 function editarMotorista(id,nome,cpf,cnh,validade,tel,email,obs){
 editMotoristaId=id
-m_nome.value=nome||""
-m_cpf.value=cpf||""
-m_cnh.value=cnh||""
-m_validade.value=validade||""
-m_tel.value=tel||""
-m_email.value=email||""
-m_obs.value=obs||""
-window.scrollTo({top:0,behavior:"smooth"})
+modalPadrao.style.display="flex"
+tituloModal.innerText="Editar Motorista"
+conteudoModal.innerHTML=`
+<div class="row"><span>Nome</span><input id="em_nome" value="${nome||""}"></div>
+<div class="row"><span>CPF</span><input id="em_cpf" value="${cpf||""}"></div>
+<div class="row"><span>CNH</span><input id="em_cnh" value="${cnh||""}"></div>
+<div class="row"><span>Validade</span><input id="em_validade" value="${validade||""}"></div>
+<div class="row"><span>Telefone</span><input id="em_tel" value="${tel||""}"></div>
+<div class="row"><span>Email</span><input id="em_email" value="${email||""}"></div>
+<div class="row"><span>Obs</span><input id="em_obs" value="${obs||""}"></div>
+`
+window.tipoModal="motorista"
 }
 
 function novoMotorista(){
@@ -682,7 +692,56 @@ editMotoristaId=null
 novoMotorista()
 carregarCadastros()
 }
-
+function editarVeiculo(id,placa,modelo){
+editId=id
+modalPadrao.style.display="flex"
+tituloModal.innerText="Editar Veículo"
+conteudoModal.innerHTML=`
+<div class="row"><span>Placa</span><input id="ev_placa" value="${placa||""}"></div>
+<div class="row"><span>Modelo</span><input id="ev_modelo" value="${modelo||""}"></div>
+`
+window.tipoModal="veiculo"
+}
+function editarPosto(id,nome){
+editId=id
+modalPadrao.style.display="flex"
+tituloModal.innerText="Editar Posto"
+conteudoModal.innerHTML=`
+<div class="row"><span>Nome</span><input id="ep_nome" value="${nome||""}"></div>
+`
+window.tipoModal="posto"
+}
+async function salvarModal(){
+if(window.tipoModal==="motorista"){
+await db.from("motoristas").update({
+nome:em_nome.value,
+cpf:em_cpf.value,
+numero_cnh:em_cnh.value,
+validade_cnh:em_validade.value,
+telefone:em_tel.value,
+email:em_email.value,
+observacoes:em_obs.value
+}).eq("id",editMotoristaId)
+}
+if(window.tipoModal==="veiculo"){
+await db.from("veiculos").update({
+placa:ev_placa.value,
+modelo:ev_modelo.value
+}).eq("id",editId)
+}
+if(window.tipoModal==="posto"){
+await db.from("postos").update({
+nome_posto:ep_nome.value
+}).eq("id",editId)
+}
+fecharModalPadrao()
+carregarCadastros()
+render()
+}
+function fecharModalPadrao(){
+modalPadrao.style.display="none"
+}
+  
 
 </script>
 
