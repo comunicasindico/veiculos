@@ -7,19 +7,19 @@
 <title>Veículo SaaS PRO MASTER</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5"></script>
 </head>
 
 <style>
-/* 002 STYLE PROFISSIONAL */
+/* 002 STYLE */
 body{
 margin:0;
 font-family:Arial;
 color:#fff;
 background:#020617;
-background-image:
-radial-gradient(circle at 20% 30%,rgba(34,197,94,0.15),transparent 40%),
-radial-gradient(circle at 80% 70%,rgba(59,130,246,0.15),transparent 40%);
+background-image:url("img/bancocomunicaveiculos.png"),radial-gradient(circle at 20% 30%,rgba(34,197,94,0.15),transparent 40%),radial-gradient(circle at 80% 70%,rgba(59,130,246,0.15),transparent 40%);
+background-size:cover,auto,auto;
+background-position:center;
+background-repeat:no-repeat;
 }
 body::before{
 content:"";
@@ -28,70 +28,40 @@ top:0;
 left:0;
 width:100%;
 height:100%;
-background:radial-gradient(2px 2px at 20px 30px,#fff,transparent),
-radial-gradient(2px 2px at 100px 150px,#fff,transparent);
-opacity:0.05;
-pointer-events:none;
+background:rgba(2,6,23,0.75);
+z-index:-1;
 }
 .container{max-width:720px;margin:auto;padding:12px}
 .card{background:#1e293b;padding:12px;border-radius:12px;margin-top:10px}
 input,select{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:none;background:#334155;color:#fff}
-button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold}
+button{padding:10px;border:none;border-radius:8px;font-weight:bold}
+.btnSave{background:#22c55e;color:#000;width:100%;margin-top:6px}
+.btnEdit{background:#f59e0b;color:#000}
+.btnDel{background:#ef4444;color:#fff}
 .item{background:#020617;padding:10px;border-radius:10px;margin-top:6px;border:1px solid #1e293b}
 .row{display:flex;justify-content:space-between;font-size:12px;margin-top:4px}
+.actions{display:flex;gap:6px;margin-top:6px}
 .headerApp{position:sticky;top:0;background:#020617;padding:10px;border-bottom:1px solid #1e293b}
 .menuTabs{display:flex;gap:6px}
 .menuTabs button{flex:1;background:#1e293b;color:#fff}
-.footerBar{position:fixed;bottom:0;width:100%;background:#020617;border-top:1px solid #1e293b;padding:8px;text-align:right}
-.btnLogout{background:#dc2626;color:#fff}
-#telaLogin{
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-background:url("img/bancocomunicaveiculos.png") no-repeat center center fixed;
-background-size:cover;
-position:relative;
-}
-#telaLogin::before{
-content:"";
-position:absolute;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(2,6,23,0.75);
-}
-#loginBox{
-position:relative;
-z-index:2;
-background:#1e293b;
-padding:20px;
-border-radius:12px;
-width:300px;
-box-shadow:0 10px 40px rgba(0,0,0,0.6);
-}#loginBox{background:#1e293b;padding:20px;border-radius:12px;width:300px}
-canvas{background:#fff;border-radius:10px}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;z-index:999}
-.modalBox{background:#1e293b;padding:20px;border-radius:12px;width:350px}
+.footerBar{position:fixed;bottom:0;width:100%;display:flex;justify-content:center;padding:10px;background:#020617}
+.btnLogout{background:#dc2626;color:#fff;width:200px}
+canvas{background:#fff;border-radius:10px;margin-top:10px}
 </style>
 
 <body>
 
-<!-- 003 LOGIN -->
-<div id="telaLogin">
-<div id="loginBox">
-<div style="position:absolute;bottom:20px;width:100%;text-align:center;color:#94a3b8;font-size:12px">
-Banco Comunica • Veículos SaaS PRO
-</div>
-<h2>🚗 Veículo PRO MASTER</h2>
-<input id="user" placeholder="Usuário">
-<input id="pass" type="password" placeholder="Senha">
-<button onclick="login()">Entrar</button>
+<!-- LOGIN -->
+<div id="telaLogin" style="display:flex;justify-content:center;align-items:center;height:100vh">
+<div class="card">
+<h2>🚗 Veículo PRO</h2>
+<input id="user">
+<input id="pass" type="password">
+<button class="btnSave" onclick="login()">Entrar</button>
 </div>
 </div>
 
-<!-- 004 APP -->
+<!-- APP -->
 <div id="app" class="container" style="display:none">
 
 <div class="headerApp">
@@ -116,12 +86,11 @@ Banco Comunica • Veículos SaaS PRO
 <select id="veiculoSel"></select>
 <input id="data" type="date">
 <select id="postoSel"></select>
-<input id="valor" placeholder="Valor">
-<input id="litros" placeholder="Litros">
-<input id="valor_litro" placeholder="Valor/Litro">
-<input id="km" placeholder="KM">
-<input type="file" accept="image/*" onchange="lerNota(this)">
-<button onclick="salvar()">Salvar</button>
+<input id="valor">
+<input id="litros">
+<input id="valor_litro">
+<input id="km">
+<button class="btnSave" onclick="salvar()">Salvar</button>
 </div>
 <div id="lista"></div>
 </div>
@@ -131,7 +100,8 @@ Banco Comunica • Veículos SaaS PRO
 <div class="card">
 <input id="m_nome" placeholder="Nome">
 <input id="m_cpf" placeholder="CPF">
-<button onclick="salvarMotorista()">Salvar</button>
+<input id="m_tel" placeholder="Telefone">
+<button class="btnSave" onclick="salvarMotorista()">Salvar</button>
 </div>
 <div id="listaMotoristas"></div>
 </div>
@@ -139,10 +109,10 @@ Banco Comunica • Veículos SaaS PRO
 <!-- VEICULO -->
 <div id="tela_veiculo" class="tela" style="display:none">
 <div class="card">
-<input id="v_placa">
-<input id="v_modelo">
+<input id="v_placa" placeholder="Placa">
+<input id="v_modelo" placeholder="Modelo">
 <select id="v_motorista"></select>
-<button onclick="salvarVeiculo()">Salvar</button>
+<button class="btnSave" onclick="salvarVeiculo()">Salvar</button>
 </div>
 <div id="listaVeiculos"></div>
 </div>
@@ -150,8 +120,10 @@ Banco Comunica • Veículos SaaS PRO
 <!-- POSTO -->
 <div id="tela_posto" class="tela" style="display:none">
 <div class="card">
-<input id="p_nome">
-<button onclick="salvarPosto()">Salvar</button>
+<input id="p_nome" placeholder="Posto">
+<input id="p_cnpj" placeholder="CNPJ">
+<input id="p_cidade" placeholder="Cidade">
+<button class="btnSave" onclick="salvarPosto()">Salvar</button>
 </div>
 <div id="listaPostos"></div>
 </div>
@@ -163,144 +135,155 @@ Banco Comunica • Veículos SaaS PRO
 </div>
 
 <script>
-/* 005 CONFIG */
+/* 003 CONFIG */
 const db=supabase.createClient(
 "https://gspdlrenyrzbkxlvyugc.supabase.co",
 "sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw"
 )
 
-/* 006 ESTADO */
+/* 004 ESTADO */
 let VID=null,graficoConsumo,graficoGasto
 
-/* 007 UTILS */
-function hojeISO(){const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
-function safe(id){return document.getElementById(id)}
-
-/* 008 AUTO CALC */
-function autoCalc(){
-["valor","litros","valor_litro"].forEach(id=>{
-safe(id)?.addEventListener("input",()=>{
-let v=parseFloat(valor.value),l=parseFloat(litros.value)
-if(v && l)valor_litro.value=(v/l).toFixed(3)
-})
-})
+/* 005 UTILS */
+function fData(d){
+if(!d)return "-"
+let x=d.split("T")[0].split("-")
+return x[2]+"/"+x[1]+"/"+x[0].slice(2)
 }
 
-/* 009 LOGIN */
+/* 006 LOGIN */
 async function login(){
 let {data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value)
-if(!data?.length)return alert("Usuário não encontrado")
-if(data[0].senha_hash!==pass.value)return alert("Senha inválida")
+if(!data?.length)return alert("Erro")
+if(data[0].senha_hash!==pass.value)return alert("Senha")
 localStorage.setItem("empresa",data[0].empresa_id)
-localStorage.setItem("uid",data[0].id)
 init()
 }
 
-/* 010 INIT */
+/* 007 INIT */
 async function init(){
 telaLogin.style.display="none";app.style.display="block"
-autoCalc()
-await carregarCadastros()
-await carregarVeiculos()
+await carregarTudo()
 render()
 }
 
-/* 011 UI */
+/* 008 UI */
 function abrirTela(t){
 document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
-safe("tela_"+t).style.display="block"
+document.getElementById("tela_"+t).style.display="block"
 }
 
-/* 012 CADASTROS */
-async function carregarCadastros(){
+/* 009 CARREGAR */
+async function carregarTudo(){
 let emp=localStorage.getItem("empresa")
 
 let {data:m=[]}=await db.from("motoristas").select("*").eq("empresa_id",emp)
-listaMotoristas.innerHTML=m.map(x=>`<div class="item">${x.nome}<button onclick="excluir('motoristas','${x.id}')">🗑</button></div>`).join("")
+listaMotoristas.innerHTML=m.map(x=>`
+<div class="item">
+<div>${x.nome} | ${x.telefone||"-"}</div>
+<div class="actions">
+<button class="btnEdit" onclick="editarMotorista('${x.id}','${x.nome}','${x.telefone}')">✏️</button>
+<button class="btnDel" onclick="excluir('motoristas','${x.id}')">🗑</button>
+</div></div>`).join("")
 v_motorista.innerHTML=m.map(x=>`<option value="${x.id}">${x.nome}</option>`).join("")
 
 let {data:p=[]}=await db.from("postos").select("*").eq("empresa_id",emp)
-listaPostos.innerHTML=p.map(x=>`<div class="item">${x.nome_posto}<button onclick="excluir('postos','${x.id}')">🗑</button></div>`).join("")
+listaPostos.innerHTML=p.map(x=>`
+<div class="item">
+<div>${x.nome_posto} | ${x.cidade||"-"}</div>
+<div class="actions">
+<button class="btnEdit" onclick="editarPosto('${x.id}','${x.nome_posto}')">✏️</button>
+<button class="btnDel" onclick="excluir('postos','${x.id}')">🗑</button>
+</div></div>`).join("")
 postoSel.innerHTML=p.map(x=>`<option value="${x.id}">${x.nome_posto}</option>`).join("")
-}
 
-/* 013 VEICULOS */
-async function carregarVeiculos(){
-let emp=localStorage.getItem("empresa")
 let {data:v=[]}=await db.from("veiculos").select("*").eq("empresa_id",emp)
 veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo}</option>`).join("")
 VID=v?.[0]?.id
-listaVeiculos.innerHTML=v.map(x=>`<div class="item">${x.modelo}<button onclick="excluir('veiculos','${x.id}')">🗑</button></div>`).join("")
+listaVeiculos.innerHTML=v.map(x=>`
+<div class="item">
+<div>${x.modelo} | ${x.placa}</div>
+<div class="actions">
+<button class="btnEdit">✏️</button>
+<button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button>
+</div></div>`).join("")
 }
 
-/* 014 SALVAR */
+/* 010 SALVAR */
 async function salvar(){
-navigator.geolocation.getCurrentPosition(p=>{
-localStorage.setItem("lat",p.coords.latitude)
-localStorage.setItem("lng",p.coords.longitude)
-})
-
 await db.from("abastecimentos").insert({
 empresa_id:localStorage.getItem("empresa"),
 veiculo_id:VID,
-posto_id:postoSel.value||null,
-valor_total:parseFloat(valor.value)||0,
-litros:parseFloat(litros.value)||0,
-valor_litro:parseFloat(valor_litro.value)||0,
-quilometragem:parseFloat(km.value)||0,
-data_abastecimento:data.value||hojeISO()
+posto_id:postoSel.value,
+valor_total:valor.value,
+litros:litros.value,
+quilometragem:km.value,
+data_abastecimento:data.value
 })
 render()
 }
 
-/* 015 RENDER */
+/* 011 RENDER */
 async function render(){
-if(!VID)return
-let {data=[]}=await db.from("abastecimentos").select("*,postos(nome_posto)").eq("veiculo_id",VID)
-lista.innerHTML=data.map(a=>`<div class="item">${a.postos?.nome_posto||"-"} - ${a.valor_total}</div>`).join("")
+let {data=[]}=await db.from("abastecimentos")
+.select("*,postos(nome_posto)")
+.eq("veiculo_id",VID)
+.order("data_abastecimento",{ascending:false})
+
+lista.innerHTML=data.map(a=>`
+<div class="item">
+<div>${fData(a.data_abastecimento)} | ${a.postos?.nome_posto||"-"}</div>
+<div>Total: ${a.valor_total} | Litros: ${a.litros}</div>
+<div class="actions">
+<button class="btnEdit">✏️</button>
+<button class="btnDel" onclick="excluir('abastecimentos','${a.id}')">🗑</button>
+</div>
+</div>`).join("")
+
 renderDashboard(data)
-analisarIA(data)
 }
 
-/* 016 DASHBOARD */
+/* 012 DASHBOARD */
 function renderDashboard(d){
-let labels=d.map(x=>x.data_abastecimento)
+let labels=d.map(x=>fData(x.data_abastecimento))
 let gastos=d.map(x=>x.valor_total)
+
 if(graficoConsumo)graficoConsumo.destroy()
 if(graficoGasto)graficoGasto.destroy()
-graficoConsumo=new Chart(graficoConsumoEl,{type:"line",data:{labels,datasets:[{label:"Km/L",data:gastos}]}})
-graficoGasto=new Chart(graficoGastoEl,{type:"bar",data:{labels,datasets:[{label:"R$",data:gastos}]}})
+
+graficoConsumo=new Chart(graficoConsumoEl,{type:"line",data:{labels,datasets:[{label:"Consumo",data:gastos}]}})
+graficoGasto=new Chart(graficoGastoEl,{type:"bar",data:{labels,datasets:[{label:"Gastos",data:gastos}]}})
 }
 
-/* 017 IA */
-function analisarIA(d){
-if(d.length<2)return
-let c=(d[0].quilometragem-d[1].quilometragem)/d[0].litros
-if(c<5)alert("⚠️ Consumo baixo detectado")
+/* CRUD */
+async function salvarMotorista(){await db.from("motoristas").insert({empresa_id:localStorage.getItem("empresa"),nome:m_nome.value,telefone:m_tel.value});carregarTudo()}
+async function salvarVeiculo(){await db.from("veiculos").insert({empresa_id:localStorage.getItem("empresa"),placa:v_placa.value,modelo:v_modelo.value,motorista_id:v_motorista.value});carregarTudo()}
+async function salvarPosto(){await db.from("postos").insert({empresa_id:localStorage.getItem("empresa"),nome_posto:p_nome.value,cnpj:p_cnpj.value,cidade:p_cidade.value});carregarTudo()}
+async function excluir(t,id){
+if(!confirm("Excluir?"))return
+/* 🔒 NÃO APAGAR ABASTECIMENTOS (DADOS CONSOLIDADOS) */
+if(t==="abastecimentos"){
+alert("⚠️ Registro consolidado não pode ser excluído.\nUse edição.")
+return
 }
-
-/* 018 OCR */
-async function lerNota(i){
-const f=i.files[0]
-const {data:{text}}=await Tesseract.recognize(f,"por")
-let v=text.match(/(\d+,\d{2})/)
-if(v)valor.value=v[0]
+/* 🔒 PROTEÇÃO EXTRA */
+let {data}=await db.from(t).select("id").eq("id",id).limit(1)
+if(!data||!data.length){
+alert("Registro não encontrado")
+return
 }
-
-/* 019 CRUD */
-async function salvarMotorista(){await db.from("motoristas").insert({empresa_id:localStorage.getItem("empresa"),nome:m_nome.value,cpf:m_cpf.value});carregarCadastros()}
-async function salvarVeiculo(){await db.from("veiculos").insert({empresa_id:localStorage.getItem("empresa"),placa:v_placa.value,modelo:v_modelo.value,motorista_id:v_motorista.value});carregarVeiculos()}
-async function salvarPosto(){await db.from("postos").insert({empresa_id:localStorage.getItem("empresa"),nome_posto:p_nome.value});carregarCadastros()}
-async function excluir(t,id){if(!confirm("Excluir?"))return;await db.from(t).delete().eq("id",id);carregarCadastros();carregarVeiculos();render()}
-
-/* 020 LOGOUT */
+await db.from(t).delete().eq("id",id)
+await carregarTudo()
+render()
+}
+/* LOGOUT */
 function logout(){localStorage.clear();location.reload()}
 
-/* 021 START */
+/* START */
 document.addEventListener("DOMContentLoaded",()=>{
-window.graficoConsumoEl=safe("graficoConsumo")
-window.graficoGastoEl=safe("graficoGasto")
-if(localStorage.getItem("uid"))init()
+window.graficoConsumoEl=document.getElementById("graficoConsumo")
+window.graficoGastoEl=document.getElementById("graficoGasto")
+if(localStorage.getItem("empresa"))init()
 })
 </script>
 
