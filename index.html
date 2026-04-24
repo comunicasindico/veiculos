@@ -477,7 +477,7 @@ async function init(){
 telaLogin.style.display="none"
 app.style.display="block"
 await carregarTudo()
-await carregarSelectsPadrao()
+setTimeout(()=>carregarSelectsPadrao(),50)
 abrirTela("combustivel")
 render()
 }
@@ -856,26 +856,25 @@ el.innerText=el.innerText==="***"?valor||"-":"***"
 async function carregarSelectsPadrao(){
 
 /* VEÍCULO */
-if(window.veiculoSel){
+if(window.veiculoSel && veiculoSel && veiculoSel.options){
 if(veiculoSel.options.length>0){
-VID=veiculoSel.value
+VID=veiculoSel.value||null
 }else{
 VID=null
 }
+}else{
+VID=null
 }
-
 /* POSTO */
-if(window.postoSel){
+if(window.postoSel && postoSel && postoSel.options){
 if(postoSel.options.length>0){
 postoSel.value=postoSel.options[0].value
 }
 }
-
-/* EDIT MODAL */
-if(window.e_posto && window.postoSel){
+/* MODAL */
+if(window.e_posto && window.postoSel && postoSel){
 e_posto.innerHTML=postoSel.innerHTML
 }
-
 }
 
   
