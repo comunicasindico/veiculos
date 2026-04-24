@@ -181,21 +181,24 @@ render()
 /* 009 RENDER */
 async function render(){
 let empresa=localStorage.getItem("empresa")
-let{data}=await db.from("abastecimentos").select("*").eq("empresa_id",empresa).eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+let{data}=await db.from("abastecimentos").select(`
+id,data_abastecimento,litros,valor_total,valor_litro,quilometragem,tanque,tipo_combustivel,
+postos(nome_posto)
+`).eq("empresa_id",empresa).eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
 lista.innerHTML=data.map((a,i)=>{
 let ant=data[i-1]
 let kmRodado=ant?(a.quilometragem-ant.quilometragem):0
-let consumo=kmRodado&&a.litros?(kmRodado/a.litros).toFixed(2):"-"
+let consumo=(kmRodado>0&&a.litros>0)?(kmRodado/a.litros).toFixed(2):"-"
 return `<div class="item">
-<div class="row"><span>Data</span><span>${a.data_abastecimento}</span></div>
-<div class="row"><span>Posto</span><span>${a.posto_id||"-"}</span></div>
+<div class="row"><span>Data</span><span>${(()=>{let d=a.data_abastecimento?.split("T")[0];if(!d)return"-";let[y,m,dd]=d.split("-");return`${dd}/${m}/${y.slice(2)}`})()}</span></div>
+<div class="row"><span>Posto</span><span>${a.postos?.nome_posto||"-"}</span></div>
 <div class="row"><span>Combustível</span><span>${a.tipo_combustivel||"-"}</span></div>
 <div class="row"><span>Litros</span><span>${a.litros}</span></div>
-<div class="row"><span>Valor Unitário</span><span>${a.valor_litro}</span></div>
+<div class="row"><span>Valor Unitário</span><span>${a.valor_litro?Number(a.valor_litro).toFixed(2):"-"}</span></div>
 <div class="row"><span>Total</span><span>${moeda(a.valor_total)}</span></div>
 <div class="row"><span>Odômetro</span><span>${a.quilometragem}</span></div>
 <div class="row"><span>KM Rodado</span><span>${kmRodado}</span></div>
-<div class="row"><span>Tanque</span><span>${a.tanque}</span></div>
+<div class="row"><span>Tanque</span><span>${(()=>{if(a.tanque)return a.tanque;let ant=data[i-1];if(!ant)return"cheio";let km=a.quilometragem-ant.quilometragem;return km>300?"cheio":"parcial"})()}</span></div>
 <div class="row"><span>Km/L</span><span>${consumo}</span></div>
 </div>`
 }).join("")
