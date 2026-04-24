@@ -421,7 +421,13 @@ listaPostos.innerHTML=p.map(x=>`
 </div></div>`).join("")
 postoSel.innerHTML=p.map(x=>`<option value="${x.id}">${x.nome_posto}</option>`).join("")
 
-let {data:v=[]}=await db.from("veiculos").select("*").eq("empresa_id",emp)
+let {data:v=[]}=await db
+.from("veiculos")
+.select(`
+*,
+motoristas(nome,cpf,telefone)
+`)
+.eq("empresa_id",emp).eq("empresa_id",emp)
 veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo}</option>`).join("")
 VID=v?.[0]?.id
 listaVeiculos.innerHTML=v.map(x=>`
@@ -480,15 +486,47 @@ let {data=[]}=await db.from("abastecimentos")
 .eq("veiculo_id",VID)
 .order("data_abastecimento",{ascending:false})
 
-lista.innerHTML=data.map(a=>`
+listaVeiculos.innerHTML=v.map(x=>`
 <div class="item">
-<div>${fData(a.data_abastecimento)} | ${a.postos?.nome_posto||"-"}</div>
-<div>Total: ${a.valor_total} | Litros: ${a.litros}</div>
-<div class="actions">
-<button class="btnEdit">✏️</button>
-<button class="btnDel" onclick="excluir('abastecimentos','${a.id}')">🗑</button>
+
+<div><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div>
+
+<div class="row">
+<span>Motorista</span>
+<span>${x.motoristas?.nome||"Sem motorista"}</span>
 </div>
-</div>`).join("")
+
+<div class="row">
+<span>CPF</span>
+<span>${x.motoristas?.cpf||"-"}</span>
+</div>
+
+<div class="row">
+<span>Telefone</span>
+<span>${x.motoristas?.telefone||"-"}</span>
+</div>
+
+<div class="actions">
+<button class="btnEdit" onclick="editarVeiculo(
+'${x.id}',
+'${x.placa||""}',
+'${x.marca||""}',
+'${x.modelo||""}',
+'${x.ano||""}',
+'${x.cor||""}',
+'${x.renavam||""}',
+'${x.combustivel_principal||""}',
+'${x.km_atual||""}',
+'${x.vencimento_ipva||""}',
+'${x.vencimento_licenciamento||""}',
+'${x.motorista_id||""}'
+)">✏️</button>
+
+<button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button>
+</div>
+
+</div>
+`).join("")
 
 renderDashboard(data)
 veiculoSel.addEventListener("change",()=>{
