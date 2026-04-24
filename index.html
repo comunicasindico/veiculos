@@ -143,7 +143,7 @@ min-width:40px;
 .item{display:flex;align-items:center;gap:10px}
 .itemContent{flex:1;min-width:0}
 #tela_veiculo input,#tela_veiculo select{font-size:13px}
-
+.btnEye{background:#64748b;color:#fff;width:34px;height:34px;display:flex;align-items:center;justify-content:center}
   
 </style>
 
@@ -173,10 +173,15 @@ min-width:40px;
 
 <!-- DASHBOARD -->
 <div class="card">
+<div onclick="toggleDash()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
 <h3>📊 Dashboard do Veículo</h3>
+<span id="dashIcon">⬇️</span>
+</div>
+<div id="dashContent">
 <div id="kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div>
 <canvas id="graficoConsumo"></canvas>
 <canvas id="graficoGasto"></canvas>
+</div>
 </div>
 
 <!-- ABASTECIMENTO -->
@@ -397,9 +402,15 @@ listaMotoristas.innerHTML=m.map(x=>`
 <div class="item">
 <div class="itemContent">
 <div><b>${x.nome||"-"}</b></div>
-<div style="font-size:11px;color:#94a3b8">CPF: ${x.cpf||"-"} | Tel: ${x.telefone||"-"}</div>
+<div style="font-size:11px;color:#94a3b8">
+CPF: <span id="cpf_${x.id}">***.***.***-**</span>
+</div>
+<div style="font-size:11px;color:#94a3b8">
+Tel: ${x.telefone||"-"}
+</div>
 </div>
 <div class="actions">
+<button class="btnEye" onclick="toggleCPF('${x.id}','${x.cpf||""}')">👁</button>
 <button class="btnEdit" onclick="editarMotorista('${x.id}','${x.nome||""}','${x.telefone||""}','${x.cpf||""}')">✏️</button>
 <button class="btnDel" onclick="excluir('motoristas','${x.id}')">🗑</button>
 </div>
@@ -473,6 +484,10 @@ KM ${x.km_atual||"-"} | Comb: ${x.combustivel_principal||"-"}
 Motorista: ${mot.nome||"-"}
 </div>
 
+<div style="font-size:11px;color:#94a3b8">
+Renavam: <span id="renavam_${x.id}">***</span>
+</div>
+
 <div style="font-size:11px;color:#64748b">
 IPVA: ${x.vencimento_ipva?fData(x.vencimento_ipva):"-"} | Lic: ${x.vencimento_licenciamento?fData(x.vencimento_licenciamento):"-"}
 </div>
@@ -480,8 +495,13 @@ IPVA: ${x.vencimento_ipva?fData(x.vencimento_ipva):"-"} | Lic: ${x.vencimento_li
 </div>
 
 <div class="actions">
+
+<button class="btnEye" onclick="toggleRenavam('${x.id}','${x.renavam||""}')">👁</button>
+
 <button class="btnEdit" onclick="editarVeiculo('${x.id}','${x.placa||""}','${x.marca||""}','${x.modelo||""}','${x.ano||""}','${x.cor||""}','${x.renavam||""}','${x.combustivel_principal||""}','${x.km_atual||""}','${x.vencimento_ipva||""}','${x.vencimento_licenciamento||""}','${x.motorista_id||""}')">✏️</button>
+
 <button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button>
+
 </div>
 
 </div>
@@ -724,7 +744,30 @@ render()
 function fecharEditar(){
 modalEditar.style.display="none"
 }
+function toggleDash(){
+let el=document.getElementById("dashContent")
+let icon=document.getElementById("dashIcon")
+if(!el)return
+if(el.style.display==="none"){
+el.style.display="block"
+icon.innerText="⬇️"
+}else{
+el.style.display="none"
+icon.innerText="⬆️"
+}
+}
+function toggleCPF(id,valor){
+let el=document.getElementById("cpf_"+id)
+if(!el)return
+el.innerText=el.innerText==="***"?valor||"-":"***"
+}
 
+function toggleRenavam(id,valor){
+let el=document.getElementById("renavam_"+id)
+if(!el)return
+el.innerText=el.innerText==="***"?valor||"-":"***"
+}
+  
   
 </script>
 
