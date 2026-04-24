@@ -133,15 +133,38 @@ let empresa=localStorage.getItem("empresa")
 
 let{data:motoristas,error:e1}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
 if(e1)console.error(e1)
-listaMotoristas.innerHTML=(motoristas||[]).map(m=>`<div class="item">${m.id} - ${m.nome}</div>`).join("")
+<button onclick="alert('Use o formulário acima para inserir')" style="background:#22c55e">Inserir</button>
+listaMotoristas.innerHTML=(motoristas||[]).map(m=>`
+<div class="item">
+<div class="row"><span>Nome</span><span>${m.nome||"-"}</span></div>
+<div class="row"><span>CPF</span><span>${m.cpf||"-"}</span></div>
+<div class="row">
+<button onclick="excluirRegistro('motoristas','${m.id}')" style="background:#ef4444;color:#fff">Excluir</button>
+</div>
+</div>`).join("")
 
 let{data:veiculos,error:e2}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
 if(e2)console.error(e2)
-listaVeiculos.innerHTML=(veiculos||[]).map(v=>`<div class="item">${v.placa} - ${v.modelo}</div>`).join("")
+<button onclick="alert('Use o formulário acima para inserir')" style="background:#22c55e">Inserir</button>
+listaVeiculos.innerHTML=(veiculos||[]).map(v=>`
+<div class="item">
+<div class="row"><span>Placa</span><span>${v.placa||"-"}</span></div>
+<div class="row"><span>Modelo</span><span>${v.modelo||"-"}</span></div>
+<div class="row">
+<button onclick="excluirRegistro('veiculos','${v.id}')" style="background:#ef4444;color:#fff">Excluir</button>
+</div>
+</div>`).join("")
 
 let{data:postos,error:e3}=await db.from("postos").select("*").eq("empresa_id",empresa)
 if(e3)console.error(e3)
-listaPostos.innerHTML=(postos||[]).map(p=>`<div class="item">${p.nome_posto}</div>`).join("")
+<button onclick="alert('Use o formulário acima para inserir')" style="background:#22c55e">Inserir</button>
+listaPostos.innerHTML=(postos||[]).map(p=>`
+<div class="item">
+<div class="row"><span>Posto</span><span>${p.nome_posto||p.nome||"-"}</span></div>
+<div class="row">
+<button onclick="excluirRegistro('postos','${p.id}')" style="background:#ef4444;color:#fff">Excluir</button>
+</div>
+</div>`).join("")
 }
 async function login(){
 const{data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
@@ -178,6 +201,8 @@ VID=data?.[0]?.id
 carregarCadastros()
 render()
 }
+function excluirRegistro(tabela,id){if(!confirm("Excluir?"))return;db.from(tabela).delete().eq("id",id).then(()=>render())}
+function editarRegistro(tabela,id,campo,valor){db.from(tabela).update({[campo]:valor}).eq("id",id)}
 function mostrarLogin(){telaLogin.style.display="block";app.style.display="none"}
 function mostrarApp(){telaLogin.style.display="none";app.style.display="block"}
 function abrirTela(t){document.querySelectorAll(".tela").forEach(e=>e.style.display="none");document.getElementById("tela_"+t).style.display="block"}
@@ -194,7 +219,7 @@ let query=db.from("abastecimentos").select(`id,data_abastecimento,litros,valor_t
 if(!isAdmin){
 query=query.eq("empresa_id",empresa)
 }
-query=query.eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+query=query.eq("veiculo_id",VID).order("data_abastecimento",{ascending:false})
 let{data,error}=await query
 if(error){
 console.error(error)
@@ -215,6 +240,9 @@ return `<div class="item">
 <div class="row"><span>Litros</span><span>${a.litros}</span></div>
 <div class="row"><span>Total</span><span>${moeda(a.valor_total)}</span></div>
 <div class="row"><span>Km/L</span><span>${consumo}</span></div>
+<div class="row">
+<button onclick="excluirRegistro('abastecimentos','${a.id}')" style="background:#ef4444;color:#fff">Excluir</button>
+</div>
 </div>`
 }).join("")
 }
