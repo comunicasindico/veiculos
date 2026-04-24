@@ -253,13 +253,21 @@ render()
 /* 009 RENDER */
 async function render(){
 let empresa=localStorage.getItem("empresa")
-if(localStorage.getItem("admin")==="1"){
-empresa=null
-}
-let{data}=await db.from("abastecimentos").select(`
+let isAdmin=localStorage.getItem("admin")==="1"
+let query=db.from("abastecimentos").select(`
 id,data_abastecimento,litros,valor_total,valor_litro,quilometragem,tanque,tipo_combustivel,
 postos(nome_posto)
-`)if(empresa)query.eq("empresa_id",empresa).eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+`)
+if(!isAdmin){
+query=query.eq("empresa_id",empresa)
+}
+query=query.eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+let{data,error}=await query
+if(error){
+console.error(error)
+lista.innerHTML="<div>Erro ao carregar</div>"
+return
+}
 lista.innerHTML=data.map((a,i)=>{
 let ant=data[i-1]
 let kmRodado=ant?(a.quilometragem-ant.quilometragem):0
