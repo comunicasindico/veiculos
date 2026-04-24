@@ -198,13 +198,15 @@ let{data:postos,error:e3}=await db.from("postos").select("*").eq("empresa_id",em
 if(e3)console.error(e3)
 listaPostos.innerHTML=botaoInserir+(postos||[]).map(p=>`
 <div class="item">
-<div class="row"><span>Posto</span><span>${p.nome_posto||p.nome||"-"}</span></div>
+<div class="row"><span>Posto</span><span>${p.nome_posto||"-"}</span></div>
 <div class="row">
 <button onclick="excluirRegistro('postos','${p.id}')" style="background:#ef4444;color:#fff">Excluir</button>
 </div>
 </div>`).join("")
-postoSel.innerHTML=(postos||[]).map(p=>`<option value="${p.id}">${p.nome_posto||p.nome}</option>`).join("")
-i_posto.innerHTML=postoSel.innerHTML
+const options=(postos||[]).map(p=>`<option value="${p.id}">${p.nome_posto||p.nome||"SEM NOME"}</option>`).join("")
+if(window.postoSel)postoSel.innerHTML=options
+if(window.i_posto)i_posto.innerHTML=options
+if(window.e_posto)e_posto.innerHTML=options
 }
 async function login(){
 const{data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
