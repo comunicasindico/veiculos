@@ -590,7 +590,11 @@ let mapMotoristas={}
 if(window.veiculoSel){
 veiculoSel.innerHTML=v.length?v.map(x=>`<option value="${x.id}">${x.modelo||x.placa||"Veículo"}</option>`).join(""):`<option value="">Nenhum veículo</option>`
 }
+if(v.length){
+VID=v[0].id
+}else{
 VID=null
+}
 if(window.listaVeiculos){
 listaVeiculos.innerHTML=v.length?v.map(x=>{
 let mot=mapMotoristas[x.motorista_id]||{}
@@ -614,6 +618,13 @@ return `
 `
 }).join(""):`<div class="item">Nenhum veículo</div>`
 }
+setTimeout(()=>{
+let vs=document.getElementById("veiculoSel")
+if(vs && vs.value){
+VID=vs.value
+render()
+}
+},100)
 }
 /* 010 SALVAR */
 async function salvar(){
@@ -631,16 +642,40 @@ render()
 
 /* 011 RENDER */
 async function render(){
+
+let vs=document.getElementById("veiculoSel")
+if(vs && vs.value){
+VID=vs.value
+}
+
 if(!VID)return
+
 let listaEl=document.getElementById("lista")
 if(!listaEl)return
-let {data,error}=await db.from("abastecimentos").select("*,postos(nome_posto)").eq("veiculo_id",VID).order("data_abastecimento",{ascending:false})
-if(error){console.error("abastecimentos:",error);listaEl.innerHTML="<div class='item'>Erro ao carregar</div>";return}
-if(!Array.isArray(data)||!data.length){listaEl.innerHTML="<div class='item'>Sem dados</div>";return}
+
+let {data,error}=await db
+.from("abastecimentos")
+.select("*,postos(nome_posto)")
+.eq("veiculo_id",VID)
+.order("data_abastecimento",{ascending:false})
+
+if(error){
+console.error(error)
+listaEl.innerHTML="<div class='item'>Erro ao carregar</div>"
+return
+}
+
+if(!data || !data.length){
+listaEl.innerHTML="<div class='item'>Sem histórico</div>"
+renderDashboard([])
+return
+}
+
 listaEl.innerHTML=data.map(a=>{
 let valor=Number(a.valor_total||0)
 let litros=Number(a.litros||0)
 let km=Number(a.quilometragem||0)
+
 return `
 <div class="item">
 <div class="itemContent">
@@ -656,22 +691,18 @@ R$ ${valor.toFixed(2)} | ${litros}L | KM ${km}
 </div>
 `
 }).join("")
+
 renderDashboard(data)
-let vs=document.getElementById("veiculoSel")
-if(vs){
-if(!vs._bind){
+
+/* bind change */
+if(vs && !vs._bind){
 vs.addEventListener("change",()=>{
-VID=vs.value||null
-if(VID)render()
+VID=vs.value
+render()
 })
 vs._bind=true
 }
 
-/* 🔥 GARANTE PRIMEIRO CARREGAMENTO */
-if(!VID && vs.value){
-VID=vs.value
-}
-}
 }
 
 /* 012 DASHBOARD */
