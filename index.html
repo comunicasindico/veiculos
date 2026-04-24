@@ -97,7 +97,22 @@ logout()
 }
 }
 function criarConta(){let nome=prompt("Nome da empresa");if(!nome)return;let email=prompt("Email");if(!email)return;let senha=prompt("Senha");if(!senha)return;db.from("usuarios").insert({usuario_apelido:email.toLowerCase(),senha_hash:senha,empresa_id:crypto.randomUUID()}).then(()=>alert("Conta criada! Aguarde liberação PRO."))}
-async function carregarAdmin(){let{data}=await db.from("usuarios").select("*");listaUsuarios.innerHTML=data.map(u=>{let ativo=u.expira_em&&new Date(u.expira_em)>new Date();return `<div class="item"><div class="row"><span>${u.usuario_apelido}</span><span>${ativo?"ATIVO":"EXPIRADO"}</span></div><button onclick="ativarPlano('${u.id}')">Ativar 6 meses</button></div>`}).join("")}
+async function carregarAdmin(){
+const isAdmin=localStorage.getItem("admin")==="1"
+if(!isAdmin)return
+let{data,error}=await db.from("usuarios").select("*").order("created_at",{ascending:false})
+if(error){console.error(error);return}
+listaUsuarios.innerHTML=data.filter(u=>u.tipo!=="admin").map(u=>{
+let ativo=u.expira_em&&new Date(u.expira_em)>new Date()
+return `<div class="item">
+<div class="row"><span>Email</span><span>${u.usuario_apelido}</span></div>
+<div class="row"><span>Empresa</span><span>${u.empresa_id}</span></div>
+<div class="row"><span>Status</span><span>${ativo?"ATIVO":"EXPIRADO"}</span></div>
+<div class="row"><span>Expira</span><span>${u.expira_em||"-"}</span></div>
+<button onclick="ativarPlano('${u.id}')" style="background:#22c55e">Ativar 6 meses R$54,90</button>
+</div>`
+}).join("")
+}
 async function ativarPlano(id){let f=new Date();f.setMonth(f.getMonth()+6);await db.from("usuarios").update({expira_em:f.toISOString()}).eq("id",id);carregarAdmin()}
 function atualizarStatusPlano(){
 const exp=localStorage.getItem("expira_em")
