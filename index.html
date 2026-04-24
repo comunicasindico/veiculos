@@ -190,13 +190,12 @@ margin-bottom:2px;
 </style>
 
 <body>
-
 <!-- LOGIN -->
 <div id="telaLogin" style="display:flex;justify-content:center;align-items:center;height:100vh">
 <div class="card">
 <h2>🚗 Veículo PRO</h2>
-<input id="user">
-<input id="pass" type="password">
+<input id="user" placeholder="Usuário">
+<input id="pass" type="password" placeholder="Senha">
 <button class="btnSave" onclick="login()">Entrar</button>
 </div>
 </div>
@@ -204,10 +203,11 @@ margin-bottom:2px;
 <!-- APP -->
 <div id="app" class="container" style="display:none">
 
+<!-- MENU -->
 <div class="headerApp">
 <div class="menuTabs">
 <button onclick="abrirTela('combustivel')">⛽</button>
-<button onclick="abrirTela('motorista')">👨</button>
+<button onclick="abrirTela('motorista')">👨‍🔧</button>
 <button onclick="abrirTela('veiculo')">🚗</button>
 <button onclick="abrirTela('posto')">🏪</button>
 </div>
@@ -219,105 +219,137 @@ margin-bottom:2px;
 <h3>📊 Dashboard do Veículo</h3>
 <span id="dashIcon">⬇️</span>
 </div>
+
 <div id="dashContent">
+
 <div id="kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div>
+
 <canvas id="graficoConsumo"></canvas>
 <canvas id="graficoGasto"></canvas>
+
 </div>
 </div>
 
-<!-- ABASTECIMENTO -->
+<!-- ========================= -->
+<!-- 🔥 TELA COMBUSTÍVEL -->
+<!-- ========================= -->
+<div id="tela_combustivel" class="tela">
+
 <div class="card">
+
 <div class="field">
 <label>🚗 Veículo</label>
 <select id="veiculoSel"></select>
 </div>
+
 <div class="field">
 <label>📅 Data</label>
 <input id="data" type="date">
 </div>
+
 <div class="field">
 <label>🏪 Posto</label>
 <select id="postoSel"></select>
 </div>
+
 <div class="field">
 <label>💰 Valor Total (R$)</label>
 <input id="valor" placeholder="Ex: 250.00">
 </div>
+
 <div class="field">
 <label>⛽ Litros</label>
 <input id="litros" placeholder="Ex: 40.5">
 </div>
+
 <div class="field">
 <label>💲 Valor por Litro</label>
 <input id="valor_litro" placeholder="Automático ou manual">
 </div>
+
 <div class="field">
 <label>📏 KM Atual</label>
 <input id="km" placeholder="Ex: 52340">
 </div>
-<button class="btnSave" onclick="salvar()">Salvar</button>
+
+<button class="btnSave" onclick="salvar()">Salvar Abastecimento</button>
+
 </div>
 
-<!-- TELA COMBUSTÍVEL -->
-<div id="tela_combustivel" class="tela">
-<div class="card">
-<select id="veiculoSel"></select>
-<input id="data" type="date">
-<select id="postoSel"></select>
-<input id="valor" placeholder="Valor total (R$)">
-<input id="litros" placeholder="Litros">
-<input id="valor_litro" placeholder="Valor por litro">
-<input id="km" placeholder="Quilometragem">
-<button class="btnSave" onclick="salvar()">Salvar</button>
-</div>
 <div id="lista"></div>
+
 </div>
-  
-<!-- MOTORISTA -->
-<div id="tela_motorista" class="tela" style="display:none">
+
+<!-- ========================= -->
+<!-- 👨 MOTORISTA -->
+<!-- ========================= -->
+<div id="tela_motorista" class="tela">
+
 <div class="card">
-<input id="m_nome" placeholder="Nome">
+<input id="m_nome" placeholder="Nome do motorista">
 <input id="m_cpf" placeholder="CPF">
 <input id="m_tel" placeholder="Telefone">
-<button class="btnSave" onclick="salvarMotorista()">Salvar</button>
-</div>
-<div id="listaMotoristas"></div>
-<button onclick="cancelarMotorista()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar</button>
+<button class="btnSave" onclick="salvarMotorista()">Salvar Motorista</button>
 </div>
 
-<!-- VEICULO -->
-<div id="tela_veiculo" class="tela" style="display:none">
+<div id="listaMotoristas"></div>
+
+<button onclick="cancelarMotorista()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
+
+</div>
+
+<!-- ========================= -->
+<!-- 🚗 VEÍCULO -->
+<!-- ========================= -->
+<div id="tela_veiculo" class="tela">
+
 <div class="card">
+
 <input id="v_placa" placeholder="Placa">
 <input id="v_marca" placeholder="Marca">
 <input id="v_modelo" placeholder="Modelo">
 <input id="v_ano" placeholder="Ano">
 <input id="v_cor" placeholder="Cor">
 <input id="v_renavam" placeholder="Renavam">
-<input id="v_combustivel" placeholder="Combustível">
-<input id="v_km" placeholder="KM Atual">
+<input id="v_combustivel" placeholder="Combustível principal">
+<input id="v_km" placeholder="KM atual">
+
+<label style="font-size:11px;color:#94a3b8">📅 Vencimento IPVA</label>
 <input id="v_ipva" type="date">
+
+<label style="font-size:11px;color:#94a3b8">📅 Licenciamento</label>
 <input id="v_licenciamento" type="date">
+
+<label style="font-size:11px;color:#94a3b8">👨‍🔧 Motorista</label>
 <select id="v_motorista"></select>
-<button class="btnSave" onclick="salvarVeiculo()">Salvar</button>
-</div>
-<div id="listaVeiculos"></div>
+
+<button class="btnSave" onclick="salvarVeiculo()">Salvar Veículo</button>
+
 </div>
 
-<!-- POSTO -->
-<div id="tela_posto" class="tela" style="display:none">
+<div id="listaVeiculos"></div>
+
+</div>
+
+<!-- ========================= -->
+<!-- 🏪 POSTO -->
+<!-- ========================= -->
+<div id="tela_posto" class="tela">
+
 <div class="card">
-<input id="p_nome" placeholder="Posto">
+<input id="p_nome" placeholder="Nome do posto">
 <input id="p_cnpj" placeholder="CNPJ">
 <input id="p_cidade" placeholder="Cidade">
-<button class="btnSave" onclick="salvarPosto()">Salvar</button>
-</div>
-<div id="listaPostos"></div>
+<button class="btnSave" onclick="salvarPosto()">Salvar Posto</button>
 </div>
 
+<div id="listaPostos"></div>
+
+</div>
+
+<!-- FOOTER -->
 <div class="footerBar">
-<button onclick="logout()" class="btnLogout">Sair</button>
+<button onclick="logout()" class="btnLogout">🚪 Sair</button>
 </div>
 
 </div>
