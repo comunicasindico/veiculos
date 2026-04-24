@@ -222,6 +222,14 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 </div>
 
 <script>
+const ed_info_nome=document.getElementById("ed_info_nome")
+const ed_info_cpf=document.getElementById("ed_info_cpf")
+const ed_info_cnh=document.getElementById("ed_info_cnh")
+const ed_info_validade=document.getElementById("ed_info_validade")
+const ed_info_tel=document.getElementById("ed_info_tel")
+const ed_info_email=document.getElementById("ed_info_email")
+const ed_info_veiculo=document.getElementById("ed_info_veiculo")
+const ed_info_posto=document.getElementById("ed_info_posto")
 const modalPadrao=document.getElementById("modalPadrao")
 const tituloModal=document.getElementById("tituloModal")
 const conteudoModal=document.getElementById("conteudoModal")
@@ -644,6 +652,7 @@ function editarMotorista(id,nome,cpf,cnh,validade,tel,email,obs){
 editMotoristaId=id
 modalPadrao.style.display="flex"
 tituloModal.innerText="Editar Motorista"
+
 conteudoModal.innerHTML=`
 <div class="row"><span>Nome</span><input id="em_nome" value="${nome||""}"></div>
 <div class="row"><span>CPF</span><input id="em_cpf" value="${cpf||""}"></div>
@@ -653,6 +662,17 @@ conteudoModal.innerHTML=`
 <div class="row"><span>Email</span><input id="em_email" value="${email||""}"></div>
 <div class="row"><span>Obs</span><input id="em_obs" value="${obs||""}"></div>
 `
+/* 🔥 PAINEL ESQUERDO */
+ed_info_nome.innerText=nome||"-"
+ed_info_cpf.innerText=cpf||"-"
+ed_info_cnh.innerText=cnh||"-"
+ed_info_validade.innerText=validade||"-"
+ed_info_tel.innerText=tel||"-"
+ed_info_email.innerText=email||"-"
+/* extras */
+ed_info_veiculo.innerText="-"
+ed_info_posto.innerText="-"
+
 window.tipoModal="motorista"
 }
 
@@ -700,19 +720,43 @@ function editarVeiculo(id,placa,modelo){
 editId=id
 modalPadrao.style.display="flex"
 tituloModal.innerText="Editar Veículo"
+
 conteudoModal.innerHTML=`
 <div class="row"><span>Placa</span><input id="ev_placa" value="${placa||""}"></div>
 <div class="row"><span>Modelo</span><input id="ev_modelo" value="${modelo||""}"></div>
 `
+
+ed_info_nome.innerText="-"
+ed_info_cpf.innerText="-"
+ed_info_cnh.innerText="-"
+ed_info_validade.innerText="-"
+ed_info_tel.innerText="-"
+ed_info_email.innerText="-"
+
+ed_info_veiculo.innerText=modelo||"-"
+ed_info_posto.innerText="-"
+
 window.tipoModal="veiculo"
 }
 function editarPosto(id,nome){
 editId=id
 modalPadrao.style.display="flex"
 tituloModal.innerText="Editar Posto"
+
 conteudoModal.innerHTML=`
 <div class="row"><span>Nome</span><input id="ep_nome" value="${nome||""}"></div>
 `
+
+ed_info_nome.innerText="-"
+ed_info_cpf.innerText="-"
+ed_info_cnh.innerText="-"
+ed_info_validade.innerText="-"
+ed_info_tel.innerText="-"
+ed_info_email.innerText="-"
+
+ed_info_veiculo.innerText="-"
+ed_info_posto.innerText=nome||"-"
+
 window.tipoModal="posto"
 }
 async function salvarModal(){
@@ -792,11 +836,38 @@ modalPadrao.style.display="none"
 
 
 <div id="modalPadrao" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;justify-content:center;align-items:center">
-<div style="background:#fff;padding:20px;border-radius:12px;width:420px">
+
+<div style="background:#fff;padding:20px;border-radius:12px;width:520px">
+
 <h3 id="tituloModal">Editar</h3>
-<div id="conteudoModal"></div>
+
+<div style="display:flex;gap:16px">
+
+<!-- 🔹 PAINEL ESQUERDO (INFO) -->
+<div style="width:45%;font-size:12px;color:#334155;background:#f1f5f9;padding:10px;border-radius:10px">
+
+<div style="margin-bottom:6px"><b>Nome:</b><br><span id="ed_info_nome">-</span></div>
+<div style="margin-bottom:6px"><b>CPF:</b><br><span id="ed_info_cpf">-</span></div>
+<div style="margin-bottom:6px"><b>CNH:</b><br><span id="ed_info_cnh">-</span></div>
+<div style="margin-bottom:6px"><b>Validade:</b><br><span id="ed_info_validade">-</span></div>
+<div style="margin-bottom:6px"><b>Telefone:</b><br><span id="ed_info_tel">-</span></div>
+<div style="margin-bottom:6px"><b>Email:</b><br><span id="ed_info_email">-</span></div>
+
+<div style="margin-bottom:6px"><b>Veículo:</b><br><span id="ed_info_veiculo">-</span></div>
+<div style="margin-bottom:6px"><b>Posto:</b><br><span id="ed_info_posto">-</span></div>
+
+</div>
+
+<!-- 🔹 FORMULÁRIO DIREITA -->
+<div id="conteudoModal" style="flex:1"></div>
+
+</div>
+
+<div style="margin-top:12px">
 <button onclick="salvarModal()" style="background:#22c55e">Salvar</button>
 <button onclick="fecharModalPadrao()" style="background:#ef4444;color:#fff">Cancelar</button>
+</div>
+
 </div>
 </div>
   
