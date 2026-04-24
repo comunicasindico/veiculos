@@ -169,12 +169,33 @@ lista.innerHTML="<div class='alertaExpira'>Plano expirado. Renove para continuar
 return
 }
 let empresa=localStorage.getItem("empresa")
-let isAdmin=localStorage.getItem("admin")==="1"
 let query=db.from("abastecimentos").select(`id,data_abastecimento,litros,valor_total,valor_litro,quilometragem,tanque,tipo_combustivel,postos(nome_posto)`)
-if(!isAdmin){query=query.eq("empresa_id",empresa)}
+if(!isAdmin){
+query=query.eq("empresa_id",empresa)
+}
 query=query.eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
-let{data}=await query
-lista.innerHTML=data.map((a,i)=>{let ant=data[i-1];let kmRodado=ant?(a.quilometragem-ant.quilometragem):0;let consumo=(kmRodado>0&&a.litros>0)?(kmRodado/a.litros).toFixed(2):"-";return `<div class="item"><div class="row"><span>Data</span><span>${formatarData(a.data_abastecimento)}</span></div><div class="row"><span>Posto</span><span>${a.postos?.nome_posto||"-"}</span></div><div class="row"><span>Litros</span><span>${a.litros}</span></div><div class="row"><span>Total</span><span>${moeda(a.valor_total)}</span></div><div class="row"><span>Km/L</span><span>${consumo}</span></div></div>`}).join("")
+let{data,error}=await query
+if(error){
+console.error(error)
+lista.innerHTML="<div>Erro ao carregar</div>"
+return
+}
+if(!data||!data.length){
+lista.innerHTML="<div>Sem dados</div>"
+return
+}
+lista.innerHTML=data.map((a,i)=>{
+let ant=data[i-1]
+let kmRodado=ant?(a.quilometragem-ant.quilometragem):0
+let consumo=(kmRodado>0&&a.litros>0)?(kmRodado/a.litros).toFixed(2):"-"
+return `<div class="item">
+<div class="row"><span>Data</span><span>${formatarData(a.data_abastecimento)}</span></div>
+<div class="row"><span>Posto</span><span>${a.postos?.nome_posto||"-"}</span></div>
+<div class="row"><span>Litros</span><span>${a.litros}</span></div>
+<div class="row"><span>Total</span><span>${moeda(a.valor_total)}</span></div>
+<div class="row"><span>Km/L</span><span>${consumo}</span></div>
+</div>`
+}).join("")
 }
 function logout(){localStorage.clear();location.reload()}
 document.addEventListener("DOMContentLoaded",()=>{if(localStorage.getItem("uid"))init();else mostrarLogin()})
