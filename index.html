@@ -119,6 +119,14 @@ box.style.display=(diff<=5 || venc<hoje)?"block":"none"
 function renovarPlano(){
 alert("Pagamento de R$54,90\nChave PIX: 69984311978\nApós pagamento, aguarde liberação.")
 }
+function verificarExpiracao(){
+const exp=localStorage.getItem("expira_em")
+const isAdmin=localStorage.getItem("admin")==="1"
+if(!isAdmin && exp && new Date(exp)<new Date()){
+alert("Plano expirado")
+logout()
+}
+}
 async function login(){
 const{data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
 if(error){console.error(error);return alert("Erro ao conectar")}
@@ -147,11 +155,6 @@ async function init(){
 if(!localStorage.getItem("uid"))return mostrarLogin()
 mostrarApp()
 verificarExpiracao()
-const isAdmin=localStorage.getItem("admin")==="1"
-const tabAdmin=document.getElementById("tab_admin")
-if(tabAdmin){
-tabAdmin.style.display=isAdmin?"block":"none"
-}
 let empresa=localStorage.getItem("empresa")
 let{data}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
 veiculoSel.innerHTML=(data||[]).map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
