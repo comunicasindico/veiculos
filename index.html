@@ -27,6 +27,22 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 .menuTabs button.active{background:#22c55e}
 .footerBar{position:fixed;bottom:0;left:0;width:100%;background:#fff;border-top:1px solid #ddd;padding:8px;display:flex;justify-content:flex-end}
 .btnLogout{background:#dc2626;color:#fff;border:none;padding:10px 16px;border-radius:10px}
+.menuTabs button[title]{position:relative}
+.menuTabs button[title]:hover::after{
+content:attr(title);
+position:absolute;
+bottom:-28px;
+left:50%;
+transform:translateX(-50%);
+background:#000;
+color:#fff;
+padding:4px 8px;
+font-size:10px;
+border-radius:6px;
+white-space:nowrap;
+}
+
+  
 </style>
 <body>
 <div id="telaLogin">
@@ -40,10 +56,10 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <div id="app" class="container" style="display:none">
 <div class="headerApp">
 <div class="menuTabs">
-<button onclick="abrirTela('combustivel')" id="tab_combustivel">⛽</button>
-<button onclick="abrirTela('motorista')" id="tab_motorista">👨</button>
-<button onclick="abrirTela('veiculo')" id="tab_veiculo">🚗</button>
-<button onclick="abrirTela('posto')" id="tab_posto">🏪</button>
+<button onclick="abrirTela('combustivel')" id="tab_combustivel" title="Abastecimento">⛽</button>
+<button onclick="abrirTela('motorista')" id="tab_motorista" title="Motoristas">👨</button>
+<button onclick="abrirTela('veiculo')" id="tab_veiculo" title="Veículos">🚗</button>
+<button onclick="abrirTela('posto')" id="tab_posto" title="Postos">🏪</button>
 </div>
 </div>
 <div id="tela_combustivel" class="tela">
