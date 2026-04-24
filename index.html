@@ -17,7 +17,15 @@
 body{margin:0;font-family:Arial;background:#fff;color:#000}
 .container{max-width:720px;margin:auto;padding:10px}
 .card{background:#f1f5f9;padding:12px;border-radius:12px;margin-top:10px}
-input,select{wlet consumo=(kmRodado>0&&a.litros>0)?(kmRodado/a.litros).toFixed(2):"-"idth:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#000}
+input,select{
+width:100%;
+padding:10px;
+margin-top:6px;
+border-radius:8px;
+border:1px solid #ccc;
+background:#fff;
+color:#000;
+}
 button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold}
 .item{background:#fff;padding:10px;border-radius:10px;margin-top:6px;border:1px solid #e2e8f0}
 .row{display:flex;justify-content:space-between;font-size:12px}
@@ -284,7 +292,7 @@ let empresa=localStorage.getItem("empresa")
 let botaoInserir='<button onclick="novoMotorista()" style="background:#22c55e">Inserir</button>'
 
 /* MOTORISTAS */
-let {data:motoristas,error:e1}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
+let {data:motoristas,error:e1}=await db.from("motoristas").select("*")
 if(e1)console.error(e1)
 if(window.listaMotoristas){
 listaMotoristas.innerHTML=botaoInserir+(motoristas||[]).map(m=>`
@@ -298,7 +306,7 @@ listaMotoristas.innerHTML=botaoInserir+(motoristas||[]).map(m=>`
 </div>`).join("")
 }
 /* VEICULOS */
-let {data:veiculos,error:e2}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
+let {data:veiculos,error:e2}=await db.from("veiculos").select("*")
 if(e2)console.error(e2)
 if(window.listaVeiculos){
 listaVeiculos.innerHTML=botaoInserir+(veiculos||[]).map(v=>`
@@ -311,7 +319,7 @@ listaVeiculos.innerHTML=botaoInserir+(veiculos||[]).map(v=>`
 </div>`).join("")
 }
 /* POSTOS */
-let {data:postos,error:e3}=await db.from("postos").select("id,nome_posto,empresa_id").eq("empresa_id",empresa)
+let {data:postos,error:e3}=await db.from("postos").select("id,nome_posto,empresa_id")
 if(e3)console.error(e3)
 if(window.listaPostos){
 listaPostos.innerHTML=botaoInserir+(postos||[]).map(p=>`
@@ -361,7 +369,7 @@ mostrarApp()
 verificarExpiracao()
 autoCalc("valor","litros","valor_litro")
 let empresa=localStorage.getItem("empresa")
-let {data}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
+let {data}=await db.from("veiculos").select("*")
 veiculoSel.innerHTML=(data||[]).map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
 VID=data?.[0]?.id
 carregarCadastros()
@@ -404,9 +412,9 @@ let k=parseFloat(km.value)
 let vl=parseFloat(valor_litro.value)||(v/l)
 
 await db.from("abastecimentos").insert({
-empresa_id:localStorage.getItem("empresa"),
+empresa_id: localStorage.getItem("empresa") || null,
 veiculo_id:VID,
-posto_id:postoSel.value||null,
+posto_id: (postoSel && postoSel.value && postoSel.value !== "undefined" && postoSel.value !== "null") ? postoSel.value : null,
 valor_total:v,
 litros:l,
 valor_litro:vl,
@@ -433,7 +441,7 @@ let query=db.from("abastecimentos").select(`
 id,data_abastecimento,litros,valor_total,valor_litro,quilometragem,tanque,posto_id,postos(nome_posto)
 `)
 
-if(!isAdmin){query=query.eq("empresa_id",empresa)}
+if(!isAdmin){query=query}
 
 query=query.eq("veiculo_id",VID).order("data_abastecimento",{ascending:false})
 
@@ -530,7 +538,7 @@ valor_total:parseFloat(e_valor.value),
 litros:parseFloat(e_litros.value),
 valor_litro:parseFloat(e_valor_litro.value),
 quilometragem:parseFloat(e_km.value),
-posto_id:e_posto.value||null,
+posto_id: (e_posto && e_posto.value && e_posto.value !== "undefined" && e_posto.value !== "null") ? e_posto.value : null,
 tanque:e_tanque.value,
 data_abastecimento:e_data.value
 }).eq("id",editId)
@@ -553,9 +561,9 @@ let k=parseFloat(i_km.value)
 let vl=parseFloat(i_valor_litro.value)||(v/l)
 
 await db.from("abastecimentos").insert({
-empresa_id:localStorage.getItem("empresa"),
+empresa_id: localStorage.getItem("empresa") || null,
 veiculo_id:VID,
-posto_id:i_posto.value||null,
+posto_id: (i_posto && i_posto.value && i_posto.value !== "undefined" && i_posto.value !== "null") ? i_posto.value : null,
 valor_total:v,
 litros:l,
 valor_litro:vl,
