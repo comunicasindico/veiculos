@@ -88,6 +88,14 @@ let VID=null,chart=null
 function hojeISO(){const d=new Date();const l=new Date(d.getTime()-d.getTimezoneOffset()*60000);return l.toISOString().slice(0,10)}
 function moeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
 function formatarData(d){if(!d)return"-";let s=d.split("T")[0];let[y,m,dd]=s.split("-");return`${dd}-${m}-${y}`}
+function verificarExpiracao(){
+const exp=localStorage.getItem("expira_em")
+const isAdmin=localStorage.getItem("admin")==="1"
+if(!isAdmin && exp && new Date(exp)<new Date()){
+alert("Plano expirado")
+logout()
+}
+}
 function criarConta(){let nome=prompt("Nome da empresa");if(!nome)return;let email=prompt("Email");if(!email)return;let senha=prompt("Senha");if(!senha)return;db.from("usuarios").insert({usuario_apelido:email.toLowerCase(),senha_hash:senha,empresa_id:crypto.randomUUID()}).then(()=>alert("Conta criada! Aguarde liberação PRO."))}
 async function carregarAdmin(){let{data}=await db.from("usuarios").select("*");listaUsuarios.innerHTML=data.map(u=>{let ativo=u.expira_em&&new Date(u.expira_em)>new Date();return `<div class="item"><div class="row"><span>${u.usuario_apelido}</span><span>${ativo?"ATIVO":"EXPIRADO"}</span></div><button onclick="ativarPlano('${u.id}')">Ativar 6 meses</button></div>`}).join("")}
 async function ativarPlano(id){let f=new Date();f.setMonth(f.getMonth()+6);await db.from("usuarios").update({expira_em:f.toISOString()}).eq("id",id);carregarAdmin()}
@@ -119,13 +127,21 @@ box.style.display=(diff<=5 || venc<hoje)?"block":"none"
 function renovarPlano(){
 alert("Pagamento de R$54,90\nChave PIX: 69984311978\nApós pagamento, aguarde liberação.")
 }
-function verificarExpiracao(){
-const exp=localStorage.getItem("expira_em")
-const isAdmin=localStorage.getItem("admin")==="1"
-if(!isAdmin && exp && new Date(exp)<new Date()){
-alert("Plano expirado")
-logout()
-}
+
+async function carregarCadastros(){
+let empresa=localStorage.getItem("empresa")
+
+let{data:motoristas,error:e1}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
+if(e1)console.error(e1)
+listaMotoristas.innerHTML=(motoristas||[]).map(m=>`<div class="item">${m.id} - ${m.nome}</div>`).join("")
+
+let{data:veiculos,error:e2}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
+if(e2)console.error(e2)
+listaVeiculos.innerHTML=(veiculos||[]).map(v=>`<div class="item">${v.placa} - ${v.modelo}</div>`).join("")
+
+let{data:postos,error:e3}=await db.from("postos").select("*").eq("empresa_id",empresa)
+if(e3)console.error(e3)
+listaPostos.innerHTML=(postos||[]).map(p=>`<div class="item">${p.nome_posto}</div>`).join("")
 }
 async function login(){
 const{data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
