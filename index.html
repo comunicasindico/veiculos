@@ -393,7 +393,6 @@ document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
 document.getElementById("tela_"+t).style.display="block"
 }
 
-/* 009 CARREGAR TUDO */
 async function carregarTudo(){
 let emp=localStorage.getItem("empresa")||null
 if(!emp)return console.error("empresa não encontrada")
@@ -445,16 +444,26 @@ if(window.e_posto && window.postoSel){
 e_posto.innerHTML=postoSel.innerHTML
 }
 
-/* VEÍCULOS */
-let {data:v,error:e3}=await db.from("veiculos").select(`*,motoristas(nome,cpf,telefone)`).eq("empresa_id",emp)
+/* VEÍCULOS (SEM RELAÇÃO DIRETA → JOIN MANUAL) */
+let {data:v,error:e3}=await db.from("veiculos").select("*").eq("empresa_id",emp)
 if(e3){console.error("veiculos:",e3);v=[]}
 v=v||[]
+
+/* MAPA DE MOTORISTAS */
+let mapMotoristas={}
+m.forEach(mo=>{mapMotoristas[mo.id]=mo})
+
+/* SELECT */
 if(window.veiculoSel){
 veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo||"-"}</option>`).join("")
 }
 VID=v?.[0]?.id||null
+
+/* LISTA */
 if(window.listaVeiculos){
-listaVeiculos.innerHTML=v.map(x=>`
+listaVeiculos.innerHTML=v.map(x=>{
+let mot=mapMotoristas[x.motorista_id]||{}
+return `
 <div class="item">
 <div class="itemContent">
 <div><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div>
@@ -462,15 +471,15 @@ listaVeiculos.innerHTML=v.map(x=>`
 ${x.marca||"-"} | ${x.ano||"-"} | KM ${x.km_atual||"-"}
 </div>
 <div style="font-size:11px;color:#94a3b8">
-Motorista: ${x.motoristas?.nome||"-"}
+Motorista: ${mot.nome||"-"}
 </div>
 </div>
 <div class="actions">
 <button class="btnEdit" onclick="editarVeiculo('${x.id}','${x.placa||""}','${x.marca||""}','${x.modelo||""}','${x.ano||""}','${x.cor||""}','${x.renavam||""}','${x.combustivel_principal||""}','${x.km_atual||""}','${x.vencimento_ipva||""}','${x.vencimento_licenciamento||""}','${x.motorista_id||""}')">✏️</button>
 <button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button>
 </div>
-</div>
-`).join("")
+</div>`
+}).join("")
 }
 }
 /* 010 SALVAR */
