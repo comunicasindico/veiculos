@@ -50,6 +50,9 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <div id="app" class="container" style="display:none">
 <div class="headerApp">
 <div id="statusPlano"></div>
+<div id="boxRenovar" style="display:none;text-align:center;margin-top:4px">
+<button onclick="renovarPlano()" style="background:#f59e0b;color:#000">💰 Renovar Plano</button>
+</div>
 <div class="menuTabs">
 <button onclick="abrirTela('combustivel')" id="tab_combustivel" title="Abastecimento">⛽</button>
 <button onclick="abrirTela('motorista')" id="tab_motorista" title="Motoristas">👨</button>
@@ -86,35 +89,85 @@ function formatarData(d){if(!d)return"-";let s=d.split("T")[0];let[y,m,dd]=s.spl
 function criarConta(){let nome=prompt("Nome da empresa");if(!nome)return;let email=prompt("Email");if(!email)return;let senha=prompt("Senha");if(!senha)return;db.from("usuarios").insert({usuario_apelido:email.toLowerCase(),senha_hash:senha,empresa_id:crypto.randomUUID()}).then(()=>alert("Conta criada! Aguarde liberação PRO."))}
 async function carregarAdmin(){let{data}=await db.from("usuarios").select("*");listaUsuarios.innerHTML=data.map(u=>{let ativo=u.expira_em&&new Date(u.expira_em)>new Date();return `<div class="item"><div class="row"><span>${u.usuario_apelido}</span><span>${ativo?"ATIVO":"EXPIRADO"}</span></div><button onclick="ativarPlano('${u.id}')">Ativar 6 meses</button></div>`}).join("")}
 async function ativarPlano(id){let f=new Date();f.setMonth(f.getMonth()+6);await db.from("usuarios").update({expira_em:f.toISOString()}).eq("id",id);carregarAdmin()}
-function atualizarStatusPlano(){let exp=localStorage.getItem("expira_em");if(!exp)return;let ativo=new Date(exp)>new Date();statusPlano.innerHTML=ativo?`<span class="badgePro">PRO até ${formatarData(exp)}</span>`:`<div class="alertaExpira">Plano expirado</div>`}
+function atualizarStatusPlano(){
+const exp=localStorage.getItem("expira_em")
+const isAdmin=localStorage.getItem("admin")==="1"
+if(isAdmin){
+statusPlano.innerHTML="<span class='badgePro'>ADMIN</span>"
+return
+}
+if(!exp)return
+let hoje=new Date()
+let venc=new Date(exp)
+let diff=Math.ceil((venc-hoje)/(1000*60*60*24))
+if(venc<hoje){
+statusPlano.innerHTML="<div class='alertaExpira'>Plano expirado</div>"
+return
+}
+if(diff<=5){
+statusPlano.innerHTML=`<div class='alertaExpira'>Expira em ${diff} dia(s)</div>`
+}else{
+statusPlano.innerHTML=`<span class='badgePro'>PRO até ${formatarData(exp)}</span>`
+}
+const box=document.getElementById("boxRenovar")
+if(box){
+box.style.display=(diff<=5 || venc<hoje)?"block":"none"
+}
+}
+function renovarPlano(){
+alert("Pagamento de R$54,90\nChave PIX: 69984311978\nApós pagamento, aguarde liberação.")
+}
 async function login(){
-const{data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
+const{data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
+if(error){console.error(error);return alert("Erro ao conectar")}
 if(!data||!data.length)return alert("Usuário não encontrado")
-if(data[0].senha_hash!==pass.value)return alert("Senha incorreta")
-if(data[0].tipo==="admin"){
+const u=data[0]
+if(u.senha_hash!==pass.value)return alert("Senha incorreta")
+if(u.tipo==="admin"){
 localStorage.setItem("admin","1")
-localStorage.setItem("uid",data[0].id)
+localStorage.setItem("uid",u.id)
 mostrarApp()
 abrirTela("admin")
 carregarAdmin()
 return
 }
-const{data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
-if(!data||!data.length)return alert("Usuário não encontrado")
-if(data[0].senha_hash!==pass.value)return alert("Senha incorreta")
-localStorage.setItem("empresa",data[0].empresa_id)
-localStorage.setItem("uid",data[0].id)
+if(u.expira_em&&new Date(u.expira_em)<new Date()){
+alert("Plano expirado")
+return
+}
+localStorage.setItem("empresa",u.empresa_id)
+localStorage.setItem("uid",u.id)
 localStorage.setItem("admin","0")
-localStorage.setItem("expira_em",data[0].expira_em||"")
-if(data[0].expira_em&&new Date(data[0].expira_em)<new Date()){alert("Plano expirado");return}
+localStorage.setItem("expira_em",u.expira_em||"")
 init()
 }
-async function init(){mostrarApp();atualizarStatusPlano();let empresa=localStorage.getItem("empresa");let{data}=await db.from("veiculos").select("*").eq("empresa_id",empresa);veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("");VID=data[0]?.id;render()}
+async function init(){
+if(!localStorage.getItem("uid"))return mostrarLogin()
+mostrarApp()
+verificarExpiracao()
+const isAdmin=localStorage.getItem("admin")==="1"
+const tabAdmin=document.getElementById("tab_admin")
+if(tabAdmin){
+tabAdmin.style.display=isAdmin?"block":"none"
+}
+let empresa=localStorage.getItem("empresa")
+let{data}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
+veiculoSel.innerHTML=(data||[]).map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
+VID=data?.[0]?.id
+carregarCadastros()
+render()
+}
 function mostrarLogin(){telaLogin.style.display="block";app.style.display="none"}
 function mostrarApp(){telaLogin.style.display="none";app.style.display="block"}
 function abrirTela(t){document.querySelectorAll(".tela").forEach(e=>e.style.display="none");document.getElementById("tela_"+t).style.display="block"}
 async function salvar(){let v=parseFloat(valor.value);let l=parseFloat(litros.value);let k=parseFloat(km.value);await db.from("abastecimentos").insert({empresa_id:localStorage.getItem("empresa"),veiculo_id:VID,valor_total:v,litros:l,valor_litro:(v/l),quilometragem:k,tanque:tanque.value,data_abastecimento:hojeISO()});render()}
 async function render(){
+const exp=localStorage.getItem("expira_em")
+const isAdmin=localStorage.getItem("admin")==="1"
+if(!isAdmin && exp && new Date(exp)<new Date()){
+lista.innerHTML="<div class='alertaExpira'>Plano expirado. Renove para continuar.</div>"
+return
+}
 let empresa=localStorage.getItem("empresa")
 let isAdmin=localStorage.getItem("admin")==="1"
 let query=db.from("abastecimentos").select(`id,data_abastecimento,litros,valor_total,valor_litro,quilometragem,tanque,tipo_combustivel,postos(nome_posto)`)
