@@ -173,12 +173,10 @@ alert("Pagamento de R$54,90\nChave PIX: 69984311978\nApós pagamento, aguarde li
 async function carregarCadastros(){
 let empresa=localStorage.getItem("empresa")
 
-let botaoInserir='<button onclick="alert(\'Use o formulário acima para inserir\')" style="background:#22c55e">Inserir</button>'
+let botaoInserir='<button onclick="novoMotorista()" style="background:#22c55e">Inserir</button>'
 
 let{data:motoristas,error:e1}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
 if(e1)console.error(e1)
-
-let botaoInserir='<button onclick="novoMotorista()" style="background:#22c55e">Inserir</button>'
 
 listaMotoristas.innerHTML=botaoInserir+(motoristas||[]).map(m=>`
 <div class="item">
@@ -215,6 +213,7 @@ if(window.postoSel)postoSel.innerHTML=options
 if(window.i_posto)i_posto.innerHTML=options
 if(window.e_posto)e_posto.innerHTML=options
 }
+  
 async function login(){
 const{data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
 if(error){console.error(error);return alert("Erro ao conectar")}
@@ -229,7 +228,7 @@ abrirTela("admin")
 carregarAdmin()
 return
 }
-if(u.expira_em&&new Date(u.expira_em)<new Date()){
+if(u.expira_em && new Date(u.expira_em)<new Date()){
 alert("Plano expirado")
 return
 }
@@ -239,6 +238,8 @@ localStorage.setItem("admin","0")
 localStorage.setItem("expira_em",u.expira_em||"")
 init()
 }
+}
+  
 async function init(){
 if(!localStorage.getItem("uid"))return mostrarLogin()
 mostrarApp()
@@ -251,6 +252,7 @@ VID=data?.[0]?.id
 carregarCadastros()
 render()
 }
+
 function excluirRegistro(tabela,id){if(!confirm("Excluir?"))return;db.from(tabela).delete().eq("id",id).then(()=>render())}
 function editarRegistro(tabela,id,campo,valor){db.from(tabela).update({[campo]:valor}).eq("id",id)}
 function mostrarLogin(){telaLogin.style.display="block";app.style.display="none"}
