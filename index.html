@@ -148,20 +148,18 @@ let empresa=localStorage.getItem("empresa")
 
 let{data:motoristas,error:e1}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
 if(e1)console.error(e1)
-<button onclick="alert('Use o formulário acima para inserir')" style="background:#22c55e">Inserir</button>
-listaMotoristas.innerHTML=(motoristas||[]).map(m=>`
+let botaoInserir='<button onclick="alert(\'Use o formulário acima para inserir\')" style="background:#22c55e">Inserir</button>'
+listaMotoristas.innerHTML=botaoInserir+(motoristas||[]).map(m=>`
 <div class="item">
 <div class="row"><span>Nome</span><span>${m.nome||"-"}</span></div>
 <div class="row"><span>CPF</span><span>${m.cpf||"-"}</span></div>
-<div class="row">
 <button onclick="excluirRegistro('motoristas','${m.id}')" style="background:#ef4444;color:#fff">Excluir</button>
-</div>
 </div>`).join("")
 
 let{data:veiculos,error:e2}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
 if(e2)console.error(e2)
-<button onclick="alert('Use o formulário acima para inserir')" style="background:#22c55e">Inserir</button>
-listaVeiculos.innerHTML=(veiculos||[]).map(v=>`
+let botaoInserir='<button onclick="alert(\'Use o formulário acima para inserir\')" style="background:#22c55e">Inserir</button>'
+listaVeiculos.innerHTML=botaoInserir+(veiculos||[]).map(v=>`
 <div class="item">
 <div class="row"><span>Placa</span><span>${v.placa||"-"}</span></div>
 <div class="row"><span>Modelo</span><span>${v.modelo||"-"}</span></div>
@@ -172,8 +170,7 @@ listaVeiculos.innerHTML=(veiculos||[]).map(v=>`
 
 let{data:postos,error:e3}=await db.from("postos").select("*").eq("empresa_id",empresa)
 if(e3)console.error(e3)
-<button onclick="alert('Use o formulário acima para inserir')" style="background:#22c55e">Inserir</button>
-listaPostos.innerHTML=(postos||[]).map(p=>`
+listaPostos.innerHTML=botaoInserir+(postos||[]).map(p=>`
 <div class="item">
 <div class="row"><span>Posto</span><span>${p.nome_posto||p.nome||"-"}</span></div>
 <div class="row">
