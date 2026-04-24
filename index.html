@@ -125,6 +125,12 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 </div>
 </div>
 <script>
+const lista=document.getElementById("lista")
+const listaMotoristas=document.getElementById("listaMotoristas")
+const listaVeiculos=document.getElementById("listaVeiculos")
+const listaPostos=document.getElementById("listaPostos")
+const telaLogin=document.getElementById("telaLogin")
+const app=document.getElementById("app")
 /* 003 SCRIPT */
 const db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
 let VID=null,chart=null
@@ -314,29 +320,21 @@ if(!isAdmin){
 query=query.eq("empresa_id",empresa)
 }
 query=query.eq("veiculo_id",VID).order("data_abastecimento",{ascending:false})
-let{data,error}=await query
+let{data:listaDados,error}=await query
 if(error){
 console.error(error)
 lista.innerHTML="<div>Erro ao carregar</div>"
 return
 }
-if(!data||!data.length){
+if(!listaDados||!listaDados.length){
 lista.innerHTML="<div>Sem dados</div>"
 return
 }
-lista.innerHTML=data.map((a,i)=>{
-let ant=data[i-1]
-let kmRodado=(ant && a.quilometragem && ant.quilometragem)
-?(a.quilometragem-ant.quilometragem)
-:0
-let consumo=(kmRodado>0 && a.litros>0)
-?(kmRodado/a.litros).toFixed(2)
-:"-"
-let valorUnitario = a.valor_litro
-?Number(a.valor_litro).toLocaleString("pt-BR",{minimumFractionDigits:3})
-:(a.valor_total && a.litros)
-?Number(a.valor_total/a.litros).toLocaleString("pt-BR",{minimumFractionDigits:3})
-:"-"
+lista.innerHTML=listaDados.map((a,i)=>{
+let ant=listaDados[i-1]
+let kmRodado=(ant && a.quilometragem && ant.quilometragem)?(a.quilometragem-ant.quilometragem):0
+let consumo=(kmRodado>0 && a.litros>0)?(kmRodado/a.litros).toFixed(2):"-"
+let valorUnitario=a.valor_litro?Number(a.valor_litro).toLocaleString("pt-BR",{minimumFractionDigits:3}):(a.valor_total && a.litros)?Number(a.valor_total/a.litros).toLocaleString("pt-BR",{minimumFractionDigits:3}):"-"
 return `<div class="item">
 <div class="row"><span>Data</span><span>${formatarData(a.data_abastecimento)}</span></div>
 <div class="row"><span>Posto</span><span>${a.postos?.nome_posto||"POSTO NÃO IDENTIFICADO"}</span></div>
@@ -354,7 +352,19 @@ return `<div class="item">
 }).join("")
 }
 function logout(){localStorage.clear();location.reload()}
-document.addEventListener("DOMContentLoaded",()=>{if(localStorage.getItem("uid"))init();else mostrarLogin()})
+
+document.addEventListener("DOMContentLoaded",()=>{
+window.telaLogin=document.getElementById("telaLogin")
+window.app=document.getElementById("app")
+window.lista=document.getElementById("lista")
+window.listaMotoristas=document.getElementById("listaMotoristas")
+window.listaVeiculos=document.getElementById("listaVeiculos")
+window.listaPostos=document.getElementById("listaPostos")
+
+if(localStorage.getItem("uid"))init()
+else mostrarLogin()
+})
+
 let editId=null
 
 function fecharModal(){
