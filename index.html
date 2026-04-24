@@ -4,872 +4,305 @@
 <!-- 001 HEAD -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#ffffff">
-<link rel="icon" href="img/192x192.png">
-<title>IA Veículo Master</title>
+<title>Veículo SaaS PRO MASTER</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5"></script>
 </head>
+
 <style>
-/* 002 STYLE */
-body{margin:0;font-family:Arial;background:#fff;color:#000}
-.container{max-width:720px;margin:auto;padding:10px}
-.card{background:#f1f5f9;padding:12px;border-radius:12px;margin-top:10px}
-input,select{
-width:100%;
-padding:10px;
-margin-top:6px;
-border-radius:8px;
-border:1px solid #ccc;
-background:#fff;
-color:#000;
+/* 002 STYLE PROFISSIONAL */
+body{
+margin:0;
+font-family:Arial;
+color:#fff;
+background:#020617;
+background-image:
+radial-gradient(circle at 20% 30%,rgba(34,197,94,0.15),transparent 40%),
+radial-gradient(circle at 80% 70%,rgba(59,130,246,0.15),transparent 40%);
 }
+body::before{
+content:"";
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:radial-gradient(2px 2px at 20px 30px,#fff,transparent),
+radial-gradient(2px 2px at 100px 150px,#fff,transparent);
+opacity:0.05;
+pointer-events:none;
+}
+.container{max-width:720px;margin:auto;padding:12px}
+.card{background:#1e293b;padding:12px;border-radius:12px;margin-top:10px}
+input,select{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:none;background:#334155;color:#fff}
 button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold}
-.item{background:#fff;padding:10px;border-radius:10px;margin-top:6px;border:1px solid #e2e8f0}
-.row{display:flex;justify-content:space-between;font-size:12px}
-.headerApp{position:sticky;top:0;background:#fff;padding:10px;border-bottom:1px solid #ddd}
+.item{background:#020617;padding:10px;border-radius:10px;margin-top:6px;border:1px solid #1e293b}
+.row{display:flex;justify-content:space-between;font-size:12px;margin-top:4px}
+.headerApp{position:sticky;top:0;background:#020617;padding:10px;border-bottom:1px solid #1e293b}
 .menuTabs{display:flex;gap:6px}
-.menuTabs button{flex:1;background:#e2e8f0;color:#000}
-.menuTabs button.active{background:#22c55e}
-.footerBar{position:fixed;bottom:0;left:0;width:100%;background:#fff;border-top:1px solid #ddd;padding:8px;display:flex;justify-content:flex-end}
-.btnLogout{background:#dc2626;color:#fff;border:none;padding:10px 16px;border-radius:10px}
-.menuTabs button[title]{position:relative}
-.menuTabs button[title]:hover::after{content:attr(title);position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:4px 8px;font-size:10px;border-radius:6px;white-space:nowrap}
-#telaLogin{background:url("img/bancocomunicaveiculos.png") no-repeat center center fixed;background-size:cover;position:fixed;top:0;left:0;width:100%;height:100vh;display:flex;justify-content:center;align-items:center}
-#telaLogin::before{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6)}
-#loginBox{position:relative;z-index:2;background:#fff;padding:20px;border-radius:14px;width:300px;box-shadow:0 10px 30px rgba(0,0,0,0.4);text-align:center;margin:0!important}
-#boxCriar{position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:3;background:#dc2626;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:bold;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.4)}
-#boxCriar:hover{background:#b91c1c}
-.badgePro{background:#22c55e;color:#000;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold}
-.alertaExpira{color:#dc2626;font-weight:bold;font-size:12px;text-align:center;margin-top:6px}
-.row{display:flex;align-items:center;gap:8px;margin-top:6px}
-.row span{width:120px;font-size:12px;color:#64748b}
-.row input{flex:1}
-
-
-  
+.menuTabs button{flex:1;background:#1e293b;color:#fff}
+.footerBar{position:fixed;bottom:0;width:100%;background:#020617;border-top:1px solid #1e293b;padding:8px;text-align:right}
+.btnLogout{background:#dc2626;color:#fff}
+#telaLogin{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+background:url("img/bancocomunicaveiculos.png") no-repeat center center fixed;
+background-size:cover;
+position:relative;
+}
+#telaLogin::before{
+content:"";
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(2,6,23,0.75);
+}
+#loginBox{
+position:relative;
+z-index:2;
+background:#1e293b;
+padding:20px;
+border-radius:12px;
+width:300px;
+box-shadow:0 10px 40px rgba(0,0,0,0.6);
+}#loginBox{background:#1e293b;padding:20px;border-radius:12px;width:300px}
+canvas{background:#fff;border-radius:10px}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;z-index:999}
+.modalBox{background:#1e293b;padding:20px;border-radius:12px;width:350px}
 </style>
+
 <body>
 
-<!-- LOGIN -->
+<!-- 003 LOGIN -->
 <div id="telaLogin">
-<div id="boxCriar" onclick="criarConta()">🚀 Criar Conta de Usuário PRO</div>
-<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2">
 <div id="loginBox">
-<h2>🚗 IA Veículo Master</h2>
+<div style="position:absolute;bottom:20px;width:100%;text-align:center;color:#94a3b8;font-size:12px">
+Banco Comunica • Veículos SaaS PRO
+</div>
+<h2>🚗 Veículo PRO MASTER</h2>
 <input id="user" placeholder="Usuário">
 <input id="pass" type="password" placeholder="Senha">
 <button onclick="login()">Entrar</button>
 </div>
 </div>
-</div>
 
-<!-- APP -->
+<!-- 004 APP -->
 <div id="app" class="container" style="display:none">
 
 <div class="headerApp">
-<div id="statusPlano"></div>
-<div id="boxRenovar" style="display:none;text-align:center;margin-top:4px">
-<button onclick="renovarPlano()" style="background:#f59e0b;color:#000">💰 Renovar Plano</button>
+<div class="menuTabs">
+<button onclick="abrirTela('combustivel')">⛽</button>
+<button onclick="abrirTela('motorista')">👨</button>
+<button onclick="abrirTela('veiculo')">🚗</button>
+<button onclick="abrirTela('posto')">🏪</button>
+</div>
 </div>
 
-<div class="menuTabs">
-<button onclick="abrirTela('combustivel')" title="Abastecimento">⛽</button>
-<button onclick="abrirTela('motorista')" title="Motoristas">👨</button>
-<button onclick="abrirTela('veiculo')" title="Veículos">🚗</button>
-<button onclick="abrirTela('posto')" title="Postos">🏪</button>
-<button onclick="abrirTela('admin')" title="Admin">🛠</button>
-</div>
+<!-- DASHBOARD -->
+<div class="card">
+<h3>📊 Dashboard</h3>
+<canvas id="graficoConsumo"></canvas>
+<canvas id="graficoGasto"></canvas>
 </div>
 
 <!-- ABASTECIMENTO -->
 <div id="tela_combustivel" class="tela">
-
 <div class="card">
 <select id="veiculoSel"></select>
-</div>
-
-<div class="card">
 <input id="data" type="date">
 <select id="postoSel"></select>
-<input id="valor" placeholder="Valor Total">
+<input id="valor" placeholder="Valor">
 <input id="litros" placeholder="Litros">
-<input id="valor_litro" placeholder="Valor Unitário">
-<input id="km" placeholder="KM Atual">
-<select id="tanque">
-<option value="cheio">Tanque Cheio</option>
-<option value="parcial">Parcial</option>
-</select>
-
-<div style="display:flex;gap:6px">
-<button onclick="abrirInserir()" style="flex:1;background:#3b82f6;color:#fff">Inserir</button>
-<button onclick="salvar()" style="flex:1">Salvar</button>
+<input id="valor_litro" placeholder="Valor/Litro">
+<input id="km" placeholder="KM">
+<input type="file" accept="image/*" onchange="lerNota(this)">
+<button onclick="salvar()">Salvar</button>
 </div>
-</div>
-
-<div class="card">
-<h3>Histórico</h3>
 <div id="lista"></div>
-</div>
-
 </div>
 
 <!-- MOTORISTA -->
 <div id="tela_motorista" class="tela" style="display:none">
-
 <div class="card">
-
-<div class="row"><span>Nome</span><input id="m_nome"></div>
-<div class="row"><span>CPF</span><input id="m_cpf"></div>
-<div class="row"><span>CNH</span><input id="m_cnh"></div>
-<div class="row"><span>Validade CNH</span><input id="m_validade"></div>
-<div class="row"><span>Telefone</span><input id="m_tel"></div>
-<div class="row"><span>Email</span><input id="m_email"></div>
-<div class="row"><span>Observações</span><input id="m_obs"></div>
-
-<div style="display:flex;gap:6px">
-<button onclick="salvarMotorista()" style="flex:1;background:#22c55e">Salvar</button>
-<button onclick="novoMotorista()" style="flex:1;background:#64748b;color:#fff">Cancelar</button>
+<input id="m_nome" placeholder="Nome">
+<input id="m_cpf" placeholder="CPF">
+<button onclick="salvarMotorista()">Salvar</button>
 </div>
-
-</div>
-
 <div id="listaMotoristas"></div>
-
 </div>
 
-<!-- VEICULOS -->
+<!-- VEICULO -->
 <div id="tela_veiculo" class="tela" style="display:none">
-
 <div class="card">
-<input id="v_placa" placeholder="Placa">
-<input id="v_marca" placeholder="Marca">
-<input id="v_modelo" placeholder="Modelo">
+<input id="v_placa">
+<input id="v_modelo">
 <select id="v_motorista"></select>
-<input id="v_ano" placeholder="Ano">
-<input id="v_cor" placeholder="Cor">
-<input id="v_renavam" placeholder="Renavam">
-<input id="v_comb" placeholder="Combustível">
-<input id="v_km" placeholder="KM Atual">
-<input id="v_ipva" placeholder="IPVA">
-<input id="v_lic" placeholder="Licenciamento">
-<input id="v_obs" placeholder="Observações">
 <button onclick="salvarVeiculo()">Salvar</button>
 </div>
-
 <div id="listaVeiculos"></div>
-
 </div>
 
-<!-- POSTOS -->
+<!-- POSTO -->
 <div id="tela_posto" class="tela" style="display:none">
 <div class="card">
-<input id="p_nome" placeholder="Nome do Posto">
-<input id="p_cnpj" placeholder="CNPJ">
-<input id="p_cidade" placeholder="Cidade">
-<input id="p_uf" placeholder="UF">
-<input id="p_endereco" placeholder="Endereço">
-<input id="p_bairro" placeholder="Bairro">
+<input id="p_nome">
 <button onclick="salvarPosto()">Salvar</button>
 </div>
 <div id="listaPostos"></div>
 </div>
-  
-<div class="row">
-<span>Motorista</span>
-<span>${a.veiculos?.motoristas?.nome || "-"}</span>
-</div>
 
-<!-- ADMIN -->
-<div id="tela_admin" class="tela" style="display:none">
-<div class="card">
-<h3>Painel Admin</h3>
-<div id="listaUsuarios"></div>
-</div>
-</div>
-
-<!-- FOOTER -->
 <div class="footerBar">
 <button onclick="logout()" class="btnLogout">Sair</button>
-</div>
-
-<!-- MODAL INSERIR -->
-<div id="modalInserir" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;justify-content:center;align-items:center">
-<div style="background:#fff;padding:20px;border-radius:12px;width:300px">
-
-<h3>Novo Abastecimento</h3>
-
-<input id="i_data" type="date">
-<select id="i_posto"></select>
-<input id="i_valor" placeholder="Valor Total">
-<input id="i_litros" placeholder="Litros">
-<input id="i_valor_litro" placeholder="Valor Unitário">
-<input id="i_km" placeholder="KM Atual">
-
-<select id="i_tanque">
-<option value="cheio">Tanque Cheio</option>
-<option value="parcial">Parcial</option>
-</select>
-
-<button onclick="salvarInsercao()">Inserir</button>
-<button onclick="fecharInserir()" style="background:#ef4444;color:#fff">Cancelar</button>
-
-</div>
 </div>
 
 </div>
 
 <script>
-const ed_info_nome=document.getElementById("ed_info_nome")
-const ed_info_cpf=document.getElementById("ed_info_cpf")
-const ed_info_cnh=document.getElementById("ed_info_cnh")
-const ed_info_validade=document.getElementById("ed_info_validade")
-const ed_info_tel=document.getElementById("ed_info_tel")
-const ed_info_email=document.getElementById("ed_info_email")
-const ed_info_veiculo=document.getElementById("ed_info_veiculo")
-const ed_info_posto=document.getElementById("ed_info_posto")
-const modalPadrao=document.getElementById("modalPadrao")
-const tituloModal=document.getElementById("tituloModal")
-const conteudoModal=document.getElementById("conteudoModal")
-const lista=document.getElementById("lista")
-const listaMotoristas=document.getElementById("listaMotoristas")
-const listaVeiculos=document.getElementById("listaVeiculos")
-const listaPostos=document.getElementById("listaPostos")
-const telaLogin=document.getElementById("telaLogin")
-const app=document.getElementById("app")
-/* 003 SCRIPT */
-const db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
-let VID=null,chart=null
-let editMotoristaId=null
-function hojeISO(){const d=new Date();const l=new Date(d.getTime()-d.getTimezoneOffset()*60000);return l.toISOString().slice(0,10)}
-function moeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
-function formatarData(d){if(!d)return"-";let s=d.split("T")[0];let[y,m,dd]=s.split("-");return`${dd}-${m}-${y}`}
-function verificarExpiracao(){
-const exp=localStorage.getItem("expira_em")
-const isAdmin=localStorage.getItem("admin")==="1"
-if(!isAdmin && exp && new Date(exp)<new Date()){
-alert("Plano expirado")
-logout()
-}
-}
-function criarConta(){let nome=prompt("Nome da empresa");if(!nome)return;let email=prompt("Email");if(!email)return;let senha=prompt("Senha");if(!senha)return;db.from("usuarios").insert({usuario_apelido:email.toLowerCase(),senha_hash:senha,empresa_id:crypto.randomUUID()}).then(()=>alert("Conta criada! Aguarde liberação PRO."))}
-async function carregarAdmin(){
-const isAdmin=localStorage.getItem("admin")==="1"
-if(!isAdmin)return
-let{data,error}=await db.from("usuarios").select("*").order("created_at",{ascending:false})
-if(error){console.error(error);return}
-listaUsuarios.innerHTML=data.filter(u=>u.tipo!=="admin").map(u=>{
-let ativo=u.expira_em&&new Date(u.expira_em)>new Date()
-return `<div class="item">
-<div class="row"><span>Email</span><span>${u.usuario_apelido}</span></div>
-<div class="row"><span>Empresa</span><span>${u.empresa_id}</span></div>
-<div class="row"><span>Status</span><span>${ativo?"ATIVO":"EXPIRADO"}</span></div>
-<div class="row"><span>Expira</span><span>${u.expira_em||"-"}</span></div>
-<button onclick="ativarPlano('${u.id}')" style="background:#22c55e">Ativar 6 meses R$54,90</button>
-</div>`
-}).join("")
-}
-async function ativarPlano(id){let f=new Date();f.setMonth(f.getMonth()+6);await db.from("usuarios").update({expira_em:f.toISOString()}).eq("id",id);carregarAdmin()}
-function atualizarStatusPlano(){
-const exp=localStorage.getItem("expira_em")
-const isAdmin=localStorage.getItem("admin")==="1"
-if(isAdmin){
-statusPlano.innerHTML="<span class='badgePro'>ADMIN</span>"
-return
-}
-if(!exp)return
-let hoje=new Date()
-let venc=new Date(exp)
-let diff=Math.ceil((venc-hoje)/(1000*60*60*24))
-if(venc<hoje){
-statusPlano.innerHTML="<div class='alertaExpira'>Plano expirado</div>"
-return
-}
-if(diff<=5){
-statusPlano.innerHTML=`<div class='alertaExpira'>Expira em ${diff} dia(s)</div>`
-}else{
-statusPlano.innerHTML=`<span class='badgePro'>PRO até ${formatarData(exp)}</span>`
-}
-const box=document.getElementById("boxRenovar")
-if(box){
-box.style.display=(diff<=5 || venc<hoje)?"block":"none"
-}
-}
-function renovarPlano(){
-alert("Pagamento de R$54,90\nChave PIX: 69984311978\nApós pagamento, aguarde liberação.")
+/* 005 CONFIG */
+const db=supabase.createClient(
+"https://gspdlrenyrzbkxlvyugc.supabase.co",
+"sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw"
+)
+
+/* 006 ESTADO */
+let VID=null,graficoConsumo,graficoGasto
+
+/* 007 UTILS */
+function hojeISO(){const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+function safe(id){return document.getElementById(id)}
+
+/* 008 AUTO CALC */
+function autoCalc(){
+["valor","litros","valor_litro"].forEach(id=>{
+safe(id)?.addEventListener("input",()=>{
+let v=parseFloat(valor.value),l=parseFloat(litros.value)
+if(v && l)valor_litro.value=(v/l).toFixed(3)
+})
+})
 }
 
-async function carregarCadastros(){
-let empresa=localStorage.getItem("empresa")
-let botaoInserir='<button onclick="novoMotorista()" style="background:#22c55e">Inserir</button>'
-
-/* MOTORISTAS */
-let {data:motoristas,error:e1}=await db.from("motoristas").select("*")
-if(e1)console.error(e1)
-if(window.listaMotoristas){
-listaMotoristas.innerHTML=botaoInserir+(motoristas||[]).map(m=>`
-<div class="item">
-<div class="row"><span>Nome</span><span>${m.nome||"-"}</span></div>
-<div class="row"><span>CPF</span><span>${m.cpf||"-"}</span></div>
-<div class="row" style="justify-content:flex-end;gap:6px;margin-top:6px">
-<button onclick="editarMotorista('${m.id}','${m.nome||""}','${m.cpf||""}','${m.numero_cnh||""}','${m.validade_cnh||""}','${m.telefone||""}','${m.email||""}','${m.observacoes||""}')" style="background:#f59e0b;color:#000;padding:6px 10px;font-size:11px">✏️</button>
-<button onclick="excluirRegistro('motoristas','${m.id}')" style="background:#ef4444;color:#fff;padding:6px 10px;font-size:11px">🗑</button>
-</div>
-</div>`).join("")
-}
-/* VEICULOS */
-let {data:veiculos,error:e2}=await db.from("veiculos").select("*")
-if(e2)console.error(e2)
-if(window.listaVeiculos){
-listaVeiculos.innerHTML=botaoInserir+(veiculos||[]).map(v=>`
-<div class="item">
-<div class="row"><span>Placa</span><span>${v.placa||"-"}</span></div>
-<div class="row"><span>Modelo</span><span>${v.modelo||"-"}</span></div>
-<div class="row" style="justify-content:flex-end;gap:6px">
-<button onclick="editarVeiculo('${v.id}','${v.placa||""}','${v.modelo||""}')"
-style="background:#f59e0b;color:#000;padding:6px 10px;font-size:11px">✏️</button>
-<button onclick="excluirRegistro('veiculos','${v.id}')"
-style="background:#ef4444;color:#fff;padding:6px 10px;font-size:11px">🗑</button>
-</div>
-</div>`).join("")
-}
-/* POSTOS */
-let {data:postos,error:e3}=await db.from("postos").select("id,nome_posto,empresa_id")
-if(e3)console.error(e3)
-if(window.listaPostos){
-listaPostos.innerHTML=botaoInserir+(postos||[]).map(p=>`
-<div class="item">
-<div class="row"><span>Posto</span><span>${p.nome_posto||"-"}</span></div>
-<div class="row" style="justify-content:flex-end;gap:6px">
-<button onclick="editarPosto('${p.id}','${p.nome_posto||""}')"
-style="background:#f59e0b;color:#000;padding:6px 10px;font-size:11px">✏️</button>
-<button onclick="excluirRegistro('postos','${p.id}')"
-style="background:#ef4444;color:#fff;padding:6px 10px;font-size:11px">🗑</button>
-</div>
-</div>`).join("")
-}
-let options=(postos||[]).map(p=>`<option value="${p.id}">${p.nome_posto||"SEM NOME"}</option>`).join("")
-if(window.postoSel)postoSel.innerHTML=options
-if(window.i_posto)i_posto.innerHTML=options
-if(window.e_posto)e_posto.innerHTML=options
-/* MOTORISTA SELECT VEICULO */
-if(window.v_motorista){
-let optionsMotoristas=(motoristas||[]).map(m=>
-`<option value="${m.id}">${m.nome}</option>`
-).join("")
-v_motorista.innerHTML=optionsMotoristas
-}
-}
-
-/* LOGIN */
+/* 009 LOGIN */
 async function login(){
-const {data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
-if(error){console.error(error);return alert("Erro ao conectar")}
-if(!data||!data.length)return alert("Usuário não encontrado")
-const u=data[0]
-if(u.senha_hash!==pass.value)return alert("Senha incorreta")
-if(u.tipo==="admin"){
-localStorage.setItem("admin","1")
-localStorage.setItem("uid",u.id)
-mostrarApp()
-abrirTela("admin")
-carregarAdmin()
-return
-}
-if(u.expira_em && new Date(u.expira_em)<new Date()){
-alert("Plano expirado")
-return
-}
-localStorage.setItem("empresa",u.empresa_id)
-localStorage.setItem("uid",u.id)
-localStorage.setItem("admin","0")
-localStorage.setItem("expira_em",u.expira_em||"")
+let {data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value)
+if(!data?.length)return alert("Usuário não encontrado")
+if(data[0].senha_hash!==pass.value)return alert("Senha inválida")
+localStorage.setItem("empresa",data[0].empresa_id)
+localStorage.setItem("uid",data[0].id)
 init()
 }
 
-/* INIT */
+/* 010 INIT */
 async function init(){
-if(!localStorage.getItem("uid"))return mostrarLogin()
-mostrarApp()
-verificarExpiracao()
-autoCalc("valor","litros","valor_litro")
-let empresa=localStorage.getItem("empresa")
-let {data}=await db.from("veiculos").select("*")
-veiculoSel.innerHTML=(data||[]).map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
-VID=data?.[0]?.id
-carregarCadastros()
+telaLogin.style.display="none";app.style.display="block"
+autoCalc()
+await carregarCadastros()
+await carregarVeiculos()
 render()
 }
 
-/* DELETE */
-function excluirRegistro(tabela,id){
-if(!confirm("Excluir?"))return
-db.from(tabela).delete().eq("id",id).then(()=>{carregarCadastros();render()})
-}
-
-/* UI */
-function mostrarLogin(){telaLogin.style.display="block";app.style.display="none"}
-function mostrarApp(){telaLogin.style.display="none";app.style.display="block"}
+/* 011 UI */
 function abrirTela(t){
 document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
-
-const el=document.getElementById("tela_"+t)
-if(!el){
-console.error("Tela não encontrada:","tela_"+t)
-return
+safe("tela_"+t).style.display="block"
 }
 
-el.style.display="block"
+/* 012 CADASTROS */
+async function carregarCadastros(){
+let emp=localStorage.getItem("empresa")
 
-if(t==="motorista"||t==="veiculo"||t==="posto"){
-carregarCadastros()
+let {data:m=[]}=await db.from("motoristas").select("*").eq("empresa_id",emp)
+listaMotoristas.innerHTML=m.map(x=>`<div class="item">${x.nome}<button onclick="excluir('motoristas','${x.id}')">🗑</button></div>`).join("")
+v_motorista.innerHTML=m.map(x=>`<option value="${x.id}">${x.nome}</option>`).join("")
+
+let {data:p=[]}=await db.from("postos").select("*").eq("empresa_id",emp)
+listaPostos.innerHTML=p.map(x=>`<div class="item">${x.nome_posto}<button onclick="excluir('postos','${x.id}')">🗑</button></div>`).join("")
+postoSel.innerHTML=p.map(x=>`<option value="${x.id}">${x.nome_posto}</option>`).join("")
 }
 
-if(t==="combustivel"){
-render()
+/* 013 VEICULOS */
+async function carregarVeiculos(){
+let emp=localStorage.getItem("empresa")
+let {data:v=[]}=await db.from("veiculos").select("*").eq("empresa_id",emp)
+veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo}</option>`).join("")
+VID=v?.[0]?.id
+listaVeiculos.innerHTML=v.map(x=>`<div class="item">${x.modelo}<button onclick="excluir('veiculos','${x.id}')">🗑</button></div>`).join("")
 }
-}
-/* SALVAR ABASTECIMENTO */
+
+/* 014 SALVAR */
 async function salvar(){
-let v=parseFloat(valor.value)
-let l=parseFloat(litros.value)
-let k=parseFloat(km.value)
-let vl=parseFloat(valor_litro.value)||(v/l)
+navigator.geolocation.getCurrentPosition(p=>{
+localStorage.setItem("lat",p.coords.latitude)
+localStorage.setItem("lng",p.coords.longitude)
+})
 
 await db.from("abastecimentos").insert({
-empresa_id: localStorage.getItem("empresa") || null,
+empresa_id:localStorage.getItem("empresa"),
 veiculo_id:VID,
-posto_id: (postoSel && postoSel.value && postoSel.value !== "undefined" && postoSel.value !== "null") ? postoSel.value : null,
-valor_total:v,
-litros:l,
-valor_litro:vl,
-quilometragem:k,
-tanque:tanque.value,
+posto_id:postoSel.value||null,
+valor_total:parseFloat(valor.value)||0,
+litros:parseFloat(litros.value)||0,
+valor_litro:parseFloat(valor_litro.value)||0,
+quilometragem:parseFloat(km.value)||0,
 data_abastecimento:data.value||hojeISO()
 })
 render()
 }
 
-/* RENDER */
+/* 015 RENDER */
 async function render(){
-const exp=localStorage.getItem("expira_em")
-const isAdmin=localStorage.getItem("admin")==="1"
-
-if(!isAdmin && exp && new Date(exp)<new Date()){
-lista.innerHTML="<div class='alertaExpira'>Plano expirado</div>"
-return
-}
-let empresa=localStorage.getItem("empresa")
-
-let query=db.from("abastecimentos").select(`
-id,data_abastecimento,litros,valor_total,valor_litro,quilometragem,tanque,posto_id,
-postos(nome_posto),
-veiculos(modelo,motorista_id,motoristas(nome))
-`)
-
-if(!isAdmin){
-query=query.eq("empresa_id",empresa)
-}
-query=query.eq("veiculo_id",VID).order("data_abastecimento",{ascending:false})
-
-let {data:listaDados,error}=await query
-
-if(error){
-console.error(error)
-lista.innerHTML="Erro ao carregar"
-return
+if(!VID)return
+let {data=[]}=await db.from("abastecimentos").select("*,postos(nome_posto)").eq("veiculo_id",VID)
+lista.innerHTML=data.map(a=>`<div class="item">${a.postos?.nome_posto||"-"} - ${a.valor_total}</div>`).join("")
+renderDashboard(data)
+analisarIA(data)
 }
 
-if(!listaDados||!listaDados.length){
-lista.innerHTML="Sem dados"
-return
+/* 016 DASHBOARD */
+function renderDashboard(d){
+let labels=d.map(x=>x.data_abastecimento)
+let gastos=d.map(x=>x.valor_total)
+if(graficoConsumo)graficoConsumo.destroy()
+if(graficoGasto)graficoGasto.destroy()
+graficoConsumo=new Chart(graficoConsumoEl,{type:"line",data:{labels,datasets:[{label:"Km/L",data:gastos}]}})
+graficoGasto=new Chart(graficoGastoEl,{type:"bar",data:{labels,datasets:[{label:"R$",data:gastos}]}})
 }
-if(!window.lista)return
-lista.innerHTML=listaDados.map((a,i)=>{
-let ant=listaDados[i+1]
 
-let kmRodado=(ant && a.quilometragem && ant.quilometragem)
-?(a.quilometragem-ant.quilometragem)
-:0
-
-let consumo=(kmRodado>0 && a.litros>0)
-?(kmRodado/a.litros).toFixed(2)
-:"-"
-
-let valorUnitario=a.valor_litro
-?Number(a.valor_litro).toLocaleString("pt-BR",{minimumFractionDigits:3})
-:(a.valor_total && a.litros)
-?Number(a.valor_total/a.litros).toLocaleString("pt-BR",{minimumFractionDigits:3})
-:"-"
-
-return `<div class="item">
-<div class="row"><span>Data</span><span>${formatarData(a.data_abastecimento)}</span></div>
-<div class="row"><span>Posto</span><span>${a.postos?.nome_posto||"POSTO NÃO IDENTIFICADO"}</span></div>
-<div class="row"><span>Litros</span><span>${a.litros}</span></div>
-<div class="row"><span>Valor Unitário</span><span>${valorUnitario}</span></div>
-<div class="row"><span>Total</span><span>${moeda(a.valor_total)}</span></div>
-<div class="row"><span>KM Atual</span><span>${a.quilometragem}</span></div>
-<div class="row"><span>Tanque</span><span>${a.tanque||"-"}</span></div>
-<div class="row"><span>Km/L</span><span>${consumo}</span></div>
-<div class="row" style="justify-content:flex-end;gap:6px;margin-top:6px">
-<button onclick="abrirEditar('${a.id}','${a.valor_total}','${a.litros}','${a.quilometragem}','${a.data_abastecimento}','${a.valor_litro}','${a.posto_id}','${a.tanque}')" style="background:#f59e0b;color:#000;padding:6px 10px;font-size:11px">✏️</button>
-<button onclick="excluirRegistro('abastecimentos','${a.id}')" style="background:#ef4444;color:#fff;padding:6px 10px;font-size:11px">🗑</button>
-</div>
-</div>`
-}).join("")
+/* 017 IA */
+function analisarIA(d){
+if(d.length<2)return
+let c=(d[0].quilometragem-d[1].quilometragem)/d[0].litros
+if(c<5)alert("⚠️ Consumo baixo detectado")
 }
+
+/* 018 OCR */
+async function lerNota(i){
+const f=i.files[0]
+const {data:{text}}=await Tesseract.recognize(f,"por")
+let v=text.match(/(\d+,\d{2})/)
+if(v)valor.value=v[0]
+}
+
+/* 019 CRUD */
+async function salvarMotorista(){await db.from("motoristas").insert({empresa_id:localStorage.getItem("empresa"),nome:m_nome.value,cpf:m_cpf.value});carregarCadastros()}
+async function salvarVeiculo(){await db.from("veiculos").insert({empresa_id:localStorage.getItem("empresa"),placa:v_placa.value,modelo:v_modelo.value,motorista_id:v_motorista.value});carregarVeiculos()}
+async function salvarPosto(){await db.from("postos").insert({empresa_id:localStorage.getItem("empresa"),nome_posto:p_nome.value});carregarCadastros()}
+async function excluir(t,id){if(!confirm("Excluir?"))return;await db.from(t).delete().eq("id",id);carregarCadastros();carregarVeiculos();render()}
+
+/* 020 LOGOUT */
 function logout(){localStorage.clear();location.reload()}
 
+/* 021 START */
 document.addEventListener("DOMContentLoaded",()=>{
-window.telaLogin=document.getElementById("telaLogin")
-window.app=document.getElementById("app")
-window.lista=document.getElementById("lista")
-window.listaMotoristas=document.getElementById("listaMotoristas")
-window.listaVeiculos=document.getElementById("listaVeiculos")
-window.listaPostos=document.getElementById("listaPostos")
-
+window.graficoConsumoEl=safe("graficoConsumo")
+window.graficoGastoEl=safe("graficoGasto")
 if(localStorage.getItem("uid"))init()
-else mostrarLogin()
 })
-
-let editId=null
-
-function fecharModal(){
-modalEditar.style.display="none"
-}
-function abrirEditar(id,v,l,k,data,vl,posto,tanqueVal){
-editId=id
-modalEditar.style.display="flex"
-/* 🔹 preenche edição */
-e_valor.value=v
-e_litros.value=l
-e_km.value=k
-e_data.value=data?.split("T")[0]||""
-e_valor_litro.value=vl||""
-e_posto.value=posto||""
-e_tanque.value=tanqueVal||"cheio"
-/* 🔹 preenche painel esquerdo */
-window.ed_info_data=document.getElementById("ed_info_data")
-window.ed_info_posto=document.getElementById("ed_info_posto")
-window.ed_info_litros=document.getElementById("ed_info_litros")
-window.ed_info_vl=document.getElementById("ed_info_vl")
-window.ed_info_total=document.getElementById("ed_info_total")
-window.ed_info_km=document.getElementById("ed_info_km")
-window.ed_info_tanque=document.getElementById("ed_info_tanque")
-autoCalc("e_valor","e_litros","e_valor_litro")
-}
-
-async function salvarEdicao(){
-await db.from("abastecimentos").update({
-valor_total:parseFloat(e_valor.value),
-litros:parseFloat(e_litros.value),
-valor_litro:parseFloat(e_valor_litro.value),
-quilometragem:parseFloat(e_km.value),
-posto_id: (e_posto && e_posto.value && e_posto.value !== "undefined" && e_posto.value !== "null") ? e_posto.value : null,
-tanque:e_tanque.value,
-data_abastecimento:e_data.value
-}).eq("id",editId)
-fecharModal()
-render()
-}
-function abrirInserir(){
-modalInserir.style.display="flex"
-if(!modalInserir.dataset.calc){
-autoCalc("i_valor","i_litros","i_valor_litro")
-modalInserir.dataset.calc="1"
-}
-}
-function fecharInserir(){modalInserir.style.display="none"}
-
-async function salvarInsercao(){
-let v=parseFloat(i_valor.value)
-let l=parseFloat(i_litros.value)
-let k=parseFloat(i_km.value)
-let vl=parseFloat(i_valor_litro.value)||(v/l)
-
-await db.from("abastecimentos").insert({
-empresa_id: localStorage.getItem("empresa") || null,
-veiculo_id:VID,
-posto_id: (i_posto && i_posto.value && i_posto.value !== "undefined" && i_posto.value !== "null") ? i_posto.value : null,
-valor_total:v,
-litros:l,
-valor_litro:vl,
-quilometragem:k,
-tanque:i_tanque.value,
-data_abastecimento:i_data.value||hojeISO()
-})
-
-fecharInserir()
-render()
-}
-async function salvarVeiculo(){
-let payload={
-empresa_id:localStorage.getItem("empresa"),
-placa:v_placa.value,
-marca:v_marca.value,
-modelo:v_modelo.value,
-ano:v_ano.value,
-cor:v_cor.value,
-renavam:v_renavam.value,
-combustivel:v_comb.value,
-km_atual:parseFloat(v_km.value)||0,
-ipva:v_ipva.value,
-licenciamento:v_lic.value,
-observacoes:v_obs.value,
-motorista_id: v_motorista?.value || null
-}
-await db.from("veiculos").insert(payload)
-carregarCadastros()
-}
-
-function autoCalc(valorId,litrosId,vlId){
-const v=document.getElementById(valorId)
-const l=document.getElementById(litrosId)
-const vl=document.getElementById(vlId)
-let lock=false
-function calc(from){
-if(lock)return
-lock=true
-let valor=parseFloat(v.value)
-let litros=parseFloat(l.value)
-let valorL=parseFloat(vl.value)
-if(from==="valor"||from==="litros"){
-if(valor && litros){vl.value=(valor/litros).toFixed(3)}
-}
-if(from==="vl"){
-if(valorL && litros){v.value=(valorL*litros).toFixed(2)}
-}
-lock=false
-}
-v.addEventListener("input",()=>calc("valor"))
-l.addEventListener("input",()=>calc("litros"))
-vl.addEventListener("input",()=>calc("vl"))
-}
-
-function editarMotorista(id,nome,cpf,cnh,validade,tel,email,obs){
-editMotoristaId=id
-modalPadrao.style.display="flex"
-tituloModal.innerText="Editar Motorista"
-
-conteudoModal.innerHTML=`
-<div class="row"><span>Nome</span><input id="em_nome" value="${nome||""}"></div>
-<div class="row"><span>CPF</span><input id="em_cpf" value="${cpf||""}"></div>
-<div class="row"><span>CNH</span><input id="em_cnh" value="${cnh||""}"></div>
-<div class="row"><span>Validade</span><input id="em_validade" value="${validade||""}"></div>
-<div class="row"><span>Telefone</span><input id="em_tel" value="${tel||""}"></div>
-<div class="row"><span>Email</span><input id="em_email" value="${email||""}"></div>
-<div class="row"><span>Obs</span><input id="em_obs" value="${obs||""}"></div>
-`
-/* 🔥 PAINEL ESQUERDO */
-ed_info_nome.innerText=nome||"-"
-ed_info_cpf.innerText=cpf||"-"
-ed_info_cnh.innerText=cnh||"-"
-ed_info_validade.innerText=validade||"-"
-ed_info_tel.innerText=tel||"-"
-ed_info_email.innerText=email||"-"
-/* extras */
-ed_info_veiculo.innerText="-"
-ed_info_posto.innerText="-"
-
-window.tipoModal="motorista"
-}
-
-function novoMotorista(){
-editMotoristaId=null
-m_nome.value=""
-m_cpf.value=""
-m_cnh.value=""
-m_validade.value=""
-m_tel.value=""
-m_email.value=""
-m_obs.value=""
-}
-
-async function salvarMotorista(){
-let payload={
-empresa_id:localStorage.getItem("empresa"),
-usuario_id:localStorage.getItem("uid"),
-nome:(m_nome.value||"").trim(),
-cpf:(m_cpf.value||"").trim(),
-numero_cnh:(m_cnh.value||"").trim(),
-categoria_cnh:"B",
-validade_cnh:(m_validade.value||"").trim(),
-telefone:(m_tel.value||"").trim(),
-email:(m_email.value||"").trim(),
-observacoes:(m_obs.value||"").trim()
-}
-console.log("Payload:",payload)
-let resp
-if(editMotoristaId){
-resp=await db.from("motoristas").update(payload).eq("id",editMotoristaId)
-}else{
-resp=await db.from("motoristas").insert(payload)
-}
-if(resp.error){
-console.error(resp.error)
-alert("Erro: "+resp.error.message)
-return
-}
-editMotoristaId=null
-novoMotorista()
-carregarCadastros()
-}
-function editarVeiculo(id,placa,modelo){
-editId=id
-modalPadrao.style.display="flex"
-tituloModal.innerText="Editar Veículo"
-
-conteudoModal.innerHTML=`
-<div class="row"><span>Placa</span><input id="ev_placa" value="${placa||""}"></div>
-<div class="row"><span>Modelo</span><input id="ev_modelo" value="${modelo||""}"></div>
-`
-
-ed_info_nome.innerText="-"
-ed_info_cpf.innerText="-"
-ed_info_cnh.innerText="-"
-ed_info_validade.innerText="-"
-ed_info_tel.innerText="-"
-ed_info_email.innerText="-"
-
-ed_info_veiculo.innerText=modelo||"-"
-ed_info_posto.innerText="-"
-
-window.tipoModal="veiculo"
-}
-function editarPosto(id,nome){
-editId=id
-modalPadrao.style.display="flex"
-tituloModal.innerText="Editar Posto"
-
-conteudoModal.innerHTML=`
-<div class="row"><span>Nome</span><input id="ep_nome" value="${nome||""}"></div>
-`
-
-ed_info_nome.innerText="-"
-ed_info_cpf.innerText="-"
-ed_info_cnh.innerText="-"
-ed_info_validade.innerText="-"
-ed_info_tel.innerText="-"
-ed_info_email.innerText="-"
-
-ed_info_veiculo.innerText="-"
-ed_info_posto.innerText=nome||"-"
-
-window.tipoModal="posto"
-}
-async function salvarModal(){
-if(window.tipoModal==="motorista"){
-await db.from("motoristas").update({
-nome:document.getElementById("em_nome").value,
-cpf:document.getElementById("em_cpf").value,
-numero_cnh:document.getElementById("em_cnh").value,
-validade_cnh:document.getElementById("em_validade").value,
-telefone:document.getElementById("em_tel").value,
-email:document.getElementById("em_email").value,
-observacoes:document.getElementById("em_obs").value
-}).eq("id",editMotoristaId)
-}
-if(window.tipoModal==="veiculo"){
-await db.from("veiculos").update({
-placa:document.getElementById("ev_placa").value,
-modelo:document.getElementById("ev_modelo").value
-}).eq("id",editId)
-}
-if(window.tipoModal==="posto"){
-await db.from("postos").update({
-nome_posto:document.getElementById("ep_nome").value
-}).eq("id",editId)
-}
-/* 🔥 FECHAMENTO CORRETO */
-fecharModalPadrao()
-carregarCadastros()
-render()
-
-}
-function fecharModalPadrao(){
-modalPadrao.style.display="none"
-}
-  
-
 </script>
 
-<div id="modalEditar" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;justify-content:center;align-items:center">
-<div style="background:#fff;padding:20px;border-radius:12px;width:420px">
-<h3>Editar</h3>
-<div style="display:flex;align-items:center;margin-bottom:6px">
-<div style="width:140px;font-weight:bold;color:#334155">Data</div>
-<input id="e_data" type="date" style="flex:1">
-</div>
-<div style="display:flex;align-items:center;margin-bottom:6px">
-<div style="width:140px;font-weight:bold;color:#334155">Posto</div>
-<select id="e_posto" style="flex:1"></select>
-</div>
-<div style="display:flex;align-items:center;margin-bottom:6px">
-<div style="width:140px;font-weight:bold;color:#334155">Valor Total</div>
-<input id="e_valor" style="flex:1">
-</div>
-<div style="display:flex;align-items:center;margin-bottom:6px">
-<div style="width:140px;font-weight:bold;color:#334155">Litros</div>
-<input id="e_litros" style="flex:1">
-</div>
-<div style="display:flex;align-items:center;margin-bottom:6px">
-<div style="width:140px;font-weight:bold;color:#334155">Valor Unitário</div>
-<input id="e_valor_litro" style="flex:1">
-</div>
-<div style="display:flex;align-items:center;margin-bottom:6px">
-<div style="width:140px;font-weight:bold;color:#334155">KM Atual</div>
-<input id="e_km" style="flex:1">
-</div>
-<div style="display:flex;align-items:center;margin-bottom:10px">
-<div style="width:140px;font-weight:bold;color:#334155">Tanque</div>
-<select id="e_tanque" style="flex:1">
-<option value="cheio">Tanque Cheio</option>
-<option value="parcial">Parcial</option>
-</select>
-</div>
-<button onclick="salvarEdicao()">Salvar</button>
-<button onclick="fecharModal()" style="background:#ef4444;color:#fff">Cancelar</button>
-</div>
-</div>
-
-
-<div id="modalPadrao" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;justify-content:center;align-items:center">
-
-<div style="background:#fff;padding:20px;border-radius:12px;width:520px">
-
-<h3 id="tituloModal">Editar</h3>
-
-<div style="display:flex;gap:16px">
-
-<!-- 🔹 PAINEL ESQUERDO (INFO) -->
-<div style="width:45%;font-size:12px;color:#334155;background:#f1f5f9;padding:10px;border-radius:10px">
-
-<div style="margin-bottom:6px"><b>Nome:</b><br><span id="ed_info_nome">-</span></div>
-<div style="margin-bottom:6px"><b>CPF:</b><br><span id="ed_info_cpf">-</span></div>
-<div style="margin-bottom:6px"><b>CNH:</b><br><span id="ed_info_cnh">-</span></div>
-<div style="margin-bottom:6px"><b>Validade:</b><br><span id="ed_info_validade">-</span></div>
-<div style="margin-bottom:6px"><b>Telefone:</b><br><span id="ed_info_tel">-</span></div>
-<div style="margin-bottom:6px"><b>Email:</b><br><span id="ed_info_email">-</span></div>
-
-<div style="margin-bottom:6px"><b>Veículo:</b><br><span id="ed_info_veiculo">-</span></div>
-<div style="margin-bottom:6px"><b>Posto:</b><br><span id="ed_info_posto">-</span></div>
-
-</div>
-
-<!-- 🔹 FORMULÁRIO DIREITA -->
-<div id="conteudoModal" style="flex:1"></div>
-
-</div>
-
-<div style="margin-top:12px">
-<button onclick="salvarModal()" style="background:#22c55e">Salvar</button>
-<button onclick="fecharModalPadrao()" style="background:#ef4444;color:#fff">Cancelar</button>
-</div>
-
-</div>
-</div>
-  
 </body>
 </html>
