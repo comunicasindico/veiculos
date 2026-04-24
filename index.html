@@ -147,6 +147,7 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <input id="v_placa" placeholder="Placa">
 <input id="v_marca" placeholder="Marca">
 <input id="v_modelo" placeholder="Modelo">
+<select id="v_motorista"></select>
 <input id="v_ano" placeholder="Ano">
 <input id="v_cor" placeholder="Cor">
 <input id="v_renavam" placeholder="Renavam">
@@ -164,7 +165,6 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 
 <!-- POSTOS -->
 <div id="tela_posto" class="tela" style="display:none">
-
 <div class="card">
 <input id="p_nome" placeholder="Nome do Posto">
 <input id="p_cnpj" placeholder="CNPJ">
@@ -174,9 +174,12 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <input id="p_bairro" placeholder="Bairro">
 <button onclick="salvarPosto()">Salvar</button>
 </div>
-
 <div id="listaPostos"></div>
-
+</div>
+  
+<div class="row">
+<span>Motorista</span>
+<span>${a.veiculos?.motoristas?.nome || "-"}</span>
 </div>
 
 <!-- ADMIN -->
@@ -334,6 +337,13 @@ let options=(postos||[]).map(p=>`<option value="${p.id}">${p.nome_posto||"SEM NO
 if(window.postoSel)postoSel.innerHTML=options
 if(window.i_posto)i_posto.innerHTML=options
 if(window.e_posto)e_posto.innerHTML=options
+/* MOTORISTA SELECT VEICULO */
+if(window.v_motorista){
+let optionsMotoristas=(motoristas||[]).map(m=>
+`<option value="${m.id}">${m.nome}</option>`
+).join("")
+v_motorista.innerHTML=optionsMotoristas
+}
 }
 
 /* LOGIN */
@@ -434,11 +444,12 @@ if(!isAdmin && exp && new Date(exp)<new Date()){
 lista.innerHTML="<div class='alertaExpira'>Plano expirado</div>"
 return
 }
-
 let empresa=localStorage.getItem("empresa")
 
 let query=db.from("abastecimentos").select(`
-id,data_abastecimento,litros,valor_total,valor_litro,quilometragem,tanque,posto_id,postos(nome_posto)
+id,data_abastecimento,litros,valor_total,valor_litro,quilometragem,tanque,posto_id,
+postos(nome_posto),
+veiculos(modelo,motorista_id,motoristas(nome))
 `)
 
 if(!isAdmin){query=query}
@@ -575,6 +586,26 @@ data_abastecimento:i_data.value||hojeISO()
 fecharInserir()
 render()
 }
+async function salvarVeiculo(){
+let payload={
+empresa_id:localStorage.getItem("empresa"),
+placa:v_placa.value,
+marca:v_marca.value,
+modelo:v_modelo.value,
+ano:v_ano.value,
+cor:v_cor.value,
+renavam:v_renavam.value,
+combustivel:v_comb.value,
+km_atual:parseFloat(v_km.value)||0,
+ipva:v_ipva.value,
+licenciamento:v_lic.value,
+observacoes:v_obs.value,
+motorista_id: v_motorista?.value || null
+}
+await db.from("veiculos").insert(payload)
+carregarCadastros()
+}
+
 function autoCalc(valorId,litrosId,vlId){
 const v=document.getElementById(valorId)
 const l=document.getElementById(litrosId)
