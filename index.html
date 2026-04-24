@@ -543,13 +543,13 @@ e_valor_litro.value=vl||""
 e_posto.value=posto||""
 e_tanque.value=tanqueVal||"cheio"
 /* 🔹 preenche painel esquerdo */
-ed_info_data.innerText=formatarData(data)
-ed_info_posto.innerText=postoSel.options[postoSel.selectedIndex]?.text||"—"
-ed_info_litros.innerText=l
-ed_info_vl.innerText=vl||"-"
-ed_info_total.innerText=moeda(v)
-ed_info_km.innerText=k
-ed_info_tanque.innerText=tanqueVal||"-"
+window.ed_info_data=document.getElementById("ed_info_data")
+window.ed_info_posto=document.getElementById("ed_info_posto")
+window.ed_info_litros=document.getElementById("ed_info_litros")
+window.ed_info_vl=document.getElementById("ed_info_vl")
+window.ed_info_total=document.getElementById("ed_info_total")
+window.ed_info_km=document.getElementById("ed_info_km")
+window.ed_info_tanque=document.getElementById("ed_info_tanque")
 autoCalc("e_valor","e_litros","e_valor_litro")
 }
 
