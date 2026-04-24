@@ -200,7 +200,7 @@ let botaoInserir='<button onclick="novoMotorista()" style="background:#22c55e">I
 /* MOTORISTAS */
 let {data:motoristas,error:e1}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
 if(e1)console.error(e1)
-
+if(window.listaMotoristas){
 listaMotoristas.innerHTML=botaoInserir+(motoristas||[]).map(m=>`
 <div class="item">
 <div class="row"><span>Nome</span><span>${m.nome||"-"}</span></div>
@@ -210,11 +210,11 @@ listaMotoristas.innerHTML=botaoInserir+(motoristas||[]).map(m=>`
 <button onclick="excluirRegistro('motoristas','${m.id}')" style="background:#ef4444;color:#fff;padding:6px 10px;font-size:11px">🗑</button>
 </div>
 </div>`).join("")
-
+}
 /* VEICULOS */
 let {data:veiculos,error:e2}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
 if(e2)console.error(e2)
-
+if(window.listaVeiculos){
 listaVeiculos.innerHTML=botaoInserir+(veiculos||[]).map(v=>`
 <div class="item">
 <div class="row"><span>Placa</span><span>${v.placa||"-"}</span></div>
@@ -223,11 +223,11 @@ listaVeiculos.innerHTML=botaoInserir+(veiculos||[]).map(v=>`
 <button onclick="excluirRegistro('veiculos','${v.id}')" style="background:#ef4444;color:#fff">🗑</button>
 </div>
 </div>`).join("")
-
+}
 /* POSTOS */
 let {data:postos,error:e3}=await db.from("postos").select("id,nome_posto,empresa_id").eq("empresa_id",empresa)
 if(e3)console.error(e3)
-
+if(window.listaPostos){
 listaPostos.innerHTML=botaoInserir+(postos||[]).map(p=>`
 <div class="item">
 <div class="row"><span>Posto</span><span>${p.nome_posto||"-"}</span></div>
@@ -235,7 +235,7 @@ listaPostos.innerHTML=botaoInserir+(postos||[]).map(p=>`
 <button onclick="excluirRegistro('postos','${p.id}')" style="background:#ef4444;color:#fff">🗑</button>
 </div>
 </div>`).join("")
-
+}
 let options=(postos||[]).map(p=>`<option value="${p.id}">${p.nome_posto||"SEM NOME"}</option>`).join("")
 if(window.postoSel)postoSel.innerHTML=options
 if(window.i_posto)i_posto.innerHTML=options
@@ -291,8 +291,16 @@ db.from(tabela).delete().eq("id",id).then(()=>{carregarCadastros();render()})
 /* UI */
 function mostrarLogin(){telaLogin.style.display="block";app.style.display="none"}
 function mostrarApp(){telaLogin.style.display="none";app.style.display="block"}
-function abrirTela(t){document.querySelectorAll(".tela").forEach(e=>e.style.display="none");document.getElementById("tela_"+t).style.display="block"}
-
+function abrirTela(t){
+document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
+document.getElementById("tela_"+t).style.display="block"
+if(t==="motorista"||t==="veiculo"||t==="posto"){
+carregarCadastros()
+}
+if(t==="combustivel"){
+render()
+}
+}
 /* SALVAR ABASTECIMENTO */
 async function salvar(){
 let v=parseFloat(valor.value)
@@ -346,7 +354,7 @@ if(!listaDados||!listaDados.length){
 lista.innerHTML="Sem dados"
 return
 }
-
+if(!window.lista)return
 lista.innerHTML=listaDados.map((a,i)=>{
 let ant=listaDados[i+1]
 
