@@ -592,13 +592,24 @@ render()
 /* 011 RENDER */
 async function render(){
 if(!VID)return
-let {data=[]}=await db.from("abastecimentos").select("*,postos(nome_posto)").eq("veiculo_id",VID).order("data_abastecimento",{ascending:false})
-if(!Array.isArray(data)||!data.length){lista.innerHTML="<div class='item'>Sem dados</div>";return}
+let lista=document.getElementById("lista")
+if(!lista)return
+let {data=[]}=await db
+.from("abastecimentos")
+.select("*,postos(nome_posto)")
+.eq("veiculo_id",VID)
+.order("data_abastecimento",{ascending:false})
+if(!Array.isArray(data)||!data.length){
+lista.innerHTML="<div class='item'>Sem dados</div>"
+return
+}
 lista.innerHTML=data.map(a=>`
 <div class="item">
 <div class="itemContent">
 <div><b>${fData(a.data_abastecimento)}</b> | ${a.postos?.nome_posto||"-"}</div>
-<div style="font-size:11px;color:#94a3b8">R$ ${Number(a.valor_total||0).toFixed(2)} | ${a.litros||0}L | KM ${a.quilometragem||0}</div>
+<div style="font-size:11px;color:#94a3b8">
+R$ ${Number(a.valor_total||0).toFixed(2)} | ${a.litros||0}L | KM ${a.quilometragem||0}
+</div>
 </div>
 <div class="actions">
 <button class="btnEdit" onclick="editarAbastecimento('${a.id}','${a.valor_total}','${a.litros}','${a.quilometragem}','${a.data_abastecimento}','${a.posto_id}')">✏️</button>
@@ -608,7 +619,10 @@ lista.innerHTML=data.map(a=>`
 `).join("")
 renderDashboard(data)
 if(!veiculoSel.dataset.bind){
-veiculoSel.addEventListener("change",()=>{VID=veiculoSel.value;render()})
+veiculoSel.addEventListener("change",()=>{
+VID=veiculoSel.value
+render()
+})
 veiculoSel.dataset.bind="1"
 }
 }
