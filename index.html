@@ -67,6 +67,7 @@ white-space:nowrap;
 <button onclick="abrirTela('motorista')" id="tab_motorista" title="Motoristas">👨</button>
 <button onclick="abrirTela('veiculo')" id="tab_veiculo" title="Veículos">🚗</button>
 <button onclick="abrirTela('posto')" id="tab_posto" title="Postos">🏪</button>
+<button onclick="abrirTela('admin')" id="tab_admin" title="Admin">🛠</button>
 </div>
 </div>
 <div id="tela_combustivel" class="tela">
@@ -123,6 +124,12 @@ white-space:nowrap;
 </div>
 <div id="listaPostos"></div>
 </div>
+<div id="tela_admin" class="tela" style="display:none">
+<div class="card">
+<h3>Painel Admin</h3>
+<div id="listaUsuarios"></div>
+</div>
+</div>
 <div class="footerBar"><button onclick="logout()" class="btnLogout">Sair</button></div>
 </div>
 <script>
@@ -145,13 +152,57 @@ senha_hash:senha,
 empresa_id:crypto.randomUUID()
 }).then(()=>alert("Conta criada! Aguarde liberação PRO."))
 }
+/* 003B carregar ADMIN */
+async function carregarAdmin(){
+let{data,error}=await db.from("usuarios").select("*").order("created_at",{ascending:false})
+if(error){console.error(error);return}
+listaUsuarios.innerHTML=data.map(u=>{
+let ativo=u.expira_em&&new Date(u.expira_em)>new Date()
+return `<div class="item">
+<div class="row"><span>Email</span><span>${u.usuario_apelido}</span></div>
+<div class="row"><span>Empresa</span><span>${u.empresa_id}</span></div>
+<div class="row"><span>Status</span><span>${ativo?"ATIVO":"EXPIRADO"}</span></div>
+<div class="row"><span>Expira</span><span>${u.expira_em||"-"}</span></div>
+<button onclick="ativarPlano('${u.id}')" style="background:#22c55e">Ativar 6 meses R$54,90</button>
+</div>`
+}).join("")
+}
+async function ativarPlano(id){
+let hoje=new Date()
+let futuro=new Date()
+futuro.setMonth(futuro.getMonth()+6)
+let dataExp=futuro.toISOString()
+let{error}=await db.from("usuarios").update({expira_em:dataExp}).eq("id",id)
+if(error){alert("Erro");return}
+alert("Plano ativado até "+dataExp)
+carregarAdmin()
+}
+function formatarData(d){
+if(!d)return"-"
+let s=d.split("T")[0]
+let[y,m,dd]=s.split("-")
+return`${dd}-${m}-${y}`
+}
 /* 004 LOGIN */
 async function login(){
+if(user.value==="admin"&&pass.value==="1234"){
+localStorage.setItem("admin","1")
+localStorage.setItem("uid","admin")
+mostrarApp()
+abrirTela("admin")
+carregarAdmin()
+return
+}
 const{data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
 if(!data||!data.length)return alert("Usuário não encontrado")
 if(data[0].senha_hash!==pass.value)return alert("Senha incorreta")
+if(data[0].expira_em&&new Date(data[0].expira_em)<new Date()){
+alert("Plano expirado")
+return
+}
 localStorage.setItem("empresa",data[0].empresa_id)
 localStorage.setItem("uid",data[0].id)
+localStorage.setItem("admin","0")
 init()
 }
 /* 005 INIT */
@@ -202,16 +253,19 @@ render()
 /* 009 RENDER */
 async function render(){
 let empresa=localStorage.getItem("empresa")
+if(localStorage.getItem("admin")==="1"){
+empresa=null
+}
 let{data}=await db.from("abastecimentos").select(`
 id,data_abastecimento,litros,valor_total,valor_litro,quilometragem,tanque,tipo_combustivel,
 postos(nome_posto)
-`).eq("empresa_id",empresa).eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+`)if(empresa)query.eq("empresa_id",empresa).eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
 lista.innerHTML=data.map((a,i)=>{
 let ant=data[i-1]
 let kmRodado=ant?(a.quilometragem-ant.quilometragem):0
 let consumo=(kmRodado>0&&a.litros>0)?(kmRodado/a.litros).toFixed(2):"-"
 return `<div class="item">
-<div class="row"><span>Data</span><span>${(()=>{let d=a.data_abastecimento?.split("T")[0];if(!d)return"-";let[y,m,dd]=d.split("-");return`${dd}/${m}/${y.slice(2)}`})()}</span></div>
+<div class="row"><span>Data</span><span>${formatarData(a.data_abastecimento)}</span></div>
 <div class="row"><span>Posto</span><span>${a.postos?.nome_posto||"-"}</span></div>
 <div class="row"><span>Combustível</span><span>${a.tipo_combustivel||"-"}</span></div>
 <div class="row"><span>Litros</span><span>${a.litros}</span></div>
