@@ -1,54 +1,37 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+<!-- 001 HEAD -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#020617">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" href="img/192x192.png">
-<link rel="apple-touch-icon" href="img/192x192.png">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>IA Veículo Master</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5"></script>
-
-<style>
-body{margin:0;font-family:Arial;background:#020617;color:#fff}
-.container{max-width:720px;margin:auto;padding:10px}
-.card{background:#0b1220;padding:12px;border-radius:12px;margin-top:10px}
-input,select{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:none;background:#020617;color:#fff}
-button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold}
-.kpi{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.item{background:#111827;padding:8px;border-radius:8px;margin-top:6px;font-size:12px}
-.row{display:flex;justify-content:space-between}
-.alerta{color:#f87171;font-weight:bold}
-#telaLogin{background:url("img/bancocomunicaveiculos.png") no-repeat center center fixed;background-size:cover;display:flex;justify-content:center;align-items:center;height:100vh}
-#telaLogin::before{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.75)}
-#loginBox{position:relative;z-index:1;width:280px}
-.headerApp{position:sticky;top:0;z-index:10;background:linear-gradient(135deg,#020617,#0f172a);padding:10px;border-bottom:1px solid rgba(255,255,255,0.05)}
-.logoArea{font-size:18px;font-weight:bold;text-align:center;margin-bottom:6px;color:#22c55e}
-.headerApp{position:sticky;top:0;background:#020617;padding:10px;border-bottom:1px solid #111}
-.logoArea{text-align:center;font-weight:bold;color:#22c55e;margin-bottom:6px}
-.menuTabs{display:flex;gap:6px}
-.menuTabs button{flex:1;background:#111827;color:#9ca3af;border:none;border-radius:10px;padding:10px}
-.menuTabs button.active{background:#22c55e;color:#000}
-.footerBar{position:fixed;bottom:0;left:0;width:100%;background:#020617;border-top:1px solid #111;padding:8px;display:flex;justify-content:flex-end;z-index:999}
-.btnLogout{background:#dc2626;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:bold}
-.item{background:#0f172a;padding:10px;border-radius:10px;margin-top:6px;border:1px solid #1e293b}
-.row{display:flex;justify-content:space-between;font-size:12px;color:#cbd5f5}
-.row span:first-child{color:#94a3b8}
-
-  
-</style>
 </head>
-
+<style>
+/* 002 STYLE */
+body{margin:0;font-family:Arial;background:#fff;color:#000}
+.container{max-width:720px;margin:auto;padding:10px}
+.card{background:#f1f5f9;padding:12px;border-radius:12px;margin-top:10px}
+input,select{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#000}
+button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;background:#22c55e;color:#000;font-weight:bold}
+.item{background:#fff;padding:10px;border-radius:10px;margin-top:6px;border:1px solid #e2e8f0}
+.row{display:flex;justify-content:space-between;font-size:12px}
+.headerApp{position:sticky;top:0;background:#fff;padding:10px;border-bottom:1px solid #ddd}
+.menuTabs{display:flex;gap:6px}
+.menuTabs button{flex:1;background:#e2e8f0;color:#000}
+.menuTabs button.active{background:#22c55e}
+.footerBar{position:fixed;bottom:0;left:0;width:100%;background:#fff;border-top:1px solid #ddd;padding:8px;display:flex;justify-content:flex-end}
+.btnLogout{background:#dc2626;color:#fff;border:none;padding:10px 16px;border-radius:10px}
+</style>
 <body>
 <div id="telaLogin">
-<div id="loginBox">
-<h2 style="text-align:center">🚗 IA Veículo(s) Master</h2>
+<div class="container">
+<h2>🚗 IA Veículo Master</h2>
 <input id="user" placeholder="Usuário">
 <input id="pass" type="password" placeholder="Senha">
 <button onclick="login()">Entrar</button>
@@ -56,7 +39,6 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 </div>
 <div id="app" class="container" style="display:none">
 <div class="headerApp">
-<div class="logoArea">🚗 IA Veículo(s)</div>
 <div class="menuTabs">
 <button onclick="abrirTela('combustivel')" id="tab_combustivel">⛽</button>
 <button onclick="abrirTela('motorista')" id="tab_motorista">👨</button>
@@ -65,78 +47,49 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 </div>
 </div>
 <div id="tela_combustivel" class="tela">
+<div class="card"><select id="veiculoSel"></select></div>
 <div class="card">
-<select id="veiculoSel"></select>
-</div>
-<div class="card kpi" id="kpi"></div>
-<div id="alerta" class="alerta"></div>
-<div class="card">
-<h3>📷 OCR Cupom</h3>
-<video id="video" autoplay style="display:none"></video>
-<button onclick="capturar()">Capturar</button>
-<canvas id="canvas"></canvas>
-<div id="ocr"></div>
-<button onclick="toggleManual()">Manual</button>
-<div id="manualBox" style="display:none">
-<input id="m_valor" placeholder="Valor">
-<input id="m_litros" placeholder="Litros">
-<input id="m_tipo" placeholder="Combustível">
-<input id="m_posto" placeholder="Posto">
-<select id="motoristaSel"></select>
-<select id="postoSel"></select>
-<select id="m_tanque">
-<option value="cheio">Tanque Cheio</option>
-<option value="parcial">Parcial</option>
-</select>
-<button onclick="usarManual()">Aplicar</button>
-</div>
-</div>
-<div class="card">
-<h3>⛽ Abastecimento</h3>
 <input id="valor" placeholder="Valor">
 <input id="litros" placeholder="Litros">
-<input id="km" placeholder="KM">
-<select id="tanque">
-<option value="cheio">Tanque Cheio</option>
-<option value="parcial">Parcial</option>
-</select>
+<input id="km" placeholder="KM Atual">
+<select id="tanque"><option value="cheio">Tanque Cheio</option><option value="parcial">Parcial</option></select>
 <button onclick="salvar()">Salvar</button>
 </div>
-<div class="card">
-<canvas id="grafico"></canvas>
-</div>
-<div class="card">
-<h3>📊 Histórico Completo</h3>
-<div id="lista"></div>
-</div>
+<div class="card"><canvas id="grafico"></canvas></div>
+<div class="card"><h3>Histórico Completo</h3><div id="lista"></div></div>
 </div>
 <div id="tela_motorista" class="tela" style="display:none">
 <div class="card">
-<h3>👨 Cadastro Motorista</h3>
 <input id="m_nome" placeholder="Nome">
+<input id="m_cpf" placeholder="CPF">
+<input id="m_cnh" placeholder="CNH">
+<input id="m_validade" placeholder="Validade CNH">
+<input id="m_tel" placeholder="Telefone">
+<input id="m_email" placeholder="E-mail">
+<input id="m_obs" placeholder="Observações">
 <button onclick="salvarMotorista()">Salvar</button>
 </div>
-<div class="card">
-<h3>📋 Lista Completa</h3>
 <div id="listaMotoristas"></div>
-</div>
 </div>
 <div id="tela_veiculo" class="tela" style="display:none">
 <div class="card">
-<h3>🚗 Cadastro Veículo</h3>
-<input id="v_modelo" placeholder="Modelo">
 <input id="v_placa" placeholder="Placa">
+<input id="v_marca" placeholder="Marca">
+<input id="v_modelo" placeholder="Modelo">
+<input id="v_ano" placeholder="Ano">
+<input id="v_cor" placeholder="Cor">
+<input id="v_renavam" placeholder="Renavam">
+<input id="v_comb" placeholder="Combustível Principal">
+<input id="v_km" placeholder="KM Atual">
+<input id="v_ipva" placeholder="IPVA Vencimento">
+<input id="v_lic" placeholder="Licenciamento">
+<input id="v_obs" placeholder="Observações">
 <button onclick="salvarVeiculo()">Salvar</button>
 </div>
-<div class="card">
-<h3>📋 Lista Completa</h3>
 <div id="listaVeiculos"></div>
-</div>
 </div>
 <div id="tela_posto" class="tela" style="display:none">
 <div class="card">
-<h3>🏪 Cadastro Posto</h3>
-<select id="postoSel"></select>
 <input id="p_nome" placeholder="Nome do Posto">
 <input id="p_cnpj" placeholder="CNPJ">
 <input id="p_cidade" placeholder="Cidade">
@@ -145,175 +98,61 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <input id="p_bairro" placeholder="Bairro">
 <button onclick="salvarPosto()">Salvar</button>
 </div>
-<div class="card">
-<h3>📋 Lista Completa</h3>
 <div id="listaPostos"></div>
 </div>
+<div class="footerBar"><button onclick="logout()" class="btnLogout">Sair</button></div>
 </div>
-<div class="footerBar">
-<button onclick="logout()" class="btnLogout">🚪 Sair</button>
-</div>
-</div>
-</body>
-
 <script>
+/* 003 SCRIPT */
 const db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
-let VID=null,chart=null,stream=null,dadosOCR=null
-
+let VID=null,chart=null
 function hojeISO(){const d=new Date();const l=new Date(d.getTime()-d.getTimezoneOffset()*60000);return l.toISOString().slice(0,10)}
-function brData(d){if(!d)return"-";let s=d.split("T")[0];let[y,m,dd]=s.split("-");return`${dd}/${m}/${y.slice(2)}`}
-function safe(v){return v??"-"}
 function moeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
-function parse(v){return parseFloat((v||"0").replace(/\./g,"").replace(",", "."))}
-
-/* LOGIN */
+/* 004 LOGIN */
 async function login(){
 const{data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value.toLowerCase())
 if(!data||!data.length)return alert("Usuário não encontrado")
 if(data[0].senha_hash!==pass.value)return alert("Senha incorreta")
 localStorage.setItem("empresa",data[0].empresa_id)
 localStorage.setItem("uid",data[0].id)
-await init()
+init()
 }
-
-/* INIT */
+/* 005 INIT */
 async function init(){
-let uid=localStorage.getItem("uid")
-if(!uid)return mostrarLogin()
+if(!localStorage.getItem("uid"))return mostrarLogin()
 mostrarApp()
 let empresa=localStorage.getItem("empresa")
-let{data,error}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
-if(error){console.error("Erro veículos:",error);return alert("Erro veículos")}
-if(!data||!Array.isArray(data))data=[]
-if(!data.length){
-veiculoSel.innerHTML="<option>Nenhum veículo</option>"
-return
-}
-veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo||"-"}</option>`).join("")
-VID=data[0].id
-await carregarCadastros()
-/* AUTOPREENCHER POSTO */
-if(window.postoSel){
-postoSel.addEventListener("change",async function(){
-let id=this.value
-if(!id)return
-let{data,error}=await db.from("postos").select("*").eq("id",id).single()
-if(error||!data)return
-p_nome.value=data.nome_posto||""
-p_cnpj.value=data.cnpj||""
-p_cidade.value=data.cidade||""
-p_uf.value=data.uf||""
-p_endereco.value=data.endereco||""
-p_bairro.value=data.bairro||""
-})
-}
-const telaSalva=localStorage.getItem("tela_ativa")||"combustivel"
-abrirTela(telaSalva)
+let{data}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
+veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
+VID=data[0]?.id
+carregarCadastros()
 render()
 }
-
-function mostrarLogin(){telaLogin.style.display="flex";app.style.display="none"}
+/* 006 UI */
+function mostrarLogin(){telaLogin.style.display="block";app.style.display="none"}
 function mostrarApp(){telaLogin.style.display="none";app.style.display="block"}
-
 function abrirTela(t){
-localStorage.setItem("tela_ativa",t)
-document.querySelectorAll(".tela").forEach(el=>el.style.display="none")
-document.querySelectorAll(".menuTabs button").forEach(b=>b.classList.remove("active"))
-let tela=document.getElementById("tela_"+t)
-let btn=document.getElementById("tab_"+t)
-if(tela)tela.style.display="block"
-if(btn)btn.classList.add("active")
+document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
+document.getElementById("tela_"+t).style.display="block"
 }
-/* CRUD */
-async function excluirRegistro(tabela,id){
-if(!confirm("Excluir registro?"))return
-let{error}=await db.from(tabela).delete().eq("id",id)
-if(error)return alert("Erro ao excluir")
-carregarCadastros()
-}
-
-async function editarRegistro(tabela,id,campo,valor){
-let{error}=await db.from(tabela).update({[campo]:valor}).eq("id",id)
-if(error)console.error("Erro editar:",error)
-}
-/* CADASTROS */
+/* 007 CADASTROS */
 async function carregarCadastros(){
-const empresa=localStorage.getItem("empresa")
-
-function montarTabela(lista,tabela){
-if(!lista||!lista.length)return"<div>Sem dados</div>"
-let colunas=Object.keys(lista[0])
-return lista.map(l=>{
-return `<div class="item">`+
-colunas.map(c=>`
-<div class="row">
-<span>${c}</span>
-<input value="${l[c]??""}" onchange="editarRegistro('${tabela}','${l.id}','${c}',this.value)">
-</div>`).join("")+
-`<button onclick="excluirRegistro('${tabela}','${l.id}')" style="background:#ef4444;color:#fff">🗑 Excluir</button>
-</div>`
-}).join("")
+let empresa=localStorage.getItem("empresa")
+let{data:motoristas}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
+listaMotoristas.innerHTML=motoristas.map(m=>`<div class="item">${m.id} - ${m.nome}</div>`).join("")
+let{data:veiculos}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
+listaVeiculos.innerHTML=veiculos.map(v=>`<div class="item">${v.placa} - ${v.modelo}</div>`).join("")
+let{data:postos}=await db.from("postos").select("*").eq("empresa_id",empresa)
+listaPostos.innerHTML=postos.map(p=>`<div class="item">${p.nome_posto}</div>`).join("")
 }
-/* VEICULOS */
-let{data:veiculos,error:e1}=await db.from("veiculos").select("*").eq("empresa_id",empresa)
-if(e1)console.error("Erro veiculos:",e1)
-veiculos=veiculos||[]
-if(window.listaVeiculos)listaVeiculos.innerHTML=montarTabela(veiculos,"veiculos")
-/* MOTORISTAS */
-let{data:motoristas,error:e2}=await db.from("motoristas").select("*").eq("empresa_id",empresa)
-if(e2)console.error("Erro motoristas:",e2)
-motoristas=motoristas||[]
-if(window.listaMotoristas)listaMotoristas.innerHTML=montarTabela(motoristas,"motoristas")
-/* POSTOS */
-let{data:postos,error:e3}=await db.from("postos").select("*").eq("empresa_id",empresa)
-if(e3)console.error("Erro postos:",e3)
-postos=postos||[]
-if(window.listaPostos)listaPostos.innerHTML=montarTabela(postos,"postos")
-/* SELECTS */
-if(window.postoSel)postoSel.innerHTML=postos.map(p=>`<option value="${p.id}">${p.nome_posto||"-"}</option>`).join("")
-if(window.motoristaSel)motoristaSel.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome||"-"}</option>`).join("")
-}
-/* OCR */
-async function capturar(){
-stream=await navigator.mediaDevices.getUserMedia({video:true})
-video.srcObject=stream
-video.style.display="block"
-await new Promise(r=>setTimeout(r,1200))
-const ctx=canvas.getContext("2d")
-canvas.width=video.videoWidth
-canvas.height=video.videoHeight
-ctx.drawImage(video,0,0)
-const{data:{text}}=await Tesseract.recognize(canvas,"por")
-dadosOCR=extrair(text)
-if(dadosOCR.valor>1000||dadosOCR.litros>150)alert("⚠ OCR suspeito")
-valor.value=dadosOCR.valor||""
-litros.value=dadosOCR.litros||""
-ocr.innerHTML=`💰 ${dadosOCR.valor} | ⛽ ${dadosOCR.litros}`
-}
-
-/* EXTRAIR */
-function extrair(txt){
-txt=txt.toUpperCase().replace(/\s+/g," ")
-let valores=[...txt.matchAll(/\d{1,3}(\.\d{3})*,\d{2}/g)]
-let valor=valores.length?Math.max(...valores.map(v=>parse(v[0]))):0
-let l=txt.match(/(\d+,\d{3})\s*L/)
-let litros=l?parseFloat(l[1].replace(",", ".")):0
-return{valor,litros}
-}
-
-/* SALVAR */
+/* 008 SALVAR */
 async function salvar(){
-const v=parse(valor.value)
-const l=parseFloat(litros.value)
-const k=parseFloat(km.value)
-const posto_id=postoSel?.value||null
-const motorista_id=motoristaSel?.value||null
-if(!v||!l||!k)return alert("Preencha tudo")
-let{error}=await db.from("abastecimentos").insert({
+let v=parseFloat(valor.value)
+let l=parseFloat(litros.value)
+let k=parseFloat(km.value)
+await db.from("abastecimentos").insert({
 empresa_id:localStorage.getItem("empresa"),
 veiculo_id:VID,
-motorista_id,
-posto_id,
 valor_total:v,
 litros:l,
 valor_litro:(v/l),
@@ -321,114 +160,37 @@ quilometragem:k,
 tanque:tanque.value,
 data_abastecimento:hojeISO()
 })
-if(error){console.error(error);return alert("Erro ao salvar")}
 render()
 }
-
-/* IA */
-function IA(data){
-let totalKm=0,totalValor=0,cons=[]
-for(let i=1;i<data.length;i++){
-let km=data[i].quilometragem-data[i-1].quilometragem
-let l=data[i].litros
-if(km>0&&l>0){
-let c=km/l
-if(data[i].tanque==="cheio")cons.push(c)
-totalKm+=km
-totalValor+=data[i].valor_total
-}
-}
-return{media:cons.length?cons.reduce((a,b)=>a+b,0)/cons.length:0,custo:totalKm?totalValor/totalKm:0}
-}
-
-/* HISTORICO */
-function renderHistorico(data){
-let html=""
-for(let i=data.length-1;i>=0;i--){
-let a=data[i]
-let ant=data[i-1]
-let kmRodado="-"
-if(ant && a.quilometragem && ant.quilometragem){
-let km=a.quilometragem-ant.quilometragem
-if(km>0)kmRodado=km+" km"
-}
-let valorLitro=a.valor_litro?Number(a.valor_litro).toFixed(2):"-"
-html+=`
-<div class="item">
-<div class="row"><span>${brData(a.data_abastecimento)}</span><span>${a.tipo_combustivel||"-"}</span></div>
-<div class="row"><span>${a.postos?.nome_posto||"-"}</span><span>${a.litros||"-"} L</span></div>
-<div class="row"><span>R$ ${valorLitro}/L</span><span>${moeda(a.valor_total)}</span></div>
-<div class="row"><span>${a.quilometragem||"-"} km</span><span>${kmRodado}</span></div>
-</div>`
-}
-lista.innerHTML=html
-}
-
-function logout(){localStorage.clear();location.reload()}
-
-/* RENDER */
+/* 009 RENDER */
 async function render(){
 let empresa=localStorage.getItem("empresa")
-
-let{data,error}=await db
-.from("abastecimentos")
-.select(`
-id,data_abastecimento,litros,valor_total,valor_litro,quilometragem,tipo_combustivel,tanque,
-postos!fk_abastecimentos_posto(nome_posto,cnpj,cidade,uf),
-motoristas!fk_abastecimentos_motorista(nome),
-veiculos!fk_abastecimentos_veiculo(modelo)
-`)
-.eq("empresa_id",empresa)
-.eq("veiculo_id",VID)
-.order("data_abastecimento",{ascending:true})
-
-if(error){
-console.error("Erro render:",error)
-lista.innerHTML="<div>Erro ao carregar</div>"
-return
+let{data}=await db.from("abastecimentos").select("*").eq("empresa_id",empresa).eq("veiculo_id",VID).order("data_abastecimento",{ascending:true})
+lista.innerHTML=data.map((a,i)=>{
+let ant=data[i-1]
+let kmRodado=ant?(a.quilometragem-ant.quilometragem):0
+let consumo=kmRodado&&a.litros?(kmRodado/a.litros).toFixed(2):"-"
+return `<div class="item">
+<div class="row"><span>Data</span><span>${a.data_abastecimento}</span></div>
+<div class="row"><span>Posto</span><span>${a.posto_id||"-"}</span></div>
+<div class="row"><span>Combustível</span><span>${a.tipo_combustivel||"-"}</span></div>
+<div class="row"><span>Litros</span><span>${a.litros}</span></div>
+<div class="row"><span>Valor Unitário</span><span>${a.valor_litro}</span></div>
+<div class="row"><span>Total</span><span>${moeda(a.valor_total)}</span></div>
+<div class="row"><span>Odômetro</span><span>${a.quilometragem}</span></div>
+<div class="row"><span>KM Rodado</span><span>${kmRodado}</span></div>
+<div class="row"><span>Tanque</span><span>${a.tanque}</span></div>
+<div class="row"><span>Km/L</span><span>${consumo}</span></div>
+</div>`
+}).join("")
 }
-
-if(!data||!data.length){
-lista.innerHTML="<div>Sem dados</div>"
-return
-}
-
-renderHistorico(data)
-
-let ia=IA(data)
-kpi.innerHTML=`
-<div>Média ${ia.media.toFixed(2)}</div>
-<div>Custo/km ${ia.custo.toFixed(2)}</div>
-`
-
-let labels=[],vals=[]
-for(let i=1;i<data.length;i++){
-let km=data[i].quilometragem-data[i-1].quilometragem
-let l=data[i].litros
-if(km>0&&l>0){
-labels.push(i)
-vals.push(km/l)
-}
-}
-
-if(chart)chart.destroy()
-chart=new Chart(grafico,{type:"line",data:{labels,datasets:[{data:vals}]}})
-}
-
-/* INIT DOM */
-document.addEventListener("DOMContentLoaded",async()=>{
-const uid=localStorage.getItem("uid")
-if(uid){
-telaLogin.style.display="none"
-app.style.display="block"
-await init()
-}else{
-telaLogin.style.display="flex"
-app.style.display="none"
-}
+/* 010 LOGOUT */
+function logout(){localStorage.clear();location.reload()}
+/* 011 INIT DOM */
+document.addEventListener("DOMContentLoaded",()=>{
+if(localStorage.getItem("uid"))init()
+else mostrarLogin()
 })
-
 </script>
-
 </body>
 </html>
