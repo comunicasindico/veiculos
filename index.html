@@ -687,7 +687,6 @@ carregarCadastros()
 </script>
 
 <div id="modalEditar" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;justify-content:center;align-items:center">
-
 <div style="background:#fff;padding:20px;border-radius:12px;width:420px">
 <h3>Editar</h3>
 <div style="display:flex;align-items:center;margin-bottom:6px">
@@ -724,8 +723,17 @@ carregarCadastros()
 <button onclick="salvarEdicao()">Salvar</button>
 <button onclick="fecharModal()" style="background:#ef4444;color:#fff">Cancelar</button>
 </div>
-  
-</div>
+ </div>
 
+
+<div id="modalPadrao" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;justify-content:center;align-items:center">
+<div style="background:#fff;padding:20px;border-radius:12px;width:420px">
+<h3 id="tituloModal">Editar</h3>
+<div id="conteudoModal"></div>
+<button onclick="salvarModal()" style="background:#22c55e">Salvar</button>
+<button onclick="fecharModalPadrao()" style="background:#ef4444;color:#fff">Cancelar</button>
+</div>
+</div>
+  
 </body>
 </html>
