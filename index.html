@@ -646,20 +646,21 @@ R$ ${valor.toFixed(2)} | ${litros}L | KM ${km}
 </div>
 </div>
 <div class="actions">
-<button class="btnEdit" onclick="editarAbastecimento('${a.id}','${valor}','${litros}','${km}','${a.data_abastecimento}','${a.posto_id}')">✏️</button>
+<button class="btnEdit" onclick="editarAbastecimento('${a.id}',${valor},${litros},${km},'${a.data_abastecimento}','${a.posto_id}')">✏️</button>
 <button class="btnDel" onclick="excluir('abastecimentos','${a.id}')">🗑</button>
 </div>
 </div>
 `
 }).join("")
 renderDashboard(data)
-if(window.veiculoSel){
-if(!veiculoSel.dataset.bind){
-veiculoSel.addEventListener("change",()=>{
-VID=veiculoSel.value
+let vs=document.getElementById("veiculoSel")
+if(vs){
+if(!vs._bind){
+vs.addEventListener("change",()=>{
+VID=vs.value
 render()
 })
-veiculoSel.dataset.bind="1"
+vs._bind=true
 }
 }
 }
