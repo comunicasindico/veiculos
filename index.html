@@ -182,7 +182,8 @@ border-radius:12px;
 
 <!-- DASHBOARD -->
 <div class="card">
-<h3>📊 Dashboard</h3>
+<h3>📊 Dashboard do Veículo</h3>
+<div id="kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div>
 <canvas id="graficoConsumo"></canvas>
 <canvas id="graficoGasto"></canvas>
 </div>
@@ -252,6 +253,109 @@ border-radius:12px;
 </div>
 
 <script>
+function calcularIndicadores(lista){
+if(!lista.length)return null
+let totalGasto=0
+let totalLitros=0
+let consumos=[]
+let totalKm=0
+for(let i=0;i<lista.length;i++){
+let atual=lista[i]
+let anterior=lista[i+1]
+totalGasto+=Number(atual.valor_total||0)
+totalLitros+=Number(atual.litros||0)
+if(anterior && atual.quilometragem && anterior.quilometragem){
+let km=atual.quilometragem-anterior.quilometragem
+if(km>0 && atual.litros>0){
+let consumo=km/atual.litros
+consumos.push(consumo)
+totalKm+=km
+}
+}
+}
+let mediaConsumo=consumos.length?(consumos.reduce((a,b)=>a+b,0)/consumos.length):0
+let melhor=Math.max(...consumos,0)
+let pior=Math.min(...consumos,0)
+let custoKm=totalKm>0?(totalGasto/totalKm):0
+return{
+totalGasto,
+totalLitros,
+mediaConsumo,
+melhor,
+pior,
+custoKm,
+totalAbastecimentos:lista.length
+}
+}
+function renderKPIs(d){
+
+if(!d)return
+
+kpis.innerHTML=`
+
+<div class="item">💰 Total<br><b>R$ ${d.totalGasto.toFixed(2)}</b></div>
+
+<div class="item">⛽ Litros<br><b>${d.totalLitros.toFixed(1)}</b></div>
+
+<div class="item">📈 Km/L<br><b>${d.mediaConsumo.toFixed(2)}</b></div>
+
+<div class="item">🚗 Custo/KM<br><b>R$ ${d.custoKm.toFixed(2)}</b></div>
+
+<div class="item">🏆 Melhor<br><b>${d.melhor.toFixed(2)}</b></div>
+
+<div class="item">⚠️ Pior<br><b>${d.pior.toFixed(2)}</b></div>
+
+<div class="item">📊 Registros<br><b>${d.totalAbastecimentos}</b></div>
+
+`
+}
+function renderDashboard(lista){
+
+if(!lista.length)return
+
+let labels=lista.map(x=>formatarData(x.data_abastecimento))
+
+let consumo=lista.map((a,i)=>{
+let ant=lista[i+1]
+if(!ant)return null
+let km=a.quilometragem-ant.quilometragem
+return km>0?(km/a.litros):0
+})
+
+let gasto=lista.map(x=>x.valor_total)
+
+if(graficoConsumo)graficoConsumo.destroy()
+if(graficoGasto)graficoGasto.destroy()
+
+graficoConsumo=new Chart(graficoConsumoEl,{
+type:"line",
+data:{
+labels,
+datasets:[{
+label:"Km/L",
+data:consumo,
+borderWidth:2,
+tension:0.3
+}]
+}
+})
+
+graficoGasto=new Chart(graficoGastoEl,{
+type:"bar",
+data:{
+labels,
+datasets:[{
+label:"R$",
+data:gasto
+}]
+}
+})
+
+let indicadores=calcularIndicadores(lista)
+renderKPIs(indicadores)
+
+}
+  
 /* 003 CONFIG */
 const db=supabase.createClient(
 "https://gspdlrenyrzbkxlvyugc.supabase.co",
@@ -387,6 +491,10 @@ lista.innerHTML=data.map(a=>`
 </div>`).join("")
 
 renderDashboard(data)
+veiculoSel.addEventListener("change",()=>{
+VID=veiculoSel.value
+render()
+})
 }
 
 /* 012 DASHBOARD */
