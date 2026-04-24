@@ -393,87 +393,86 @@ document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
 document.getElementById("tela_"+t).style.display="block"
 }
 
-/* 009 CARREGAR */
+/* 009 CARREGAR TUDO */
 async function carregarTudo(){
-if(window.e_posto){
-e_posto.innerHTML=postoSel.innerHTML
-}
-let emp=localStorage.getItem("empresa")
+let emp=localStorage.getItem("empresa")||null
+if(!emp)return console.error("empresa não encontrada")
 
-let {data:m=[]}=await db.from("motoristas").select("*").eq("empresa_id",emp)
+/* MOTORISTAS */
+let {data:m,error:e1}=await db.from("motoristas").select("*").eq("empresa_id",emp)
+if(e1){console.error("motoristas:",e1);m=[]}
+m=m||[]
+if(window.listaMotoristas){
 listaMotoristas.innerHTML=m.map(x=>`
 <div class="item">
-
 <div class="itemContent">
 <div><b>${x.nome||"-"}</b></div>
-<div style="font-size:11px;color:#94a3b8">
-CPF: ${x.cpf||"-"} | Tel: ${x.telefone||"-"}
+<div style="font-size:11px;color:#94a3b8">CPF: ${x.cpf||"-"} | Tel: ${x.telefone||"-"}</div>
 </div>
-</div>
-
 <div class="actions">
-<button class="btnEdit" onclick="editarMotorista('${x.id}','${x.nome}','${x.telefone}','${x.cpf}')">✏️</button>
+<button class="btnEdit" onclick="editarMotorista('${x.id}','${x.nome||""}','${x.telefone||""}','${x.cpf||""}')">✏️</button>
 <button class="btnDel" onclick="excluir('motoristas','${x.id}')">🗑</button>
 </div>
-
-</div>
-`).join("")
-v_motorista.innerHTML=m.map(x=>`<option value="${x.id}">${x.nome}</option>`).join("")
-
-let {data:p=[]}=await db.from("postos").select("*").eq("empresa_id",emp)
-listaPostos.innerHTML=p.map(x=>`
-<div class="item">
-<div>${x.nome_posto} | ${x.cidade||"-"}</div>
-<div class="actions">
-<button class="btnEdit" onclick="editarPosto('${x.id}','${x.nome_posto}')">✏️</button>
-<button class="btnDel" onclick="excluir('postos','${x.id}')">🗑</button>
-</div></div>`).join("")
-postoSel.innerHTML=p.map(x=>`<option value="${x.id}">${x.nome_posto}</option>`).join("")
-
-let {data:v=[]}=await db
-.from("veiculos")
-.select(`
-*,
-motoristas(nome,cpf,telefone)
-`)
-.eq("empresa_id",emp).eq("empresa_id",emp)
-veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo}</option>`).join("")
-VID=v?.[0]?.id
-listaVeiculos.innerHTML=v.map(x=>`
-<div class="item">
-<div><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div>
-<div class="row"><span>Marca</span><span>${x.marca||"-"}</span></div>
-<div class="row"><span>Ano</span><span>${x.ano||"-"}</span></div>
-<div class="row"><span>Cor</span><span>${x.cor||"-"}</span></div>
-<div class="row"><span>Renavam</span><span>${x.renavam||"-"}</span></div>
-<div class="row"><span>Combustível</span><span>${x.combustivel_principal||"-"}</span></div>
-<div class="row"><span>KM</span><span>${x.km_atual||"-"}</span></div>
-<div class="row"><span>IPVA</span><span>${x.vencimento_ipva||"-"}</span></div>
-<div class="row"><span>Licenciamento</span><span>${x.vencimento_licenciamento||"-"}</span></div>
-
-<div class="actions">
-<button class="btnEdit" onclick="editarVeiculo(
-'${x.id}',
-'${x.placa||""}',
-'${x.marca||""}',
-'${x.modelo||""}',
-'${x.ano||""}',
-'${x.cor||""}',
-'${x.renavam||""}',
-'${x.combustivel_principal||""}',
-'${x.km_atual||""}',
-'${x.vencimento_ipva||""}',
-'${x.vencimento_licenciamento||""}',
-'${x.motorista_id||""}'
-)">✏️</button>
-
-<button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button>
-</div>
-
 </div>
 `).join("")
 }
+if(window.v_motorista){
+v_motorista.innerHTML=m.map(x=>`<option value="${x.id}">${x.nome||"-"}</option>`).join("")
+}
 
+/* POSTOS */
+let {data:p,error:e2}=await db.from("postos").select("*").eq("empresa_id",emp)
+if(e2){console.error("postos:",e2);p=[]}
+p=p||[]
+if(window.listaPostos){
+listaPostos.innerHTML=p.map(x=>`
+<div class="item">
+<div class="itemContent">
+<div><b>${x.nome_posto||"-"}</b></div>
+<div style="font-size:11px;color:#94a3b8">${x.cidade||"-"} | ${x.cnpj||"-"}</div>
+</div>
+<div class="actions">
+<button class="btnEdit" onclick="editarPosto('${x.id}','${x.nome_posto||""}','${x.cidade||""}','${x.cnpj||""}')">✏️</button>
+<button class="btnDel" onclick="excluir('postos','${x.id}')">🗑</button>
+</div>
+</div>
+`).join("")
+}
+if(window.postoSel){
+postoSel.innerHTML=p.map(x=>`<option value="${x.id}">${x.nome_posto||"-"}</option>`).join("")
+}
+if(window.e_posto && window.postoSel){
+e_posto.innerHTML=postoSel.innerHTML
+}
+
+/* VEÍCULOS */
+let {data:v,error:e3}=await db.from("veiculos").select(`*,motoristas(nome,cpf,telefone)`).eq("empresa_id",emp)
+if(e3){console.error("veiculos:",e3);v=[]}
+v=v||[]
+if(window.veiculoSel){
+veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo||"-"}</option>`).join("")
+}
+VID=v?.[0]?.id||null
+if(window.listaVeiculos){
+listaVeiculos.innerHTML=v.map(x=>`
+<div class="item">
+<div class="itemContent">
+<div><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div>
+<div style="font-size:11px;color:#94a3b8">
+${x.marca||"-"} | ${x.ano||"-"} | KM ${x.km_atual||"-"}
+</div>
+<div style="font-size:11px;color:#94a3b8">
+Motorista: ${x.motoristas?.nome||"-"}
+</div>
+</div>
+<div class="actions">
+<button class="btnEdit" onclick="editarVeiculo('${x.id}','${x.placa||""}','${x.marca||""}','${x.modelo||""}','${x.ano||""}','${x.cor||""}','${x.renavam||""}','${x.combustivel_principal||""}','${x.km_atual||""}','${x.vencimento_ipva||""}','${x.vencimento_licenciamento||""}','${x.motorista_id||""}')">✏️</button>
+<button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button>
+</div>
+</div>
+`).join("")
+}
+}
 /* 010 SALVAR */
 async function salvar(){
 await db.from("abastecimentos").insert({
