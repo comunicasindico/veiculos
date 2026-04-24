@@ -484,11 +484,11 @@ render()
 function abrirTela(t){
 document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
 let el=document.getElementById("tela_"+t)
-if(!el){
-console.error("Tela não encontrada:","tela_"+t)
-return
-}
+if(!el)return
 el.style.display="block"
+if(t==="combustivel"){
+carregarTudo()
+}
 }
 
 async function carregarTudo(){
@@ -526,90 +526,58 @@ v_motorista.innerHTML=m.map(x=>`<option value="${x.id}">${x.nome||"-"}</option>`
 /* POSTOS */
 let {data:p,error:e2}=await db.from("postos").select("*").eq("empresa_id",emp)
 if(e2){console.error("postos:",e2);p=[]}
-p=p||[]
+p=Array.isArray(p)?p:[]
 if(window.listaPostos){
-listaPostos.innerHTML=p.map(x=>`
+listaPostos.innerHTML=p.length?p.map(x=>`
 <div class="item">
 <div class="itemContent">
 <div><b>${x.nome_posto||"-"}</b></div>
 <div style="font-size:11px;color:#94a3b8">${x.cidade||"-"} | ${x.cnpj||"-"}</div>
 </div>
 <div class="actions">
-<button class="btnEdit" onclick="editarPosto('${x.id}','${x.nome_posto||""}','${x.cidade||""}','${x.cnpj||""}')">✏️</button>
+<button class="btnEdit" onclick="editarPosto('${x.id}','${(x.nome_posto||"").replace(/'/g,"")}','${(x.cidade||"").replace(/'/g,"")}','${(x.cnpj||"").replace(/'/g,"")}')">✏️</button>
 <button class="btnDel" onclick="excluir('postos','${x.id}')">🗑</button>
 </div>
 </div>
-`).join("")
+`).join(""):`<div class="item">Nenhum posto</div>`
 }
 if(window.postoSel){
-postoSel.innerHTML=p.map(x=>`<option value="${x.id}">${x.nome_posto||"-"}</option>`).join("")
+postoSel.innerHTML=p.length?p.map(x=>`<option value="${x.id}">${x.nome_posto||"Posto"}</option>`).join(""):`<option value="">Nenhum posto</option>`
 }
-if(window.e_posto && window.postoSel){
+if(window.e_posto&&window.postoSel){
 e_posto.innerHTML=postoSel.innerHTML
 }
-
-/* VEÍCULOS (SEM RELAÇÃO DIRETA → JOIN MANUAL) */
 let {data:v,error:e3}=await db.from("veiculos").select("*").eq("empresa_id",emp)
 if(e3){console.error("veiculos:",e3);v=[]}
-v=v||[]
-
-/* MAPA DE MOTORISTAS */
+v=Array.isArray(v)?v:[]
 let mapMotoristas={}
-m.forEach(mo=>{mapMotoristas[mo.id]=mo})
-
-/* SELECT */
+;(m||[]).forEach(mo=>{mapMotoristas[mo.id]=mo})
 if(window.veiculoSel){
-veiculoSel.innerHTML=v.map(x=>`<option value="${x.id}">${x.modelo||"-"}</option>`).join("")
+veiculoSel.innerHTML=v.length?v.map(x=>`<option value="${x.id}">${x.modelo||x.placa||"Veículo"}</option>`).join(""):`<option value="">Nenhum veículo</option>`
 }
 VID=v?.[0]?.id||null
-
-/* LISTA */
 if(window.listaVeiculos){
-listaVeiculos.innerHTML=v.map(x=>{
+listaVeiculos.innerHTML=v.length?v.map(x=>{
 let mot=mapMotoristas[x.motorista_id]||{}
+let renavamSafe=(x.renavam||"").replace(/'/g,"")
 return `
 <div class="item">
-
 <div class="itemContent">
-
 <div><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div>
-
-<div style="font-size:11px;color:#94a3b8">
-${x.marca||"-"} | ${x.ano||"-"} | ${x.cor||"-"}
+<div style="font-size:11px;color:#94a3b8">${x.marca||"-"} | ${x.ano||"-"} | ${x.cor||"-"}</div>
+<div style="font-size:11px;color:#94a3b8">KM ${x.km_atual||"-"} | Comb: ${x.combustivel_principal||"-"}</div>
+<div style="font-size:11px;color:#94a3b8">Motorista: ${mot.nome||"-"}</div>
+<div style="font-size:11px;color:#94a3b8">Renavam: <span id="renavam_${x.id}">***</span></div>
+<div style="font-size:11px;color:#64748b">IPVA: ${x.vencimento_ipva?fData(x.vencimento_ipva):"-"} | Lic: ${x.vencimento_licenciamento?fData(x.vencimento_licenciamento):"-"}</div>
 </div>
-
-<div style="font-size:11px;color:#94a3b8">
-KM ${x.km_atual||"-"} | Comb: ${x.combustivel_principal||"-"}
-</div>
-
-<div style="font-size:11px;color:#94a3b8">
-Motorista: ${mot.nome||"-"}
-</div>
-
-<div style="font-size:11px;color:#94a3b8">
-Renavam: <span id="renavam_${x.id}">***</span>
-</div>
-
-<div style="font-size:11px;color:#64748b">
-IPVA: ${x.vencimento_ipva?fData(x.vencimento_ipva):"-"} | Lic: ${x.vencimento_licenciamento?fData(x.vencimento_licenciamento):"-"}
-</div>
-
-</div>
-
 <div class="actions">
-
-<button class="btnEye" onclick="toggleRenavam('${x.id}','${x.renavam||""}')">👁</button>
-
-<button class="btnEdit" onclick="editarVeiculo('${x.id}','${x.placa||""}','${x.marca||""}','${x.modelo||""}','${x.ano||""}','${x.cor||""}','${x.renavam||""}','${x.combustivel_principal||""}','${x.km_atual||""}','${x.vencimento_ipva||""}','${x.vencimento_licenciamento||""}','${x.motorista_id||""}')">✏️</button>
-
+<button class="btnEye" onclick="toggleRenavam('${x.id}','${renavamSafe}')">👁</button>
+<button class="btnEdit" onclick="editarVeiculo('${x.id}','${(x.placa||"").replace(/'/g,"")}','${(x.marca||"").replace(/'/g,"")}','${(x.modelo||"").replace(/'/g,"")}','${x.ano||""}','${(x.cor||"").replace(/'/g,"")}','${renavamSafe}','${(x.combustivel_principal||"").replace(/'/g,"")}','${x.km_atual||""}','${x.vencimento_ipva||""}','${x.vencimento_licenciamento||""}','${x.motorista_id||""}')">✏️</button>
 <button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button>
-
 </div>
-
 </div>
 `
-}).join("")
-}
+}).join(""):`<div class="item">Nenhum veículo</div>`
 }
 /* 010 SALVAR */
 async function salvar(){
