@@ -44,6 +44,8 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
   
 </style>
 <body>
+
+<!-- LOGIN -->
 <div id="telaLogin">
 <div id="boxCriar" onclick="criarConta()">🚀 Criar Conta de Usuário PRO</div>
 <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2">
@@ -55,22 +57,32 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 </div>
 </div>
 </div>
+
+<!-- APP -->
 <div id="app" class="container" style="display:none">
+
 <div class="headerApp">
 <div id="statusPlano"></div>
 <div id="boxRenovar" style="display:none;text-align:center;margin-top:4px">
 <button onclick="renovarPlano()" style="background:#f59e0b;color:#000">💰 Renovar Plano</button>
 </div>
+
 <div class="menuTabs">
-<button onclick="abrirTela('combustivel')" id="tab_combustivel" title="Abastecimento">⛽</button>
-<button onclick="abrirTela('motorista')" id="tab_motorista" title="Motoristas">👨</button>
-<button onclick="abrirTela('veiculo')" id="tab_veiculo" title="Veículos">🚗</button>
-<button onclick="abrirTela('posto')" id="tab_posto" title="Postos">🏪</button>
-<button onclick="abrirTela('admin')" id="tab_admin" title="Admin">🛠</button>
+<button onclick="abrirTela('combustivel')" title="Abastecimento">⛽</button>
+<button onclick="abrirTela('motorista')" title="Motoristas">👨</button>
+<button onclick="abrirTela('veiculo')" title="Veículos">🚗</button>
+<button onclick="abrirTela('posto')" title="Postos">🏪</button>
+<button onclick="abrirTela('admin')" title="Admin">🛠</button>
 </div>
 </div>
+
+<!-- ABASTECIMENTO -->
 <div id="tela_combustivel" class="tela">
-<div class="card"><select id="veiculoSel"></select></div>
+
+<div class="card">
+<select id="veiculoSel"></select>
+</div>
+
 <div class="card">
 <input id="data" type="date">
 <select id="postoSel"></select>
@@ -82,6 +94,7 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <option value="cheio">Tanque Cheio</option>
 <option value="parcial">Parcial</option>
 </select>
+
 <div style="display:flex;gap:6px">
 <button onclick="abrirInserir()" style="flex:1;background:#3b82f6;color:#fff">Inserir</button>
 <button onclick="salvar()" style="flex:1">Salvar</button>
@@ -89,6 +102,17 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 </div>
 
 <div class="card">
+<h3>Histórico</h3>
+<div id="lista"></div>
+</div>
+
+</div>
+
+<!-- MOTORISTA -->
+<div id="tela_motorista" class="tela" style="display:none">
+
+<div class="card">
+
 <div class="row"><span>Nome</span><input id="m_nome"></div>
 <div class="row"><span>CPF</span><input id="m_cpf"></div>
 <div class="row"><span>CNH</span><input id="m_cnh"></div>
@@ -96,34 +120,96 @@ button{width:100%;padding:12px;margin-top:6px;border:none;border-radius:10px;bac
 <div class="row"><span>Telefone</span><input id="m_tel"></div>
 <div class="row"><span>Email</span><input id="m_email"></div>
 <div class="row"><span>Observações</span><input id="m_obs"></div>
+
 <div style="display:flex;gap:6px">
 <button onclick="salvarMotorista()" style="flex:1;background:#22c55e">Salvar</button>
 <button onclick="novoMotorista()" style="flex:1;background:#64748b;color:#fff">Cancelar</button>
 </div>
+
 </div>
-  
-<div id="tela_veiculo" class="tela" style="display:none"><div class="card"><input id="v_placa" placeholder="Placa"><input id="v_marca" placeholder="Marca"><input id="v_modelo" placeholder="Modelo"><input id="v_ano" placeholder="Ano"><input id="v_cor" placeholder="Cor"><input id="v_renavam" placeholder="Renavam"><input id="v_comb" placeholder="Combustível Principal"><input id="v_km" placeholder="KM Atual"><input id="v_ipva" placeholder="IPVA Vencimento"><input id="v_lic" placeholder="Licenciamento"><input id="v_obs" placeholder="Observações"><button onclick="salvarVeiculo()">Salvar</button></div><div id="listaVeiculos"></div></div>
-<div id="tela_posto" class="tela" style="display:none"><div class="card"><input id="p_nome" placeholder="Nome do Posto"><input id="p_cnpj" placeholder="CNPJ"><input id="p_cidade" placeholder="Cidade"><input id="p_uf" placeholder="UF"><input id="p_endereco" placeholder="Endereço"><input id="p_bairro" placeholder="Bairro"><button onclick="salvarPosto()">Salvar</button></div><div id="listaPostos"></div></div>
-<div id="tela_admin" class="tela" style="display:none"><div class="card"><h3>Painel Admin</h3><div id="listaUsuarios"></div></div></div>
-<div class="footerBar"><button onclick="logout()" class="btnLogout">Sair</button></div>
+
+<div id="listaMotoristas"></div>
+
+</div>
+
+<!-- VEICULOS -->
+<div id="tela_veiculo" class="tela" style="display:none">
+
+<div class="card">
+<input id="v_placa" placeholder="Placa">
+<input id="v_marca" placeholder="Marca">
+<input id="v_modelo" placeholder="Modelo">
+<input id="v_ano" placeholder="Ano">
+<input id="v_cor" placeholder="Cor">
+<input id="v_renavam" placeholder="Renavam">
+<input id="v_comb" placeholder="Combustível">
+<input id="v_km" placeholder="KM Atual">
+<input id="v_ipva" placeholder="IPVA">
+<input id="v_lic" placeholder="Licenciamento">
+<input id="v_obs" placeholder="Observações">
+<button onclick="salvarVeiculo()">Salvar</button>
+</div>
+
+<div id="listaVeiculos"></div>
+
+</div>
+
+<!-- POSTOS -->
+<div id="tela_posto" class="tela" style="display:none">
+
+<div class="card">
+<input id="p_nome" placeholder="Nome do Posto">
+<input id="p_cnpj" placeholder="CNPJ">
+<input id="p_cidade" placeholder="Cidade">
+<input id="p_uf" placeholder="UF">
+<input id="p_endereco" placeholder="Endereço">
+<input id="p_bairro" placeholder="Bairro">
+<button onclick="salvarPosto()">Salvar</button>
+</div>
+
+<div id="listaPostos"></div>
+
+</div>
+
+<!-- ADMIN -->
+<div id="tela_admin" class="tela" style="display:none">
+<div class="card">
+<h3>Painel Admin</h3>
+<div id="listaUsuarios"></div>
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footerBar">
+<button onclick="logout()" class="btnLogout">Sair</button>
+</div>
+
+<!-- MODAL INSERIR -->
 <div id="modalInserir" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;justify-content:center;align-items:center">
 <div style="background:#fff;padding:20px;border-radius:12px;width:300px">
+
 <h3>Novo Abastecimento</h3>
+
 <input id="i_data" type="date">
 <select id="i_posto"></select>
 <input id="i_valor" placeholder="Valor Total">
 <input id="i_litros" placeholder="Litros">
 <input id="i_valor_litro" placeholder="Valor Unitário">
 <input id="i_km" placeholder="KM Atual">
+
 <select id="i_tanque">
 <option value="cheio">Tanque Cheio</option>
 <option value="parcial">Parcial</option>
 </select>
+
 <button onclick="salvarInsercao()">Inserir</button>
 <button onclick="fecharInserir()" style="background:#ef4444;color:#fff">Cancelar</button>
+
 </div>
 </div>
+
 </div>
+
 <script>
 const lista=document.getElementById("lista")
 const listaMotoristas=document.getElementById("listaMotoristas")
@@ -293,10 +379,19 @@ function mostrarLogin(){telaLogin.style.display="block";app.style.display="none"
 function mostrarApp(){telaLogin.style.display="none";app.style.display="block"}
 function abrirTela(t){
 document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
-document.getElementById("tela_"+t).style.display="block"
+
+const el=document.getElementById("tela_"+t)
+if(!el){
+console.error("Tela não encontrada:","tela_"+t)
+return
+}
+
+el.style.display="block"
+
 if(t==="motorista"||t==="veiculo"||t==="posto"){
 carregarCadastros()
 }
+
 if(t==="combustivel"){
 render()
 }
