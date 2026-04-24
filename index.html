@@ -184,7 +184,10 @@ font-size:11px;
 color:#94a3b8;
 margin-bottom:2px;
 }
-
+.btnCancel{
+background:#64748b;
+color:#fff;
+}
 
 
 </style>
@@ -815,7 +818,7 @@ v_motorista.value=motorista||""
 window.editarAbastecimento=function(id,valor,litros,km,data,posto){
 window.editAbastecimentoId=id
 modalEditar.style.display="flex"
-e_valor.value=valor||""
+e_valor.value=Number(valor||0).toFixed(2)
 e_litros.value=litros||""
 e_km.value=km||""
 e_data.value=(data||"").split("T")[0]
@@ -879,7 +882,7 @@ e_posto.value=posto||""
 
 async function salvarEdicao(){
 await db.from("abastecimentos").update({
-valor_total:parseFloat(e_valor.value)||0,
+valor_total:Number(parseFloat(e_valor.value||0).toFixed(2)),
 litros:parseFloat(e_litros.value)||0,
 quilometragem:parseFloat(e_km.value)||0,
 posto_id:e_posto.value||null,
@@ -946,17 +949,38 @@ e_posto.innerHTML=postoSel.innerHTML
 
 <div id="modalEditar" class="modal">
 <div class="modalBox">
-<h3>Editar Abastecimento</h3>
+<h3 style="margin-bottom:10px">✏️ Editar Abastecimento</h3>
+<div class="field">
+<label>📅 Data</label>
 <input id="e_data" type="date">
+</div>
+<div class="field">
+<label>🏪 Posto</label>
 <select id="e_posto"></select>
-<input id="e_valor">
-<input id="e_litros">
-<input id="e_km">
-<div class="actions">
-<button class="btnSave" onclick="salvarEdicao()">Salvar</button>
-<button class="btnDel" onclick="fecharEditar()">Cancelar</button>
+</div>
+<div class="field">
+<label>💰 Valor (R$)</label>
+<input id="e_valor" type="number" step="0.01">
+</div>
+<div class="field">
+<label>⛽ Litros</label>
+<input id="e_litros" type="number" step="0.01">
+</div>
+<div class="field">
+<label>📏 KM</label>
+<input id="e_km" type="number">
+</div>
+<div style="display:flex;gap:10px;margin-top:15px">
+<button class="btnSave" style="flex:1" onclick="salvarEdicao()">
+✔ Salvar
+</button>
+<button style="flex:1;background:#64748b;color:#fff;border-radius:8px" onclick="fecharEditar()">
+✖ Cancelar
+</button>
 </div>
 </div>
 </div>
+
+
 </body>
 </html>
