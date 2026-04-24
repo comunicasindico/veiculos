@@ -377,36 +377,44 @@ render()
 </script>
 
 <div id="modalEditar" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;justify-content:center;align-items:center">
-<div style="background:#fff;padding:20px;border-radius:12px;width:520px;display:flex;gap:14px">
 
-<!-- 🔹 LADO ESQUERDO (RESUMO) -->
-<div style="width:45%;font-size:12px;color:#334155">
-<div><b>Data:</b><br><span id="ed_info_data"></span></div>
-<div><b>Posto:</b><br><span id="ed_info_posto"></span></div>
-<div><b>Litros:</b><br><span id="ed_info_litros"></span></div>
-<div><b>Valor Unitário:</b><br><span id="ed_info_vl"></span></div>
-<div><b>Total:</b><br><span id="ed_info_total"></span></div>
-<div><b>KM:</b><br><span id="ed_info_km"></span></div>
-<div><b>Tanque:</b><br><span id="ed_info_tanque"></span></div>
-</div>
-<!-- 🔹 LADO DIREITO (EDIÇÃO) -->
-<div style="width:55%">
+<div style="background:#fff;padding:20px;border-radius:12px;width:420px">
 <h3>Editar</h3>
-<input id="e_data" type="date">
-<select id="e_posto"></select>
-<input id="e_valor">
-<input id="e_litros">
-<input id="e_valor_litro">
-<input id="e_km">
-<select id="e_tanque">
+<div style="display:flex;align-items:center;margin-bottom:6px">
+<div style="width:140px;font-weight:bold;color:#334155">Data</div>
+<input id="e_data" type="date" style="flex:1">
+</div>
+<div style="display:flex;align-items:center;margin-bottom:6px">
+<div style="width:140px;font-weight:bold;color:#334155">Posto</div>
+<select id="e_posto" style="flex:1"></select>
+</div>
+<div style="display:flex;align-items:center;margin-bottom:6px">
+<div style="width:140px;font-weight:bold;color:#334155">Valor Total</div>
+<input id="e_valor" style="flex:1">
+</div>
+<div style="display:flex;align-items:center;margin-bottom:6px">
+<div style="width:140px;font-weight:bold;color:#334155">Litros</div>
+<input id="e_litros" style="flex:1">
+</div>
+<div style="display:flex;align-items:center;margin-bottom:6px">
+<div style="width:140px;font-weight:bold;color:#334155">Valor Unitário</div>
+<input id="e_valor_litro" style="flex:1">
+</div>
+<div style="display:flex;align-items:center;margin-bottom:6px">
+<div style="width:140px;font-weight:bold;color:#334155">KM Atual</div>
+<input id="e_km" style="flex:1">
+</div>
+<div style="display:flex;align-items:center;margin-bottom:10px">
+<div style="width:140px;font-weight:bold;color:#334155">Tanque</div>
+<select id="e_tanque" style="flex:1">
 <option value="cheio">Tanque Cheio</option>
 <option value="parcial">Parcial</option>
 </select>
+</div>
 <button onclick="salvarEdicao()">Salvar</button>
 <button onclick="fecharModal()" style="background:#ef4444;color:#fff">Cancelar</button>
 </div>
-
-</div>
+  
 </div>
 
 </body>
