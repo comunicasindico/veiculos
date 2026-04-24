@@ -474,12 +474,13 @@ init()
 
 /* 007 INIT */
 async function init(){
-telaLogin.style.display="none";app.style.display="block"
+telaLogin.style.display="none"
+app.style.display="block"
 await carregarTudo()
+await carregarSelectsPadrao()
 abrirTela("combustivel")
 render()
 }
-
 /* 008 UI */
 function abrirTela(t){
 document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
@@ -542,7 +543,9 @@ listaPostos.innerHTML=p.length?p.map(x=>`
 `).join(""):`<div class="item">Nenhum posto</div>`
 }
 if(window.postoSel){
-postoSel.innerHTML=p.length?p.map(x=>`<option value="${x.id}">${x.nome_posto||"Posto"}</option>`).join(""):`<option value="">Nenhum posto</option>`
+postoSel.innerHTML=p.length
+? p.map(x=>`<option value="${x.id}">${x.nome_posto||"-"}</option>`).join("")
+: `<option value="">Sem postos</option>`
 }
 if(window.e_posto&&window.postoSel){
 e_posto.innerHTML=postoSel.innerHTML
@@ -555,7 +558,7 @@ let mapMotoristas={}
 if(window.veiculoSel){
 veiculoSel.innerHTML=v.length?v.map(x=>`<option value="${x.id}">${x.modelo||x.placa||"Veículo"}</option>`).join(""):`<option value="">Nenhum veículo</option>`
 }
-VID=v?.[0]?.id||null
+VID=null
 if(window.listaVeiculos){
 listaVeiculos.innerHTML=v.length?v.map(x=>{
 let mot=mapMotoristas[x.motorista_id]||{}
@@ -585,7 +588,7 @@ async function salvar(){
 await db.from("abastecimentos").insert({
 empresa_id:localStorage.getItem("empresa"),
 veiculo_id:VID,
-posto_id:postoSel.value,
+posto_id:postoSel?.value||null,
 valor_total:valor.value,
 litros:litros.value,
 quilometragem:km.value,
@@ -626,10 +629,15 @@ let vs=document.getElementById("veiculoSel")
 if(vs){
 if(!vs._bind){
 vs.addEventListener("change",()=>{
-VID=vs.value
-render()
+VID=vs.value||null
+if(VID)render()
 })
 vs._bind=true
+}
+
+/* 🔥 GARANTE PRIMEIRO CARREGAMENTO */
+if(!VID && vs.value){
+VID=vs.value
 }
 }
 }
@@ -845,6 +853,31 @@ let el=document.getElementById("renavam_"+id)
 if(!el)return
 el.innerText=el.innerText==="***"?valor||"-":"***"
 }
+async function carregarSelectsPadrao(){
+
+/* VEÍCULO */
+if(window.veiculoSel){
+if(veiculoSel.options.length>0){
+VID=veiculoSel.value
+}else{
+VID=null
+}
+}
+
+/* POSTO */
+if(window.postoSel){
+if(postoSel.options.length>0){
+postoSel.value=postoSel.options[0].value
+}
+}
+
+/* EDIT MODAL */
+if(window.e_posto && window.postoSel){
+e_posto.innerHTML=postoSel.innerHTML
+}
+
+}
+
   
   
 </script>
