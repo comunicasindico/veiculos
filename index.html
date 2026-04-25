@@ -293,7 +293,7 @@ let filtroFim=null
 let timerCNPJ=null
 let ultimoCNPJBuscado=null
 
-window.addEventListener("DOMContentLoaded",()=>{
+function initCNPJAuto(){
 const cnpjInput=document.getElementById("cnpjBusca")
 if(!cnpjInput)return
 
@@ -320,7 +320,7 @@ buscarCNPJ_PRO(limpo)
 },600)
 }
 })
-})
+}
 
 function getCacheCNPJ(cnpj){
 return JSON.parse(localStorage.getItem("cnpj_"+cnpj)||"null")
@@ -1165,8 +1165,22 @@ pass.value=""
 /* START */
 document.addEventListener("DOMContentLoaded",()=>{
 document.body.classList.add("login")
+
 window.graficoConsumoEl=document.getElementById("graficoConsumo")
 window.graficoGastoEl=document.getElementById("graficoGasto")
+
+/* 🔥 DATA AUTOMÁTICA CORRIGIDA */
+let inputData=document.getElementById("data")
+if(inputData && !inputData.value){
+let hoje=new Date()
+let offset=hoje.getTimezoneOffset()
+hoje=new Date(hoje.getTime()-offset*60000)
+inputData.value=hoje.toISOString().slice(0,10)
+}
+
+/* 🔥 CNPJ AUTO INICIALIZA */
+initCNPJAuto()
+
 if(localStorage.getItem("empresa")){
 document.body.classList.remove("login")
 init()
