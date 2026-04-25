@@ -544,6 +544,33 @@ render()
 }
 },100)
 }
+
+async function garantirPosto(){
+let nome=(p_nome.value||"").trim()
+if(!nome)return
+let emp=localStorage.getItem("empresa")
+let {data}=await db.from("postos")
+.select("*")
+.ilike("nome_posto",nome)
+if(data && data.length){
+postoSel.value=data[0].id
+return
+}
+/* 🆕 CRIA POSTO SEM CNPJ */
+let {data:novo}=await db.from("postos")
+.insert({
+empresa_id:emp,
+nome_posto:nome,
+cidade:""
+})
+.select()
+.single()
+await carregarTudo()
+setTimeout(()=>{
+postoSel.value=novo.id
+},300)
+}
+
 /* 010 SALVAR */
 async function salvar(){
 if(!data.value){
@@ -590,7 +617,7 @@ litros.value=""
 km.value=""
 
 /* 🔥 FEEDBACK */
-alert("✅ Abastecimento salvo")
+alert("✅ Abastecimento salvo com Sucesso")
 
 /* 🔥 ATUALIZA TELA */
 render()
@@ -1061,6 +1088,11 @@ function processarCupomInteligente(text){
 text=text.replace(/\r/g,"\n").toLowerCase()
 /* 🔥 CNPJ */
 let cnpj=(text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[""])[0]
+/* 🔥 TENTA PEGAR NOME DO POSTO */
+let nomePosto=(text.match(/posto\s+[a-z0-9\s\-]+/)||[""])[0]
+if(nomePosto && !cnpj){
+p_nome.value=nomePosto.toUpperCase()
+}
 /* 🔥 VALORES */
 let total=(text.match(/total\s*[r\$]*\s*([\d\.,]+)/)||[])[1]
 let litros=(text.match(/(\d+[\.,]\d+)\s*l/)||[])[1]
@@ -1092,36 +1124,57 @@ modalConfirmacao.style.display="flex"
 async function buscarPostoPorCNPJ(cnpj){
 try{
 let limpo=cnpj.replace(/\D/g,"")
+let emp=localStorage.getItem("empresa")
+
 let res=await fetch("https://receitaws.com.br/v1/cnpj/"+limpo)
 let json=await res.json()
+
 if(!json.nome)return
+
 let nome=json.nome
 let cidade=json.municipio+"-"+json.uf
-let emp=localStorage.getItem("empresa")
-/* 🔍 verifica se já existe */
-let {data}=await db.from("postos").select("*").eq("cnpj",cnpj)
+
+/* 🔍 VERIFICA EXISTENTE */
+let {data}=await db.from("postos")
+.select("*")
+.eq("cnpj",cnpj)
+
 let postoId=null
-if(data&&data.length){
+
+if(data && data.length){
 postoId=data[0].id
 }else{
-/* 🆕 cria automaticamente */
-let {data:novo}=await db.from("postos").insert({
+/* 🆕 CRIA NOVO POSTO */
+let {data:novo,error}=await db.from("postos")
+.insert({
 empresa_id:emp,
 nome_posto:nome,
 cidade:cidade,
 cnpj:cnpj
-}).select().single()
+})
+.select()
+.single()
+
+if(error){
+console.error(error)
+return
+}
+
 postoId=novo.id
 }
-/* 🔥 atualiza dropdown */
+
+/* 🔥 ATUALIZA LISTA */
 await carregarTudo()
+
+/* 🔥 SELECIONA AUTOMATICAMENTE */
 setTimeout(()=>{
 if(window.postoSel && postoId){
 postoSel.value=postoId
 }
 },300)
+
 }catch(e){
-console.log("Erro CNPJ:",e)
+console.log("Erro ao buscar CNPJ:",e)
 }
 }
 
@@ -1159,13 +1212,19 @@ km.style.border="2px solid #22c55e"
 /* 🔥 FECHAR MODAIS */
 fecharConfirmacao()
 fecharOCR()
-/* 🔥 MENSAGEM FINAL */
-setTimeout(()=>{
-alert("✅ Abastecimento pronto para salvar")
-},300)
-/* 🔥 AUTO-FOCUS NO BOTÃO SALVAR */
-document.querySelector(".btnSave")?.focus()
+/* 🔥 GARANTE POSTO + SALVA */
+setTimeout(async()=>{
+if(typeof garantirPosto==="function"){
+await garantirPosto()
 }
+/* 🔥 VALIDAÇÃO FINAL */
+validarAbastecimentoAvancado?.()
+/* 🔥 SALVAR */
+await garantirPosto()
+salvar()  
+/* 🔥 FEEDBACK REAL */
+alert("✅ Abastecimento salvo com sucesso!")
+},300)
 
 function fecharConfirmacao(){
 modalConfirmacao.style.display="none"
