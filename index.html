@@ -51,7 +51,10 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 .btnSair{background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 8px 30px rgba(220,38,38,.5)}
 .tela{display:none;animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-
+#modalOCR .modalBox{max-height:90vh;overflow-y:auto}
+#modalOCR video{max-height:35vh;object-fit:cover}
+#modalOCR img{max-height:35vh;object-fit:contain}
+  
   
   
 </style>
@@ -972,30 +975,46 @@ let img=canvas.toDataURL("image/jpeg",0.9)
 previewOCR.src=img
 previewOCR.style.display="block"
 }
+
 async function processarOCR(){
 if(!previewOCR.src)return alert("Capture primeiro")
-alert("Processando cupom...")
+let btns=document.querySelector("#modalOCR .modalBox")
+btns.style.opacity="0.6"
+btns.innerHTML+="<div id='loadingOCR' style='text-align:center;margin-top:10px'>🔄 Lendo cupom...</div>"
 const {data:{text}}=await Tesseract.recognize(previewOCR.src,"por",{logger:m=>console.log(m)})
-console.log(text)
+document.getElementById("loadingOCR")?.remove()
+btns.style.opacity="1"
 processarCupomInteligente(text)
-fecharOCR()
 }
+
+
 function processarCupomInteligente(text){
 text=text.replace(/\r/g,"\n").toLowerCase()
-let cnpj=(text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[""])[0]
 let total=(text.match(/total\s*[r\$]*\s*([\d\.,]+)/)||[])[1]
 let litros=(text.match(/(\d+[\.,]\d+)\s*l/)||[])[1]
 let valorLitro=(text.match(/(\d+[\.,]\d+)\s*(?:\/l|litro)/)||[])[1]
 let km=(text.match(/km[:\s]*([\d]+)/)||[])[1]
 let combustivel=(text.match(/gasolina|etanol|diesel|gnv/)||[""])[0]
-if(total)valor.value=total.replace(",",".")
-if(litros)litros.value=litros.replace(",",".")
-if(valorLitro)valor_litro.value=valorLitro.replace(",",".")
-if(km)km.value=km
-if(combustivel)v_combustivel.value=combustivel
-if(cnpj)buscarPostoPorCNPJ(cnpj)
-validarAbastecimento()
-alert("Cupom processado com IA")
+
+c_valor.value=total||""
+c_litros.value=litros||""
+c_valorLitro.value=valorLitro||""
+c_km.value=km||""
+c_combustivel.value=combustivel||""
+
+modalConfirmacao.style.display="flex"
+}
+function confirmarOCR(){
+valor.value=c_valor.value.replace(",",".")
+litros.value=c_litros.value.replace(",",".")
+valor_litro.value=c_valorLitro.value.replace(",",".")
+km.value=c_km.value
+v_combustivel.value=c_combustivel.value
+fecharConfirmacao()
+fecharOCR()
+}
+function fecharConfirmacao(){
+modalConfirmacao.style.display="none"
 }
 function validarAbastecimento(){
 let v=parseFloat(valor.value)||0
@@ -1131,13 +1150,29 @@ return{posto:melhor,preco:menor}
 <video id="videoOCR" autoplay playsinline style="width:100%;border-radius:10px;background:#000"></video>
 <canvas id="canvasOCR" style="display:none"></canvas>
 <img id="previewOCR" style="width:100%;margin-top:8px;border-radius:10px;display:none">
-<div style="display:flex;gap:6px;margin-top:10px">
-<button class="btnSave" onclick="capturarImagem()">📸 Capturar</button>
+<div style="position:sticky;bottom:0;background:#1e293b;padding:10px;display:flex;gap:6px">
+<button class="btnSave" onclick="capturarImagem()">📸</button>
 <button class="btnSave" onclick="processarOCR()" style="background:#22c55e">✔ Ler</button>
 <button onclick="fecharOCR()" style="background:#64748b;color:#fff;border-radius:8px">✖</button>
 </div>
 </div>
 </div>
+
+<div id="modalConfirmacao" class="modal">
+<div class="modalBox">
+<h3>📋 Confirmar Dados</h3>
+<div class="field"><label>Valor</label><input id="c_valor"></div>
+<div class="field"><label>Litros</label><input id="c_litros"></div>
+<div class="field"><label>Valor/L</label><input id="c_valorLitro"></div>
+<div class="field"><label>KM</label><input id="c_km"></div>
+<div class="field"><label>Combustível</label><input id="c_combustivel"></div>
+<div style="display:flex;gap:6px;margin-top:10px">
+<button class="btnSave" onclick="confirmarOCR()">✔ Salvar</button>
+<button onclick="fecharConfirmacao()" style="background:#64748b;color:#fff">✖</button>
+</div>
+</div>
+</div>
+
 
 </body>
 </html>
