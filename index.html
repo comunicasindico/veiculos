@@ -423,6 +423,10 @@ const db=supabase.createClient(
 "sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw"
 )
 
+/* 🔥 OCR LOG */
+Tesseract.setLogging(true)
+
+
 /* 004 ESTADO */
 let VID=null,graficoConsumo,graficoGasto
 
@@ -1636,6 +1640,14 @@ alert("📷 Aponte primeiro para o QR do cupom.\nSe não detectar, capture norma
 },400)
 }
 
+  window.addEventListener("load",()=>{
+if(window.Tesseract){
+console.log("✅ OCR pronto")
+}else{
+console.warn("⚠️ OCR não carregou")
+}
+})
+  
 
   
 </script>
