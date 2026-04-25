@@ -456,7 +456,6 @@ carregarTudo()
 async function carregarTudo(){
 let emp=localStorage.getItem("empresa")||null
 if(!emp)return console.error("empresa não encontrada")
-
 let elMotoristas=document.getElementById("listaMotoristas")
 let elPostos=document.getElementById("listaPostos")
 let elVeiculos=document.getElementById("listaVeiculos")
@@ -465,10 +464,11 @@ let selPosto=document.getElementById("postoSel")
 let selPostoEdit=document.getElementById("e_posto")
 let selVeiculo=document.getElementById("veiculoSel")
 
-/* MOTORISTAS */
-let {data:m,error:e1}=await db.from("motoristas").select("*").eq("empresa_id",emp)
-if(e1){console.error("motoristas:",e1);m=[]}
-m=Array.isArray(m)?m:[]
+/* 🔥 MOTORISTAS (CORRIGIDO DEFINITIVO) */
+let m=[]
+let {data:motoristas,error:e1}=await db.from("motoristas").select("*")
+if(e1){console.error("motoristas erro:",e1);motoristas=[]}
+m=Array.isArray(motoristas)?motoristas:[]
 console.log("motoristas:",m)
 
 if(elMotoristas){
@@ -479,10 +479,11 @@ if(selMotorista){
 selMotorista.innerHTML=m.length?m.map(x=>`<option value="${x.id}">${x.nome||"-"}</option>`).join(""):`<option value="">Sem motoristas</option>`
 }
 
-/* POSTOS */
-let {data:p,error:e2}=await db.from("postos").select("*").eq("empresa_id",emp)
-if(e2){console.error("postos:",e2);p=[]}
-p=Array.isArray(p)?p:[]
+/* 🔥 POSTOS */
+let p=[]
+let {data:postos,error:e2}=await db.from("postos").select("*").eq("empresa_id",emp)
+if(e2){console.error("postos erro:",e2);postos=[]}
+p=Array.isArray(postos)?postos:[]
 console.log("postos:",p)
 
 if(elPostos){
@@ -497,10 +498,11 @@ if(selPostoEdit&&selPosto){
 selPostoEdit.innerHTML=selPosto.innerHTML
 }
 
-/* VEICULOS */
-let {data:v,error:e3}=await db.from("veiculos").select("*").eq("empresa_id",emp)
-if(e3){console.error("veiculos:",e3);v=[]}
-v=Array.isArray(v)?v:[]
+/* 🔥 VEÍCULOS */
+let v=[]
+let {data:veiculos,error:e3}=await db.from("veiculos").select("*").eq("empresa_id",emp)
+if(e3){console.error("veiculos erro:",e3);veiculos=[]}
+v=Array.isArray(veiculos)?veiculos:[]
 console.log("veiculos:",v)
 
 let mapMotoristas={}
