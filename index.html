@@ -811,17 +811,14 @@ console.error(error)
 return alert("Erro ao salvar motorista")
 }
 
-/* LIMPA */
-m_nome.value=""
-m_tel.value=""
-if(typeof m_cpf!=="undefined" && m_cpf)m_cpf.value=""
-
-/* FEEDBACK */
+/* 🔥 FEEDBACK */
 alert("✅ Motorista salvo")
 
+/* 🔥 VOLTA PARA LISTA */
+cancelarMotorista()
+
+/* 🔥 RECARREGA */
 await carregarTudo()
-document.getElementById("formMotorista").style.display="none"
-document.getElementById("listaMotoristas").style.display="block"
 }
 
 
@@ -860,77 +857,68 @@ window.editVeiculoId=null
 }
 
 if(error){
-console.error("ERRO VEICULO:",error)
-alert("Erro: "+(error.message||JSON.stringify(error)))
-return
+console.error(error)
+return alert("Erro ao salvar veículo")
 }
 
-/* LIMPA */
-v_placa.value=""
-v_marca.value=""
-v_modelo.value=""
-v_ano.value=""
-v_cor.value=""
-v_renavam.value=""
-v_combustivel.value=""
-v_km.value=""
-v_ipva.value=""
-v_licenciamento.value=""
-
-/* FEEDBACK */
 alert("✅ Veículo salvo")
 
+cancelarVeiculo()
 await carregarTudo()
 }
 
 async function salvarPosto(){
+
 let emp=localStorage.getItem("empresa")
+
 let nome=(p_nome.value||"").trim()
 if(!nome)return alert("Informe o nome do posto")
+
 let payload={
 empresa_id:emp,
 nome_posto:nome,
 cidade:(p_cidade.value||"").trim(),
 cnpj:(p_cnpj.value||"").trim(),
-endereco:(p_endereco?.value||"").trim(),
-numero:(p_numero?.value||"").trim(),
-uf:(p_uf?.value||"").trim(),
-cep:(p_cep?.value||"").trim()
+endereco:(p_endereco.value||"").trim(),
+numero:(p_numero.value||"").trim(),
+uf:(p_uf.value||"").trim(),
+cep:(p_cep.value||"").trim()
 }
+
 let error=null
+
 if(window.editPostoId){
 ({error}=await db.from("postos").update(payload).eq("id",window.editPostoId))
 window.editPostoId=null
 }else{
 ({error}=await db.from("postos").insert(payload))
 }
+
 if(error){
 console.error(error)
 return alert("Erro ao salvar posto")
 }
+
 alert("✅ Posto salvo")
-p_nome.value=""
-p_cidade.value=""
-p_cnpj.value=""
-if(p_endereco)p_endereco.value=""
-if(p_numero)p_numero.value=""
-if(p_uf)p_uf.value=""
-if(p_cep)p_cep.value=""
-let form=document.getElementById("formPosto")
-if(form)form.style.display="none"
+
+cancelarPosto()
 await carregarTudo()
 }
 
+window.editPostoId=null
 window.editarPosto=function(id,nome,cidade,cnpj){
 window.editPostoId=id
 p_nome.value=nome||""
 p_cidade.value=cidade||""
 p_cnpj.value=cnpj||""
+let form=document.getElementById("formPosto")
+let lista=document.getElementById("listaPostos")
+if(form)form.style.display="block"
+if(lista)lista.style.display="none"
 }
 
 window.editVeiculoId=null
-window.editarVeiculo=function(
-id,placa,marca,modelo,ano,cor,renavam,comb,kilometragem,ipva,lic,motorista){
+window.editarVeiculo=function(id,placa,marca,modelo,ano,cor,renavam,comb,kilometragem,ipva,lic,motorista){
 window.editVeiculoId=id
 v_placa.value=placa||""
 v_marca.value=marca||""
@@ -943,6 +931,10 @@ v_km.value=kilometragem||""
 v_ipva.value=(ipva||"").split("T")[0]
 v_licenciamento.value=(lic||"").split("T")[0]
 v_motorista.value=motorista||""
+let form=document.getElementById("formVeiculo")
+let lista=document.getElementById("listaVeiculos")
+if(form)form.style.display="block"
+if(lista)lista.style.display="none"
 }
 
 window.editarAbastecimento=function(id,valor,litros,km,data,posto){
@@ -960,6 +952,7 @@ e_posto.value=posto||""
 window.editMotoristaId=null
 window.editarMotorista=function(id,nome,tel,cpf){
 window.editMotoristaId=id
+
 if(typeof m_nome!=="undefined" && m_nome){
 m_nome.value=nome||""
 }
@@ -969,6 +962,13 @@ m_tel.value=tel||""
 if(typeof m_cpf!=="undefined" && m_cpf){
 m_cpf.value=cpf||""
 }
+
+/* 🔥 MOSTRAR FORM E ESCONDER LISTA */
+let form=document.getElementById("formMotorista")
+let lista=document.getElementById("listaMotoristas")
+
+if(form)form.style.display="block"
+if(lista)lista.style.display="none"
 }
 
 async function excluir(t,id){
@@ -1599,30 +1599,37 @@ e_posto.value=""
 })
 }
 function cancelarVeiculo(){
-document.getElementById("formVeiculo").style.display="none"
-document.getElementById("listaVeiculos").style.display="block"
+let form=document.getElementById("formVeiculo")
+let lista=document.getElementById("listaVeiculos")
+if(form)form.style.display="none"
+if(lista)lista.style.display="block"
 window.editVeiculoId=null
-if(window.v_placa)v_placa.value=""
-if(window.v_marca)v_marca.value=""
-if(window.v_modelo)v_modelo.value=""
-if(window.v_ano)v_ano.value=""
-if(window.v_cor)v_cor.value=""
-if(window.v_renavam)v_renavam.value=""
-if(window.v_km)v_km.value=""
-}
-function cancelarPosto(){
-document.getElementById("formPosto").style.display="none"
-document.getElementById("listaPostos").style.display="block"
-window.editPostoId=null
-if(window.p_nome)p_nome.value=""
-if(window.p_cnpj)p_cnpj.value=""
-if(window.p_cidade)p_cidade.value=""
-if(window.p_endereco)p_endereco.value=""
-if(window.p_numero)p_numero.value=""
-if(window.p_uf)p_uf.value=""
-if(window.p_cep)p_cep.value=""
+v_placa.value=""
+v_marca.value=""
+v_modelo.value=""
+v_ano.value=""
+v_cor.value=""
+v_renavam.value=""
+v_combustivel.value=""
+v_km.value=""
+v_ipva.value=""
+v_licenciamento.value=""
 }
 
+function cancelarPosto(){
+let form=document.getElementById("formPosto")
+let lista=document.getElementById("listaPostos")
+if(form)form.style.display="none"
+if(lista)lista.style.display="block"
+window.editPostoId=null
+p_nome.value=""
+p_cidade.value=""
+p_cnpj.value=""
+p_endereco.value=""
+p_numero.value=""
+p_uf.value=""
+p_cep.value=""
+}
 
 let cropMode=false
 let startX,startY,endX,endY
