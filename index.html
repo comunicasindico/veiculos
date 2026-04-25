@@ -359,8 +359,37 @@ callback:(v)=>"R$ "+Number(v).toLocaleString("pt-BR")
 })
 let indicadores=calcularIndicadores(dados)
 renderKPIs(indicadores)
+let auto=calcularAutonomia(lista)
+if(auto){
+let el=document.getElementById("kpis")
+el.innerHTML+=`
+<div class="item">🚗 Autonomia<br><b>${auto.autonomia.toFixed(0)} km</b></div>
+<div class="item">⛽ Consumo Médio<br><b>${auto.media.toFixed(2)} km/L</b></div>
+`
 }
-  
+}
+
+function calcularAutonomia(lista){
+if(!Array.isArray(lista)||lista.length<2)return null
+let dados=[...lista].sort((a,b)=>new Date(b.data_abastecimento)-new Date(a.data_abastecimento))
+let consumos=[]
+for(let i=0;i<dados.length-1;i++){
+let a=dados[i],b=dados[i+1]
+if(a.tipo_abastecimento!=="cheio"||b.tipo_abastecimento!=="cheio")continue
+let kmA=Number(a.quilometragem||0),kmB=Number(b.quilometragem||0),lit=Number(a.litros||0)
+let rodado=kmA-kmB
+if(rodado>0&&lit>0)consumos.push(rodado/lit)
+}
+if(!consumos.length)return null
+let media=consumos.reduce((x,y)=>x+y,0)/consumos.length
+let ultimoKm=Number(dados[0].quilometragem||0)
+/* 🔧 ajuste aqui se quiser por veículo no futuro */
+let capacidade=60
+let autonomia=media*capacidade
+return{media,autonomia,capacidade,ultimoKm}
+}
+
+
 /* 003 CONFIG */
 const db=supabase.createClient(
 "https://gspdlrenyrzbkxlvyugc.supabase.co",
@@ -1006,19 +1035,25 @@ previewOCR.style.display="block"
 
 async function processarOCR(){
 if(!previewOCR.src)return alert("Capture primeiro")
-alert("🔍 IA analisando cupom... aguarde")
-const {data:{text}}=await Tesseract.recognize(
+try{
+alert("🔍 Analisando cupom...")
+const result=await Tesseract.recognize(
 previewOCR.src,
 "por",
-{
-logger:m=>console.log(m),
-tessedit_pageseg_mode:6,
-tessedit_char_whitelist:"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:-/ R$L"
-}
+{logger:m=>console.log(m)}
 )
-console.log("OCR TEXTO:",text)
+let text=result?.data?.text||""
+if(!text||text.length<10){
+alert("❌ Não foi possível ler o cupom. Tente outra foto.")
+return
+}
+console.log("OCR:",text)
 processarCupomInteligente(text)
 fecharOCR()
+}catch(e){
+console.error(e)
+alert("Erro no OCR")
+}
 }
 
 
@@ -1059,14 +1094,34 @@ try{
 let limpo=cnpj.replace(/\D/g,"")
 let res=await fetch("https://receitaws.com.br/v1/cnpj/"+limpo)
 let json=await res.json()
-
-if(json.nome){
-p_nome.value=json.nome
-p_cidade.value=json.municipio+"-"+json.uf
-p_cnpj.value=cnpj
+if(!json.nome)return
+let nome=json.nome
+let cidade=json.municipio+"-"+json.uf
+let emp=localStorage.getItem("empresa")
+/* 🔍 verifica se já existe */
+let {data}=await db.from("postos").select("*").eq("cnpj",cnpj)
+let postoId=null
+if(data&&data.length){
+postoId=data[0].id
+}else{
+/* 🆕 cria automaticamente */
+let {data:novo}=await db.from("postos").insert({
+empresa_id:emp,
+nome_posto:nome,
+cidade:cidade,
+cnpj:cnpj
+}).select().single()
+postoId=novo.id
 }
+/* 🔥 atualiza dropdown */
+await carregarTudo()
+setTimeout(()=>{
+if(window.postoSel && postoId){
+postoSel.value=postoId
+}
+},300)
 }catch(e){
-console.log("Erro ReceitaWS",e)
+console.log("Erro CNPJ:",e)
 }
 }
 
