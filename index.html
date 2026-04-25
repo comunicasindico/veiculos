@@ -1141,7 +1141,7 @@ alert("Conta criada com sucesso!")
 user.value=usuario
 pass.value=senha
 }
-  
+
 async function abrirCameraOCR(){
 modalOCR.style.display="flex"
 previewOCR.style.display="none"
@@ -1202,18 +1202,64 @@ console.error("Erro QR:",e)
 },300)
 }
 
+function preprocessarImagem(src){
+return new Promise(resolve=>{
+let img=new Image()
+img.onload=()=>{
+let canvas=document.createElement("canvas")
+let ctx=canvas.getContext("2d")
+
+canvas.width=img.width
+canvas.height=img.height
+
+ctx.drawImage(img,0,0)
+
+let imageData=ctx.getImageData(0,0,canvas.width,canvas.height)
+let data=imageData.data
+
+for(let i=0;i<data.length;i+=4){
+let avg=(data[i]+data[i+1]+data[i+2])/3
+
+// 🔥 ajuste profissional (não estoura)
+let val=avg>160?255:0
+
+data[i]=val
+data[i+1]=val
+data[i+2]=val
+}
+
+ctx.putImageData(imageData,0,0)
+
+resolve(canvas.toDataURL())
+}
+img.src=src
+})
+}
+
+
 async function tentarQRImagem(src){
 return new Promise((resolve)=>{
 try{
+
+let temp=document.createElement("div")
+temp.id="qr-temp"
+temp.style.display="none"
+document.body.appendChild(temp)
+
 const html5QrCode=new Html5Qrcode("qr-temp")
 
 html5QrCode.scanFile(src,true)
 .then(decodedText=>{
+html5QrCode.clear()
+temp.remove()
 resolve(decodedText)
 })
 .catch(()=>{
+html5QrCode.clear()
+temp.remove()
 resolve(null)
 })
+
 }catch(e){
 console.error("QR erro:",e)
 resolve(null)
@@ -1226,7 +1272,8 @@ async function processarOCR(){
 previewOCR.style.opacity="0.5"
 if(!previewOCR.src)return alert("Capture primeiro")
 
-alert("🔍 Processando cupom...")
+iaBox.style.display="block"
+iaBox.innerHTML="🔍 Processando cupom..."
 
 try{
 const worker=await Tesseract.createWorker("por")
@@ -1234,7 +1281,8 @@ await worker.setParameters({
 tessedit_char_whitelist:"0123456789.,R$LKMGASOLINAETANOLDIESEL"
 })
 
-const {data:{text}}=await worker.recognize(previewOCR.src)
+let imgProcessada=await preprocessarImagem(previewOCR.src)
+const {data:{text}}=await worker.recognize(imgProcessada)
 
 await worker.terminate()
 
