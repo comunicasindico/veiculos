@@ -147,6 +147,13 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <label>📏 KM Atual</label>
 <input id="km" placeholder="Ex: 52340">
 </div>
+<div class="field">
+<label>⛽ Tipo de abastecimento</label>
+<select id="tipo_abastecimento">
+<option value="cheio">Tanque cheio</option>
+<option value="parcial">Parcial</option>
+</select>
+</div>
 <button class="btnSave" onclick="salvar()">Salvar Abastecimento</button>
 </div>
 
@@ -285,16 +292,20 @@ function renderDashboard(lista){
 if(!Array.isArray(lista)||!lista.length)return
 let dados=[...lista].sort((a,b)=>new Date(b.data_abastecimento)-new Date(a.data_abastecimento))
 let labels=dados.map(x=>fData(x.data_abastecimento))
-let consumo=dados.map((a,i)=>{
-let ant=dados[i+1]
-if(!ant)return 0
-let kmAtual=Number(a.quilometragem||0)
-let kmAnt=Number(ant.quilometragem||0)
-let litros=Number(a.litros||0)
-let km=kmAtual-kmAnt
-if(km<=0||litros<=0)return 0
-return km/litros
-})
+let consumo=[]
+for(let i=0;i<dados.length-1;i++){
+let atual=dados[i]
+let anterior=dados[i+1]
+if(atual.tipo_abastecimento!=="cheio")continue
+if(anterior.tipo_abastecimento!=="cheio")continue
+let kmAtual=Number(atual.quilometragem||0)
+let kmAnterior=Number(anterior.quilometragem||0)
+let litros=Number(atual.litros||0)
+let kmRodado=kmAtual-kmAnterior
+if(kmRodado>0 && litros>0){
+consumo.push(kmRodado/litros)
+}
+}
 let valores=dados.map(x=>Number(x.valor_total||0))
 if(graficoConsumo)graficoConsumo.destroy()
 if(graficoGasto)graficoGasto.destroy()
@@ -516,6 +527,7 @@ let emp=localStorage.getItem("empresa")
 let v_total=parseFloat(valor.value)||0
 let v_litros=parseFloat(litros.value)||0
 let v_km=parseFloat(km.value)||0
+let tipo=tipo_abastecimento?.value||"cheio"
 let v_data=data.value
 
 if(!v_data)return alert("Informe a data")
@@ -534,7 +546,8 @@ valor_total:parseFloat(v_total.toFixed(2)),
 litros:parseFloat(v_litros.toFixed(3)),
 quilometragem:v_km,
 data_abastecimento:v_data,
-valor_litro:parseFloat(v_valorLitro.toFixed(3))
+valor_litro:parseFloat(v_valorLitro.toFixed(3)),
+tipo_abastecimento:tipo
 })
 
 if(error){
@@ -598,6 +611,9 @@ return `
 <div><b>${fData(a.data_abastecimento)}</b> | ${a.postos?.nome_posto||"-"}</div>
 <div style="font-size:11px;color:#94a3b8">
 R$ ${valor.toFixed(2)} | ${litros}L | KM ${km}
+<br><span style="font-size:10px;color:${a.tipo_abastecimento==="cheio"?"#22c55e":"#f59e0b"}">
+${a.tipo_abastecimento==="cheio"?"🟢 Tanque cheio":"🟡 Parcial"}
+</span>
 </div>
 </div>
 <div class="actions">
@@ -1139,7 +1155,7 @@ let kmAnterior=Number(anterior.quilometragem||0)
 let litros=Number(atual.litros||0)
 let valor=Number(atual.valor_total||0)
 let kmRodado=kmAtual-kmAnterior
-if(kmRodado>0&&litros>0){
+if(atual.tipo_abastecimento==="cheio" && anterior.tipo_abastecimento==="cheio" && kmRodado>0 && litros>0){
 let consumo=kmRodado/litros
 consumos.push(consumo)
 if(consumo<5)alertas.push("⚠️ Consumo muito baixo detectado")
