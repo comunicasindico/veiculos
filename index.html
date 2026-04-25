@@ -583,17 +583,29 @@ data.value=new Date().toISOString().slice(0,10)
 if(!VID)return alert("Selecione um veículo")
 
 let emp=localStorage.getItem("empresa")
-let postoId=postoSel?.value||null
-let nomePosto=(postoInput?.value||"").trim()
-if(!postoId && nomePosto){
-let {data:novo,error:errPosto}=await db.from("postos").insert({
+  
+let nomeDigitado=(postoInput?.value||"").trim()
+let postoId=null
+if(nomeDigitado){
+/* 🔍 VERIFICA SE JÁ EXISTE */
+let {data:existente}=await db.from("postos")
+.select("*")
+.ilike("nome_posto",nomeDigitado)
+.eq("empresa_id",emp)
+.limit(1)
+if(existente && existente.length){
+postoId=existente[0].id
+}else{
+/* ➕ CRIA NOVO POSTO */
+let {data:novo,error}=await db.from("postos").insert({
 empresa_id:emp,
-nome_posto:nomePosto
+nome_posto:nomeDigitado
 }).select().single()
-if(!errPosto && novo){
+if(!error && novo){
 postoId=novo.id
 await carregarTudo()
 postoSel.value=postoId
+}
 }
 }
 
@@ -1346,8 +1358,13 @@ return{posto:melhor,preco:menor}
 function bindPostoInput(){
 if(!postoSel||!postoInput)return
 postoSel.addEventListener("change",()=>{
+if(!postoInput.value){ // 🔥 só preenche se estiver vazio
 let txt=postoSel.options[postoSel.selectedIndex]?.text||""
 postoInput.value=txt
+}
+})
+postoInput.addEventListener("input",()=>{
+postoSel.value="" // 🔥 limpa seleção quando digita
 })
 }
 
