@@ -1086,29 +1086,43 @@ pass.value=senha
 async function abrirCameraOCR(){
 modalOCR.style.display="flex"
 previewOCR.style.display="none"
-let stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
+
+let stream=await navigator.mediaDevices.getUserMedia({
+video:{
+facingMode:"environment",
+width:{ideal:1280},
+height:{ideal:720}
+}
+})
+
 videoOCR.srcObject=stream
+
+await new Promise(res=>{
+videoOCR.onloadedmetadata=()=>res()
+})
 }
 
 function capturarImagem(){
 let canvas=canvasOCR
 let video=videoOCR
-canvas.width=video.videoWidth
-canvas.height=video.videoHeight
-let ctx=canvas.getContext("2d")
-ctx.drawImage(video,0,0)
-/* 🔥 MELHORIA OCR (CONTRASTE + BINARIZAÇÃO) */
-let imgData=ctx.getImageData(0,0,canvas.width,canvas.height)
-let data=imgData.data
-for(let i=0;i<data.length;i+=4){
-let gray=data[i]*0.3+data[i+1]*0.59+data[i+2]*0.11
-let v=gray>140?255:0
-data[i]=v
-data[i+1]=v
-data[i+2]=v
+
+let w=video.videoWidth
+let h=video.videoHeight
+
+if(!w || !h){
+alert("Aguarde câmera carregar")
+return
 }
-ctx.putImageData(imgData,0,0)
-let img=canvas.toDataURL("image/jpeg",0.95)
+
+canvas.width=w
+canvas.height=h
+
+let ctx=canvas.getContext("2d",{willReadFrequently:true})
+
+ctx.drawImage(video,0,0,w,h)
+
+let img=canvas.toDataURL("image/jpeg",1.0)
+
 previewOCR.src=img
 previewOCR.style.display="block"
 }
@@ -1139,41 +1153,65 @@ alert("Erro no OCR")
 
 function processarCupomInteligente(text){
 text=text.replace(/\r/g,"\n").toLowerCase()
+
 /* 🔥 CNPJ */
 let cnpj=(text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[""])[0]
-/* 🔥 TENTA PEGAR NOME DO POSTO */
-let nomePosto=(text.match(/posto\s+[a-z0-9\s\-]+/)||[""])[0]
-if(nomePosto && !cnpj){
-p_nome.value=nomePosto.toUpperCase()
+
+/* 🔥 NOME DO POSTO (MELHORADO) */
+let nomePosto=""
+let matchPosto=text.match(/(?:posto|auto\s?posto|rede)\s+([a-z0-9\s\-]+)/i)
+if(matchPosto && matchPosto[1]){
+nomePosto=matchPosto[1].trim()
 }
+
 /* 🔥 VALORES */
 let total=(text.match(/total\s*[r\$]*\s*([\d\.,]+)/)||[])[1]
 let litros=(text.match(/(\d+[\.,]\d+)\s*l/)||[])[1]
 let valorLitro=(text.match(/(\d+[\.,]\d+)\s*(?:\/l|litro)/)||[])[1]
-/* 🔥 KM (mais robusto) */
+
+/* 🔥 KM */
 let km=(text.match(/km[\s:]*([\d]{3,7})/)||[])[1]
-/* 🔥 COMBUSTÍVEL */
-let combustivel=(text.match(/gasolina comum|gasolina|etanol|diesel s10|diesel|gnv/)||[""])[0]
+
+/* 🔥 COMBUSTÍVEL (MAIS COMPLETO) */
+let combustivelRaw=(text.match(/gasolina\s+aditivada|gasolina|etanol|álcool|diesel\s?s10|diesel|gnv/i)||[""])[0]
+
 /* 🔥 NORMALIZA */
 if(total)total=total.replace(",",".")
 if(litros)litros=litros.replace(",",".")
 if(valorLitro)valorLitro=valorLitro.replace(",",".")
-/* 🔥 AUTO-CÁLCULO */
 if(!valorLitro && total && litros){
 valorLitro=(parseFloat(total)/parseFloat(litros)).toFixed(3)
 }
-/* 🔥 PREENCHE CONFIRMAÇÃO */
+
+/* 🔥 NORMALIZA COMBUSTÍVEL */
+let combustivel=normalizarCombustivel(combustivelRaw)
+
+/* 🔥 PREENCHE MODAL CONFIRMAÇÃO */
 c_valor.value=total||""
 c_litros.value=litros||""
 c_valorLitro.value=valorLitro||""
 c_km.value=km||""
 c_combustivel.value=combustivel||""
-/* 🔥 BUSCA CNPJ */
+c_cnpj.value=cnpj||""
+c_posto.value=nomePosto?nomePosto.toUpperCase():""
+
+/* 🔥 BUSCA CNPJ (se existir) */
 if(cnpj)buscarPostoPorCNPJ(cnpj)
-/* 🔥 ABRE MODAL */
+
+/* 🔥 ABRE CONFIRMAÇÃO */
 modalConfirmacao.style.display="flex"
 }
 
+function normalizarCombustivel(c){
+c=c.toLowerCase()
+if(c.includes("aditiv"))return "Gasolina Aditivada"
+if(c.includes("gasolina"))return "Gasolina Comum"
+if(c.includes("etanol")||c.includes("alcool"))return "Álcool"
+if(c.includes("diesel"))return "Diesel"
+if(c.includes("gnv"))return "GNV"
+return "Gasolina Comum"
+}
+  
 async function buscarPostoPorCNPJ(cnpj){
 try{
 let limpo=cnpj.replace(/\D/g,"")
@@ -1232,52 +1270,42 @@ console.log("Erro ao buscar CNPJ:",e)
 }
 
 function confirmarOCR(){
-let v=(c_valor.value||"").replace(",",".")
-let l=(c_litros.value||"").replace(",",".")
-let vl=(c_valorLitro.value||"").replace(",",".")
-let k=c_km.value||""
-let comb=c_combustivel.value||""
-/* 🔥 PREENCHE */
-valor.value=v
-litros.value=l
-km.value=k
-if(typeof v_combustivel!=="undefined" && v_combustivel){
-v_combustivel.value=comb
+let nomePosto=(c_posto.value||"").trim()
+let cnpj=(c_cnpj.value||"").trim()
+let emp=localStorage.getItem("empresa")
+
+if(nomePosto){
+
+db.from("postos")
+.select("*")
+.ilike("nome_posto",nomePosto)
+.eq("empresa_id",emp)
+.limit(1)
+.then(async({data})=>{
+let postoId=null
+
+if(data && data.length){
+postoId=data[0].id
+}else{
+let {data:novo}=await db.from("postos").insert({
+empresa_id:emp,
+nome_posto:nomePosto,
+cnpj:cnpj
+}).select().single()
+if(novo)postoId=novo.id
 }
-/* 🔥 CALCULA AUTOMÁTICO */
-if(!vl && v && l){
-vl=(parseFloat(v)/parseFloat(l)).toFixed(3)
+
+if(postoId)postoSel.value=postoId
+})
 }
-valor_litro.value=vl
-/* 🔥 VALIDAÇÃO INTELIGENTE */
-let preco=parseFloat(vl)||0
-let litrosNum=parseFloat(l)||0
-if(preco>10||preco<2){
-alert("⚠️ Valor por litro fora do padrão")
-}
-if(litrosNum>120){
-alert("🚨 Volume muito alto — verifique possível erro")
-}
-/* 🔥 FEEDBACK VISUAL */
-valor.style.border="2px solid #22c55e"
-litros.style.border="2px solid #22c55e"
-km.style.border="2px solid #22c55e"
-/* 🔥 FECHAR MODAIS */
+
+valor.value=c_valor.value.replace(",",".")
+litros.value=c_litros.value.replace(",",".")
+valor_litro.value=c_valorLitro.value.replace(",",".")
+km.value=c_km.value
+
 fecharConfirmacao()
 fecharOCR()
-/* 🔥 GARANTE POSTO + SALVA */
-setTimeout(async()=>{
-if(typeof garantirPosto==="function"){
-await garantirPosto()
-}
-/* 🔥 VALIDAÇÃO FINAL */
-validarAbastecimentoAvancado?.()
-/* 🔥 SALVAR */
-await garantirPosto()
-salvar()  
-/* 🔥 FEEDBACK REAL */
-alert("✅ Abastecimento salvo com sucesso!")
-},300)
 }
 
 function fecharConfirmacao(){
@@ -1471,6 +1499,26 @@ e_posto.value=""
 <div style="display:flex;gap:6px;margin-top:10px">
 <button class="btnSave" onclick="confirmarOCR()">✔ Salvar</button>
 <button onclick="fecharConfirmacao()" style="background:#64748b;color:#fff">✖</button>
+</div>
+<div class="field">
+<label>🏪 Posto</label>
+<input id="c_posto">
+</div>
+<div class="field">
+<label>🧾 CNPJ</label>
+<input id="c_cnpj">
+</div>
+<div class="field">
+<label>⛽ Combustível</label>
+<input id="c_combustivel" list="combustiveis">
+<datalist id="combustiveis">
+<option>Gasolina Comum</option>
+<option>Gasolina Aditivada</option>
+<option>Álcool</option>
+<option>Diesel</option>
+<option>GNV</option>
+<option>Híbrido/Gas</option>
+</datalist>
 </div>
 </div>
 </div>
