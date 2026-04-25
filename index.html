@@ -54,8 +54,10 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 #modalOCR .modalBox{max-height:90vh;overflow-y:auto}
 #modalOCR video{max-height:35vh;object-fit:cover}
 #modalOCR img{max-height:35vh;object-fit:contain}
-#telaLogin{display:flex;justify-content:center;align-items:center;height:100vh;padding:20px;position:relative;z-index:2;transform:translateY(-60px);}
+#telaLogin{display:flex;justify-content:center;align-items:flex-start; /* 🔥 sobe o box */height:100vh;padding:20px;padding-top:40px; /* 🔥 distância do topo */position:relative;z-index:2;}
 @media(max-width:600px){#telaLogin{transform:translateY(-20px);}}
+@media(max-width:768px){#telaLogin{padding-top:20px; /* mais alto ainda no mobile */}#telaLogin > div{margin-top:0;}}
+
 
   
 </style>
