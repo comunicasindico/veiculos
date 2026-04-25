@@ -17,16 +17,16 @@ body{margin:0;font-family:Arial;color:#fff;background:#020617;overflow-x:hidden}
 body.login{background:url("img/bcveiculos.png") center center no-repeat;background-size:cover;background-attachment:fixed}
 @media(max-width:768px){body.login{background-position:center top;background-size:cover}}
 @media(min-width:769px){body.login{background-position:center;background-size:cover}}
-body.login::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(0,0,0,0.5),rgba(0,0,0,0.85));z-index:0}
-body::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.75);z-index:-1}
+body.login::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(2,6,23,0.35),rgba(2,6,23,0.85));z-index:0}
+body:not(.login)::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.85);z-index:-1}
 .tela{display:none}
 .container{max-width:720px;width:100%;margin:auto;padding:10px}
-.card{width:100%;background:#1e293b;padding:10px;border-radius:12px;margin-top:10px}
-input,select{width:100%;max-width:100%;padding:10px;margin-top:6px;border-radius:8px;border:none;background:#334155;color:#fff}
+.card{width:100%;background:rgba(30,41,59,0.65);backdrop-filter:blur(10px);padding:12px;border-radius:18px;margin-top:10px;border:1px solid rgba(255,255,255,0.05);box-shadow:0 6px 20px rgba(0,0,0,0.4)}
+input,select{width:100%;padding:12px;margin-top:6px;border-radius:12px;border:none;background:rgba(51,65,85,0.6);color:#fff;font-size:14px}
 button{padding:10px;border:none;border-radius:8px;font-weight:bold}
-.btnSave{background:#22c55e;color:#000;width:100%}
+.btnSave{background:linear-gradient(135deg,#22c55e,#16a34a);color:#000;width:100%;border-radius:14px;font-weight:600;box-shadow:0 6px 20px rgba(34,197,94,.4)}
 .row{display:flex;justify-content:space-between;gap:6px;font-size:12px;flex-wrap:wrap}
-.headerApp{position:sticky;top:0;background:#020617;padding:10px;border-bottom:1px solid #1e293b;z-index:10}
+.headerApp{position:sticky;top:0;background:rgba(2,6,23,0.7);backdrop-filter:blur(10px);padding:10px;border-bottom:1px solid rgba(255,255,255,0.05);z-index:10}
 .menuTabs{display:flex;gap:6px}
 .menuTabs button{flex:1;background:#1e293b;color:#fff}
 .footerBar{position:fixed;bottom:0;left:0;width:100%;background:#020617;border-top:1px solid #1e293b;padding:8px;z-index:10;}
@@ -45,6 +45,15 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 .field label{font-size:11px;color:#94a3b8;margin-bottom:2px}
 .btnCancel{background:#64748b;color:#fff}
 .btnHome{width:60px;height:60px;border-radius:16px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,215,0,0.4);color:#facc15;font-size:22px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.btnFloat{width:58px;height:58px;border-radius:18px;border:none;background:rgba(30,41,59,0.55);backdrop-filter:blur(12px);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(0,0,0,0.6);transition:all .25s ease}
+.btnFloat:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,0.7)}
+.btnFloat:active{transform:scale(.92)}
+.btnSair{background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 8px 30px rgba(220,38,38,.5)}
+.tela{display:none;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+  
+  
 </style>
 
 <body>
@@ -59,13 +68,14 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 </div>
 </div>
 
-<div id="menuHome" style="position:fixed;bottom:20px;left:0;width:100%;display:flex;justify-content:center;gap:10px;z-index:2">
-<button onclick="abrirTela('combustivel')" class="btnHome">⛽</button>
-<button onclick="abrirTela('motorista')" class="btnHome">👨</button>
-<button onclick="abrirTela('veiculo')" class="btnHome">🚗</button>
-<button onclick="abrirTela('posto')" class="btnHome">🏪</button>
+<div id="menuHome" style="position:fixed;bottom:18px;left:0;width:100%;display:flex;justify-content:center;gap:14px;z-index:50;padding:0 10px">
+<button onclick="abrirTela('combustivel')" class="btnFloat">⛽</button>
+<button onclick="abrirTela('motorista')" class="btnFloat">👨</button>
+<button onclick="abrirTela('veiculo')" class="btnFloat">🚗</button>
+<button onclick="abrirTela('posto')" class="btnFloat">🏪</button>
+<button onclick="logout()" class="btnFloat btnSair">🚪</button>
 </div>
-
+  
 <!-- APP -->
 <div id="app" class="container" style="display:none">
 
@@ -207,15 +217,7 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 </div>
 </div>
 
-<div class="footerBar">
-<div class="menuTabs">
-<button onclick="abrirTela('combustivel')">⛽</button>
-<button onclick="abrirTela('motorista')">👨‍🔧</button>
-<button onclick="abrirTela('veiculo')">🚗</button>
-<button onclick="abrirTela('posto')">🏪</button>
-<button onclick="logout()" style="background:#dc2626">🚪</button>
-</div>
-</div>
+
 
 </div>
 
@@ -389,6 +391,7 @@ init()
 /* 007 INIT */
 async function init(){
 document.body.classList.remove("login")
+document.getElementById("menuHome").style.display="none"
 telaLogin.style.display="none"
 app.style.display="block"
 await carregarTudo()
@@ -845,6 +848,7 @@ localStorage.removeItem("empresa")
 document.getElementById("app").style.display="none"
 document.getElementById("telaLogin").style.display="flex"
 document.body.classList.add("login")
+document.getElementById("menuHome").style.display="flex"
 user.value=""
 pass.value=""
 }
