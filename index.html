@@ -454,21 +454,41 @@ carregarTudo()
 }
 
 async function carregarTudo(){
-let emp=localStorage.getItem("empresa")||null
+let emp=null
+
+/* 🔥 1. tenta VEÍCULO (PRIORIDADE MÁXIMA) */
+let {data:vCheck}=await db.from("veiculos").select("empresa_id").limit(1)
+if(vCheck&&vCheck.length){
+emp=vCheck[0].empresa_id
+}
+
+/* 🔥 2. fallback abastecimento */
 if(!emp){
 let {data:abast}=await db.from("abastecimentos").select("empresa_id").limit(1)
 if(abast&&abast.length){
 emp=abast[0].empresa_id
-localStorage.setItem("empresa",emp)
 }
 }
+
+/* 🔥 3. fallback motoristas */
 if(!emp){
 let {data:mot}=await db.from("motoristas").select("empresa_id").limit(1)
 if(mot&&mot.length){
 emp=mot[0].empresa_id
+}
+}
+
+/* 🔥 salva corretamente */
+if(emp){
 localStorage.setItem("empresa",emp)
 }
+
+if(!emp){
+console.error("❌ empresa não encontrada")
+return
 }
+
+console.log("🚀 EMPRESA CORRETA:",emp)
 if(!emp)return console.error("empresa não encontrada")
 console.log("EMPRESA ATIVA:",emp)
 let elMotoristas=document.getElementById("listaMotoristas")
