@@ -4,10 +4,13 @@
 <!-- 001 HEAD -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Veículo SaaS MASTER</title>
+<title>Veículos SaaS</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
 <link rel="icon" href="./favicon.ico">
 </head>
 
@@ -66,7 +69,7 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <!-- LOGIN -->
 <div id="telaLogin">
 <div style="width:100%;max-width:420px;background:rgba(15,23,42,0.75);backdrop-filter:blur(12px);padding:20px;border-radius:20px;border:1px solid rgba(255,255,255,0.1)">
-<h2 style="text-align:center;margin-bottom:10px">🚗 Veículos Carro e Moto PRO</h2>
+<h2 style="text-align:center;margin-bottom:10px">🚗 Veículos - Carro e Moto</h2>
 <input id="user" placeholder="Usuário ou e-mail" style="margin-bottom:8px">
 <input id="pass" type="password" placeholder="Senha" style="margin-bottom:12px">
 <button class="btnSave" onclick="login()" style="margin-bottom:10px">Entrar</button>
@@ -102,10 +105,10 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <div id="tela_combustivel" class="tela">
 
 <div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="document.getElementById('data').focus()" style="flex:1;background:#22c55e">⛽ Novo Abastecimento</button>
-<button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff;border-radius:10px;padding:10px">📷 Ler Cupom</button>
+<button onclick="capturaInteligente()" style="flex:1;background:#22c55e;color:#000;border-radius:10px;padding:10px">📲 Inteligente</button>
+<button onclick="abrirQR()" style="flex:1;background:#16a34a;color:#fff;border-radius:10px;padding:10px">🔳 QR</button>
+<button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff;border-radius:10px;padding:10px">📷 OCR</button>
 </div>
-<div id="iaBox" class="card" style="display:none"></div>
   
 <!-- DASHBOARD -->
 <div class="card">
@@ -1176,9 +1179,19 @@ ctx.putImageData(imgData,0,0)
 let img=canvas.toDataURL("image/jpeg",0.95)
 previewOCR.src=img
 previewOCR.style.display="block"
+
+setTimeout(async()=>{
+let qr=await tentarQRImagem(previewOCR.src)
+if(qr){
+alert("🔳 QR detectado automaticamente!")
+await processarQR(qr)
+fecharOCR()
+}
+},300)
 }
 
 async function processarOCR(){
+previewOCR.style.opacity="0.5"
 if(!previewOCR.src)return alert("Capture primeiro")
 
 alert("🔍 Processando cupom...")
@@ -1209,6 +1222,7 @@ setTimeout(()=>{
 alert("Se travar, recorte melhor o cupom")
 },4000)
 }
+previewOCR.style.opacity="1"
 }
 
 
@@ -1556,6 +1570,73 @@ previewOCR.src=canvas.toDataURL("image/jpeg",1)
 cropMode=false
 }
 }
+
+let qrScanner=null
+function abrirQR(){
+modalQR.style.display="flex"
+qrScanner=new Html5Qrcode("readerQR")
+qrScanner.start(
+{facingMode:"environment"},
+{fps:10,qrbox:250},
+(qrCodeMessage)=>{
+console.log("QR:",qrCodeMessage)
+processarQR(qrCodeMessage)
+fecharQR()
+},
+(error)=>{}
+)
+}
+function fecharQR(){
+modalQR.style.display="none"
+if(qrScanner){
+qrScanner.stop().then(()=>{qrScanner.clear()})
+}
+}
+
+async function processarQR(url){
+try{
+if(!url.includes("sefaz")){
+alert("QR não reconhecido como cupom fiscal")
+return
+}
+let res=await fetch(url)
+let html=await res.text()
+
+/* 🔥 NOME POSTO */
+let nome=(html.match(/Razão Social<\/td><td>(.*?)<\/td>/i)||[])[1]
+
+/* 🔥 CNPJ */
+let cnpj=(html.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[])[0]
+
+/* 🔥 TOTAL */
+let total=(html.match(/Valor Total.*?([\d\.,]+)/i)||[])[1]
+
+if(nome){
+postoInput.value=nome
+}
+if(total){
+valor.value=total.replace(",",".")
+}
+if(cnpj){
+buscarPostoPorCNPJ(cnpj)
+}
+
+alert("✅ Dados capturados via QR")
+
+}catch(e){
+console.error(e)
+alert("Erro ao ler QR")
+}
+}
+
+async function capturaInteligente(){
+abrirCameraOCR()
+setTimeout(()=>{
+alert("📷 Aponte primeiro para o QR do cupom.\nSe não detectar, capture normalmente.")
+},400)
+}
+
+
   
 </script>
 
@@ -1644,6 +1725,14 @@ cropMode=false
 <option>Híbrido/Gas</option>
 </datalist>
 </div>
+</div>
+</div>
+
+<div id="modalQR" class="modal">
+<div class="modalBox">
+<h3>🔳 Ler QR do Cupom</h3>
+<div id="readerQR" style="width:100%"></div>
+<button onclick="fecharQR()" style="margin-top:10px;background:#64748b;color:#fff">Fechar</button>
 </div>
 </div>
 
