@@ -430,6 +430,7 @@ telaLogin.style.display="none"
 app.style.display="block"
 await carregarTudo()
 bindPostoInput()
+bindPostoEdicao()
 setTimeout(()=>carregarSelectsPadrao(),50)
 abrirTela("combustivel")
 render()
@@ -895,6 +896,8 @@ v_motorista.value=motorista||""
 }
 
 window.editarAbastecimento=function(id,valor,litros,km,data,posto){
+let nomePostoTexto = e_posto.options[e_posto.selectedIndex]?.text || ""
+e_postoInput.value = nomePostoTexto
 window.editAbastecimentoId=id
 modalEditar.style.display="flex"
 e_valor.value=Number(valor||0).toFixed(2)
@@ -973,14 +976,35 @@ e_posto.value=posto||""
 
 
 async function salvarEdicao(){
+let emp=localStorage.getItem("empresa")
+let nomeDigitado=(e_postoInput?.value||"").trim()
+let postoId=null
+if(nomeDigitado){
+let {data:existente}=await db.from("postos")
+.select("*")
+.ilike("nome_posto",nomeDigitado)
+.eq("empresa_id",emp)
+.limit(1)
+if(existente && existente.length){
+postoId=existente[0].id
+}else{
+let {data:novo,error}=await db.from("postos").insert({
+empresa_id:emp,
+nome_posto:nomeDigitado
+}).select().single()
+if(!error && novo){
+postoId=novo.id
+await carregarTudo()
+}
+}
+}
 await db.from("abastecimentos").update({
 valor_total:Number(parseFloat(e_valor.value||0).toFixed(2)),
 litros:parseFloat(e_litros.value)||0,
 quilometragem:parseFloat(e_km.value)||0,
-posto_id:e_posto.value||null,
+posto_id:postoId,
 data_abastecimento:e_data.value
 }).eq("id",editAbastecimentoId)
-
 modalEditar.style.display="none"
 render()
 }
@@ -1367,7 +1391,18 @@ postoInput.addEventListener("input",()=>{
 postoSel.value="" // 🔥 limpa seleção quando digita
 })
 }
-
+function bindPostoEdicao(){
+if(!e_posto||!e_postoInput)return
+e_posto.addEventListener("change",()=>{
+if(!e_postoInput.value){
+let txt=e_posto.options[e_posto.selectedIndex]?.text||""
+e_postoInput.value=txt
+}
+})
+e_postoInput.addEventListener("input",()=>{
+e_posto.value=""
+})
+}
   
   
   
@@ -1385,6 +1420,7 @@ postoSel.value="" // 🔥 limpa seleção quando digita
 </div>
 <div class="field">
 <label>🏪 Posto</label>
+<input id="e_postoInput" placeholder="Digite ou selecione o posto">
 <select id="e_posto"></select>
 </div>
 <div class="field">
