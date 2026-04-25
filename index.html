@@ -87,7 +87,7 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 
 <div style="display:flex;gap:6px;margin-bottom:8px">
 <button onclick="document.getElementById('data').focus()" style="flex:1;background:#22c55e">⛽ Novo Abastecimento</button>
-<input type="file" accept="image/*" capture="environment" onchange="lerCupomOCR(this)" style="flex:1;background:#3b82f6;color:#fff;border-radius:8px;padding:6px">
+<button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff;border-radius:10px;padding:10px">📷 Ler Cupom</button>
 </div>
 
 <!-- DASHBOARD -->
@@ -994,6 +994,83 @@ pass.value=senha
 </div>
 </div>
 
+<div id="modalOCR" class="modal">
+<div class="modalBox" style="max-width:520px">
+<h3 style="margin-bottom:8px">📷 Capturar Cupom</h3>
+<video id="videoOCR" autoplay playsinline style="width:100%;border-radius:10px;background:#000"></video>
+<canvas id="canvasOCR" style="display:none"></canvas>
+<img id="previewOCR" style="width:100%;margin-top:8px;border-radius:10px;display:none">
+<div style="display:flex;gap:6px;margin-top:10px">
+<button class="btnSave" onclick="capturarImagem()">📸 Capturar</button>
+<button class="btnSave" onclick="processarOCR()" style="background:#22c55e">✔ Ler</button>
+<button onclick="fecharOCR()" style="background:#64748b;color:#fff;border-radius:8px">✖</button>
+</div>
+</div>
+</div>
+async function abrirCameraOCR(){
+modalOCR.style.display="flex"
+previewOCR.style.display="none"
+let stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
+videoOCR.srcObject=stream
+}
+function capturarImagem(){
+let canvas=canvasOCR
+let video=videoOCR
+canvas.width=video.videoWidth
+canvas.height=video.videoHeight
+let ctx=canvas.getContext("2d")
+ctx.drawImage(video,0,0)
+let img=canvas.toDataURL("image/jpeg",0.9)
+previewOCR.src=img
+previewOCR.style.display="block"
+}
+async function processarOCR(){
+if(!previewOCR.src)return alert("Capture primeiro")
+alert("Processando cupom...")
+const {data:{text}}=await Tesseract.recognize(previewOCR.src,"por",{logger:m=>console.log(m)})
+console.log(text)
+processarCupomInteligente(text)
+fecharOCR()
+}
+function processarCupomInteligente(text){
+text=text.replace(/\r/g,"\n").toLowerCase()
+let cnpj=(text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[""])[0]
+let total=(text.match(/total\s*[r\$]*\s*([\d\.,]+)/)||[])[1]
+let litros=(text.match(/(\d+[\.,]\d+)\s*l/)||[])[1]
+let valorLitro=(text.match(/(\d+[\.,]\d+)\s*(?:\/l|litro)/)||[])[1]
+let km=(text.match(/km[:\s]*([\d]+)/)||[])[1]
+let combustivel=(text.match(/gasolina|etanol|diesel|gnv/)||[""])[0]
+if(total)valor.value=total.replace(",",".")
+if(litros)litros.value=litros.replace(",",".")
+if(valorLitro)valor_litro.value=valorLitro.replace(",",".")
+if(km)km.value=km
+if(combustivel)v_combustivel.value=combustivel
+if(cnpj)buscarPostoPorCNPJ(cnpj)
+validarAbastecimento()
+alert("Cupom processado com IA")
+}
+function validarAbastecimento(){
+let v=parseFloat(valor.value)||0
+let l=parseFloat(litros.value)||0
+if(v>0&&l>0){
+let calc=v/l
+if(calc>10||calc<2){
+alert("⚠️ Valor por litro suspeito")
+}
+}
+}
+function fecharOCR(){
+modalOCR.style.display="none"
+let stream=videoOCR.srcObject
+if(stream){stream.getTracks().forEach(t=>t.stop())}
+}
 
+  
+  
+  
+  
+  
+
+  
 </body>
 </html>
