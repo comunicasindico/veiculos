@@ -964,6 +964,7 @@ previewOCR.style.display="none"
 let stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
 videoOCR.srcObject=stream
 }
+
 function capturarImagem(){
 let canvas=canvasOCR
 let video=videoOCR
@@ -971,61 +972,154 @@ canvas.width=video.videoWidth
 canvas.height=video.videoHeight
 let ctx=canvas.getContext("2d")
 ctx.drawImage(video,0,0)
-let img=canvas.toDataURL("image/jpeg",0.9)
+/* 🔥 MELHORIA OCR (CONTRASTE + BINARIZAÇÃO) */
+let imgData=ctx.getImageData(0,0,canvas.width,canvas.height)
+let data=imgData.data
+for(let i=0;i<data.length;i+=4){
+let gray=data[i]*0.3+data[i+1]*0.59+data[i+2]*0.11
+let v=gray>140?255:0
+data[i]=v
+data[i+1]=v
+data[i+2]=v
+}
+ctx.putImageData(imgData,0,0)
+let img=canvas.toDataURL("image/jpeg",0.95)
 previewOCR.src=img
 previewOCR.style.display="block"
 }
 
 async function processarOCR(){
 if(!previewOCR.src)return alert("Capture primeiro")
-let btns=document.querySelector("#modalOCR .modalBox")
-btns.style.opacity="0.6"
-btns.innerHTML+="<div id='loadingOCR' style='text-align:center;margin-top:10px'>🔄 Lendo cupom...</div>"
-const {data:{text}}=await Tesseract.recognize(previewOCR.src,"por",{logger:m=>console.log(m)})
-document.getElementById("loadingOCR")?.remove()
-btns.style.opacity="1"
+alert("🔍 IA analisando cupom... aguarde")
+const {data:{text}}=await Tesseract.recognize(
+previewOCR.src,
+"por",
+{
+logger:m=>console.log(m),
+tessedit_pageseg_mode:6,
+tessedit_char_whitelist:"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:-/ R$L"
+}
+)
+console.log("OCR TEXTO:",text)
 processarCupomInteligente(text)
+fecharOCR()
 }
 
 
 function processarCupomInteligente(text){
 text=text.replace(/\r/g,"\n").toLowerCase()
+/* 🔥 CNPJ */
+let cnpj=(text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[""])[0]
+/* 🔥 VALORES */
 let total=(text.match(/total\s*[r\$]*\s*([\d\.,]+)/)||[])[1]
 let litros=(text.match(/(\d+[\.,]\d+)\s*l/)||[])[1]
 let valorLitro=(text.match(/(\d+[\.,]\d+)\s*(?:\/l|litro)/)||[])[1]
-let km=(text.match(/km[:\s]*([\d]+)/)||[])[1]
-let combustivel=(text.match(/gasolina|etanol|diesel|gnv/)||[""])[0]
-
+/* 🔥 KM (mais robusto) */
+let km=(text.match(/km[\s:]*([\d]{3,7})/)||[])[1]
+/* 🔥 COMBUSTÍVEL */
+let combustivel=(text.match(/gasolina comum|gasolina|etanol|diesel s10|diesel|gnv/)||[""])[0]
+/* 🔥 NORMALIZA */
+if(total)total=total.replace(",",".")
+if(litros)litros=litros.replace(",",".")
+if(valorLitro)valorLitro=valorLitro.replace(",",".")
+/* 🔥 AUTO-CÁLCULO */
+if(!valorLitro && total && litros){
+valorLitro=(parseFloat(total)/parseFloat(litros)).toFixed(3)
+}
+/* 🔥 PREENCHE CONFIRMAÇÃO */
 c_valor.value=total||""
 c_litros.value=litros||""
 c_valorLitro.value=valorLitro||""
 c_km.value=km||""
 c_combustivel.value=combustivel||""
-
+/* 🔥 BUSCA CNPJ */
+if(cnpj)buscarPostoPorCNPJ(cnpj)
+/* 🔥 ABRE MODAL */
 modalConfirmacao.style.display="flex"
 }
+
+async function buscarPostoPorCNPJ(cnpj){
+try{
+let limpo=cnpj.replace(/\D/g,"")
+let res=await fetch("https://receitaws.com.br/v1/cnpj/"+limpo)
+let json=await res.json()
+
+if(json.nome){
+p_nome.value=json.nome
+p_cidade.value=json.municipio+"-"+json.uf
+p_cnpj.value=cnpj
+}
+}catch(e){
+console.log("Erro ReceitaWS",e)
+}
+}
+
 function confirmarOCR(){
-valor.value=c_valor.value.replace(",",".")
-litros.value=c_litros.value.replace(",",".")
-valor_litro.value=c_valorLitro.value.replace(",",".")
-km.value=c_km.value
-v_combustivel.value=c_combustivel.value
+let v=(c_valor.value||"").replace(",",".")
+let l=(c_litros.value||"").replace(",",".")
+let vl=(c_valorLitro.value||"").replace(",",".")
+let k=c_km.value||""
+let comb=c_combustivel.value||""
+/* 🔥 PREENCHE */
+valor.value=v
+litros.value=l
+km.value=k
+if(typeof v_combustivel!=="undefined" && v_combustivel){
+v_combustivel.value=comb
+}
+/* 🔥 CALCULA AUTOMÁTICO */
+if(!vl && v && l){
+vl=(parseFloat(v)/parseFloat(l)).toFixed(3)
+}
+valor_litro.value=vl
+/* 🔥 VALIDAÇÃO INTELIGENTE */
+let preco=parseFloat(vl)||0
+let litrosNum=parseFloat(l)||0
+if(preco>10||preco<2){
+alert("⚠️ Valor por litro fora do padrão")
+}
+if(litrosNum>120){
+alert("🚨 Volume muito alto — verifique possível erro")
+}
+/* 🔥 FEEDBACK VISUAL */
+valor.style.border="2px solid #22c55e"
+litros.style.border="2px solid #22c55e"
+km.style.border="2px solid #22c55e"
+/* 🔥 FECHAR MODAIS */
 fecharConfirmacao()
 fecharOCR()
+/* 🔥 MENSAGEM FINAL */
+setTimeout(()=>{
+alert("✅ Abastecimento pronto para salvar")
+},300)
+/* 🔥 AUTO-FOCUS NO BOTÃO SALVAR */
+document.querySelector(".btnSave")?.focus()
 }
+
 function fecharConfirmacao(){
 modalConfirmacao.style.display="none"
 }
-function validarAbastecimento(){
+function validarAbastecimentoAvancado(){
 let v=parseFloat(valor.value)||0
 let l=parseFloat(litros.value)||0
-if(v>0&&l>0){
-let calc=v/l
-if(calc>10||calc<2){
-alert("⚠️ Valor por litro suspeito")
+let kmAtual=parseFloat(km.value)||0
+if(v<=0||l<=0)return
+let preco=v/l
+if(preco>10||preco<2){
+alert("⚠️ Valor por litro fora do padrão")
+}
+if(l>120){
+alert("🚨 Volume alto incomum")
+}
+if(kmAtual<1000){
+alert("⚠️ KM muito baixo, verifique")
+}
+/* 🔥 ALERTA DE POSSÍVEL FRAUDE */
+if(preco>8.5){
+alert("🚨 Possível combustível adulterado ou erro")
 }
 }
-}
+  
 function fecharOCR(){
 modalOCR.style.display="none"
 let stream=videoOCR.srcObject
