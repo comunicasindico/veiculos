@@ -455,7 +455,22 @@ carregarTudo()
 
 async function carregarTudo(){
 let emp=localStorage.getItem("empresa")||null
+if(!emp){
+let {data:abast}=await db.from("abastecimentos").select("empresa_id").limit(1)
+if(abast&&abast.length){
+emp=abast[0].empresa_id
+localStorage.setItem("empresa",emp)
+}
+}
+if(!emp){
+let {data:mot}=await db.from("motoristas").select("empresa_id").limit(1)
+if(mot&&mot.length){
+emp=mot[0].empresa_id
+localStorage.setItem("empresa",emp)
+}
+}
 if(!emp)return console.error("empresa não encontrada")
+console.log("EMPRESA ATIVA:",emp)
 let elMotoristas=document.getElementById("listaMotoristas")
 let elPostos=document.getElementById("listaPostos")
 let elVeiculos=document.getElementById("listaVeiculos")
@@ -464,9 +479,9 @@ let selPosto=document.getElementById("postoSel")
 let selPostoEdit=document.getElementById("e_posto")
 let selVeiculo=document.getElementById("veiculoSel")
 
-/* 🔥 MOTORISTAS (CORRIGIDO DEFINITIVO) */
+/* 🔥 MOTORISTAS */
 let m=[]
-let {data:motoristas,error:e1}=await db.from("motoristas").select("*")
+let {data:motoristas,error:e1}=await db.from("motoristas").select("*").eq("empresa_id",emp)
 if(e1){console.error("motoristas erro:",e1);motoristas=[]}
 m=Array.isArray(motoristas)?motoristas:[]
 console.log("motoristas:",m)
@@ -512,8 +527,15 @@ if(selVeiculo){
 selVeiculo.innerHTML=v.length?v.map(x=>`<option value="${x.id}">${x.modelo||x.placa||"Veículo"}</option>`).join(""):`<option value="">Nenhum veículo</option>`
 }
 
-VID=v.length?v[0].id:null
+/* 🔥 GARANTE VID */
+if(v.length){
+VID=selVeiculo&&selVeiculo.value?selVeiculo.value:v[0].id
+}else{
+VID=null
+console.warn("⚠️ Nenhum veículo")
+}
 
+/* 🔥 LISTA VEÍCULOS */
 if(elVeiculos){
 elVeiculos.innerHTML=v.length?v.map(x=>{
 let mot=mapMotoristas[x.motorista_id]||{}
@@ -522,11 +544,12 @@ return `<div class="item"><div class="itemContent"><div><b>${x.modelo||"-"}</b> 
 }).join(""):`<div class="item">Nenhum veículo</div>`
 }
 
+/* 🔥 ATUALIZA ABASTECIMENTOS */
 setTimeout(()=>{
-let vs=document.getElementById("veiculoSel")
-if(vs&&vs.value){
-VID=vs.value
+if(VID){
 render()
+}else{
+console.warn("Sem VID → não renderiza abastecimentos")
 }
 },100)
 }
