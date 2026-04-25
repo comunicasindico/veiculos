@@ -365,10 +365,26 @@ return x[2]+"/"+x[1]
 
 /* 006 LOGIN */
 async function login(){
-let {data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value)
-if(!data?.length)return alert("Erro")
-if(data[0].senha_hash!==pass.value)return alert("Senha")
-localStorage.setItem("empresa",data[0].empresa_id)
+let usuario=(user.value||"").trim()
+let senha=(pass.value||"").trim()
+if(!usuario||!senha){
+alert("Informe usuário e senha")
+return
+}
+let {data,error}=await db
+.from("usuarios")
+.select("*")
+.eq("usuario_apelido",usuario)
+.single()
+if(error||!data){
+alert("Usuário não encontrado")
+return
+}
+if(data.senha_hash!==senha){
+alert("Senha incorreta")
+return
+}
+localStorage.setItem("empresa",data.empresa_id)
 init()
 }
 
@@ -827,14 +843,24 @@ await carregarTudo()
 render()
 }
 /* LOGOUT */
-function logout(){localStorage.clear();location.reload()}
+function logout(){
+localStorage.removeItem("empresa")
+document.getElementById("app").style.display="none"
+document.getElementById("telaLogin").style.display="flex"
+document.body.classList.add("login")
+user.value=""
+pass.value=""
+}
 
 /* START */
 document.addEventListener("DOMContentLoaded",()=>{
 document.body.classList.add("login")
 window.graficoConsumoEl=document.getElementById("graficoConsumo")
 window.graficoGastoEl=document.getElementById("graficoGasto")
-if(localStorage.getItem("empresa"))init()
+if(localStorage.getItem("empresa")){
+document.body.classList.remove("login")
+init()
+}
 })
 
 let editId=null
@@ -918,8 +944,25 @@ if(window.e_posto && window.postoSel && postoSel){
 e_posto.innerHTML=postoSel.innerHTML
 }
 }
-function abrirCadastro(){
-alert("Cadastro em breve ou criar tela nova")
+async function abrirCadastro(){
+let usuario=prompt("Crie um usuário:")
+if(!usuario)return
+let senha=prompt("Crie uma senha:")
+if(!senha)return
+let empresa=crypto.randomUUID()
+let {error}=await db.from("usuarios").insert({
+usuario_apelido:usuario,
+senha_hash:senha,
+empresa_id:empresa
+})
+if(error){
+console.error(error)
+alert("Erro ao criar conta")
+return
+}
+alert("Conta criada com sucesso!")
+user.value=usuario
+pass.value=senha
 }
   
   
