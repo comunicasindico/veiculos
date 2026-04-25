@@ -12,197 +12,57 @@
 
 <style>
 *{box-sizing:border-box}
-body{
-margin:0;
-font-family:Arial;
-color:#fff;
-background:#020617;
-background-image:url("img/bancocomunicaveiculos.png"),radial-gradient(circle at 20% 30%,rgba(34,197,94,0.15),transparent 40%),radial-gradient(circle at 80% 70%,rgba(59,130,246,0.15),transparent 40%);
-background-size:cover,auto,auto;
-background-position:center;
-background-repeat:no-repeat;
-overflow-x:hidden;
-}
-body::before{
-content:"";
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(2,6,23,0.75);
-z-index:-1;
-}
+body{margin:0;font-family:Arial;color:#fff;background:#020617;overflow-x:hidden}
+body.login{background:url("img/bcveiculos.png") center center no-repeat;background-size:cover;background-attachment:fixed}
+@media(max-width:768px){body.login{background-position:center top;background-size:cover}}
+@media(min-width:769px){body.login{background-position:center;background-size:cover}}
+body.login::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(0,0,0,0.5),rgba(0,0,0,0.85));z-index:0}
+body::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.75);z-index:-1}
 .tela{display:none}
-.container{
-max-width:720px;
-width:100%;
-margin:auto;
-padding:10px;
-}
-.card{
-width:100%;
-background:#1e293b;
-padding:10px;
-border-radius:12px;
-margin-top:10px;
-}
-input,select{
-width:100%;
-max-width:100%;
-padding:10px;
-margin-top:6px;
-border-radius:8px;
-border:none;
-background:#334155;
-color:#fff;
-}
-button{
-padding:10px;
-border:none;
-border-radius:8px;
-font-weight:bold;
-}
-.btnSave{
-background:#22c55e;
-color:#000;
-width:100%;
-}
-.row{
-display:flex;
-justify-content:space-between;
-gap:6px;
-font-size:12px;
-flex-wrap:wrap;
-}
-.headerApp{
-position:sticky;
-top:0;
-background:#020617;
-padding:10px;
-border-bottom:1px solid #1e293b;
-z-index:10;
-}
-.menuTabs{
-display:flex;
-gap:6px;
-}
-.menuTabs button{
-flex:1;
-background:#1e293b;
-color:#fff;
-}
-.footerBar{
-position:fixed;
-bottom:0;
-left:0;
-width:100%;
-display:flex;
-justify-content:center;
-padding:10px;
-background:#020617;
-}
-.btnLogout{
-background:#dc2626;
-color:#fff;
-width:180px;
-}
-canvas{
-width:100%!important;
-max-width:100%;
-border-radius:10px;
-margin-top:10px;
-background:#fff;
-}
-.modal{
-display:none;
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.7);
-justify-content:center;
-align-items:center;
-z-index:999;
-}
-.modalBox{
-width:95%;
-max-width:420px;
-background:#1e293b;
-padding:15px;
-border-radius:12px;
-}
-.btnEdit,.btnDel{
-padding:6px 10px;
-font-size:12px;
-width:auto;
-min-width:40px;
-}
-.actions{
-display:flex;
-gap:6px;
-margin-left:auto;
-}
-.actions button{
-width:34px;
-height:34px;
-padding:0;
-border-radius:8px;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-.item{
-display:flex;
-align-items:center;
-gap:10px;
-}
-.itemContent{
-flex:1;
-min-width:0;
-}
-#tela_veiculo input,#tela_veiculo select{
-font-size:13px;
-}
-.btnEye{
-background:#64748b;
-color:#fff;
-width:34px;
-height:34px;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-.field{
-margin-top:8px;
-display:flex;
-flex-direction:column;
-}
-.field label{
-font-size:11px;
-color:#94a3b8;
-margin-bottom:2px;
-}
-.btnCancel{
-background:#64748b;
-color:#fff;
-}
-
-
+.container{max-width:720px;width:100%;margin:auto;padding:10px}
+.card{width:100%;background:#1e293b;padding:10px;border-radius:12px;margin-top:10px}
+input,select{width:100%;max-width:100%;padding:10px;margin-top:6px;border-radius:8px;border:none;background:#334155;color:#fff}
+button{padding:10px;border:none;border-radius:8px;font-weight:bold}
+.btnSave{background:#22c55e;color:#000;width:100%}
+.row{display:flex;justify-content:space-between;gap:6px;font-size:12px;flex-wrap:wrap}
+.headerApp{position:sticky;top:0;background:#020617;padding:10px;border-bottom:1px solid #1e293b;z-index:10}
+.menuTabs{display:flex;gap:6px}
+.menuTabs button{flex:1;background:#1e293b;color:#fff}
+.footerBar{position:fixed;bottom:0;left:0;width:100%;display:flex;justify-content:center;padding:10px;background:#020617}
+.btnLogout{background:#dc2626;color:#fff;width:180px}
+canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;background:#fff}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;z-index:999}
+.modalBox{width:95%;max-width:420px;background:#1e293b;padding:15px;border-radius:12px}
+.btnEdit,.btnDel{padding:6px 10px;font-size:12px;width:auto;min-width:40px}
+.actions{display:flex;gap:6px;margin-left:auto}
+.actions button{width:34px;height:34px;padding:0;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.item{display:flex;align-items:center;gap:10px}
+.itemContent{flex:1;min-width:0}
+#tela_veiculo input,#tela_veiculo select{font-size:13px}
+.btnEye{background:#64748b;color:#fff;width:34px;height:34px;display:flex;align-items:center;justify-content:center}
+.field{margin-top:8px;display:flex;flex-direction:column}
+.field label{font-size:11px;color:#94a3b8;margin-bottom:2px}
+.btnCancel{background:#64748b;color:#fff}
+.btnHome{width:60px;height:60px;border-radius:16px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,215,0,0.4);color:#facc15;font-size:22px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
 </style>
 
 <body>
 <!-- LOGIN -->
-<div id="telaLogin" style="display:flex;justify-content:center;align-items:center;height:100vh">
-<div class="card">
-<h2>🚗 Veículo PRO</h2>
-<input id="user" placeholder="Usuário">
-<input id="pass" type="password" placeholder="Senha">
-<button class="btnSave" onclick="login()">Entrar</button>
+<div id="telaLogin" style="display:flex;justify-content:center;align-items:flex-end;height:100vh;padding:20px;position:relative;z-index:2">
+<div style="width:100%;max-width:420px;background:rgba(15,23,42,0.75);backdrop-filter:blur(12px);padding:20px;border-radius:20px;border:1px solid rgba(255,255,255,0.1)">
+<h2 style="text-align:center;margin-bottom:10px">🚗 Veículos Carro e Moto PRO</h2>
+<input id="user" placeholder="Usuário ou e-mail" style="margin-bottom:8px">
+<input id="pass" type="password" placeholder="Senha" style="margin-bottom:12px">
+<button class="btnSave" onclick="login()" style="margin-bottom:10px">Entrar</button>
+<button onclick="abrirCadastro()" style="width:100%;background:transparent;border:1px solid #22c55e;color:#22c55e;padding:10px;border-radius:10px">Criar Conta</button>
 </div>
 </div>
-
+<div id="menuHome" style="position:fixed;bottom:20px;left:0;width:100%;display:flex;justify-content:center;gap:10px;z-index:2">
+<button onclick="abrirTela('combustivel')" class="btnHome">⛽</button>
+<button onclick="abrirTela('motorista')" class="btnHome">👨</button>
+<button onclick="abrirTela('veiculo')" class="btnHome">🚗</button>
+<button onclick="abrirTela('posto')" class="btnHome">🏪</button>
+</div>
 <!-- APP -->
 <div id="app" class="container" style="display:none">
 
@@ -514,6 +374,7 @@ init()
 
 /* 007 INIT */
 async function init(){
+document.body.classList.remove("login")
 telaLogin.style.display="none"
 app.style.display="block"
 await carregarTudo()
@@ -970,10 +831,12 @@ function logout(){localStorage.clear();location.reload()}
 
 /* START */
 document.addEventListener("DOMContentLoaded",()=>{
+document.body.classList.add("login")
 window.graficoConsumoEl=document.getElementById("graficoConsumo")
 window.graficoGastoEl=document.getElementById("graficoGasto")
 if(localStorage.getItem("empresa"))init()
 })
+
 let editId=null
 
 function abrirEditar(id,valor,litros,km,data,posto){
@@ -1055,7 +918,9 @@ if(window.e_posto && window.postoSel && postoSel){
 e_posto.innerHTML=postoSel.innerHTML
 }
 }
-
+function abrirCadastro(){
+alert("Cadastro em breve ou criar tela nova")
+}
   
   
 </script>
