@@ -367,24 +367,13 @@ return x[2]+"/"+x[1]
 async function login(){
 let usuario=(user.value||"").trim()
 let senha=(pass.value||"").trim()
-if(!usuario||!senha){
-alert("Informe usuário e senha")
-return
-}
-let {data,error}=await db
-.from("usuarios")
-.select("*")
-.eq("usuario_apelido",usuario)
-.single()
-if(error||!data){
-alert("Usuário não encontrado")
-return
-}
-if(data.senha_hash!==senha){
-alert("Senha incorreta")
-return
-}
-localStorage.setItem("empresa",data.empresa_id)
+if(!usuario||!senha){alert("Informe usuário e senha");return}
+let {data,error}=await db.from("usuarios").select("*").ilike("usuario_apelido",usuario)
+if(error){console.error(error);alert("Erro conexão");return}
+if(!data||!data.length){alert("Usuário não encontrado");return}
+let userDB=data[0]
+if(userDB.senha_hash!==senha){alert("Senha incorreta");return}
+localStorage.setItem("empresa",userDB.empresa_id)
 init()
 }
 
