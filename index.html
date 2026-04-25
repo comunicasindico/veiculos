@@ -103,8 +103,9 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <!-- 🔥 TELA COMBUSTÍVEL -->
 <!-- ========================= -->
 <div id="tela_combustivel" class="tela">
-
+<div id="iaBox" class="card" style="display:none"></div>
 <div style="display:flex;gap:6px;margin-bottom:8px">
+<button onclick="executarAutoRecorte()">🤖 Autorrecorte</button>
 <button onclick="capturaInteligente()" style="flex:1;background:#22c55e;color:#000;border-radius:10px;padding:10px">📲 Inteligente</button>
 <button onclick="abrirQR()" style="flex:1;background:#16a34a;color:#fff;border-radius:10px;padding:10px">🔳 QR</button>
 <button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff;border-radius:10px;padding:10px">📷 OCR</button>
@@ -260,6 +261,12 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 
 
 <script>
+
+let iaBox
+window.addEventListener("DOMContentLoaded",()=>{
+iaBox = document.getElementById("iaBox")
+})
+  
 function calcularIndicadores(lista){
 if(!lista.length)return null
 let totalGasto=0
@@ -1221,7 +1228,7 @@ for(let i=0;i<data.length;i+=4){
 let avg=(data[i]+data[i+1]+data[i+2])/3
 
 // 🔥 ajuste profissional (não estoura)
-let val=avg>160?255:0
+let val=avg>140?255:0
 
 data[i]=val
 data[i+1]=val
@@ -1237,9 +1244,14 @@ img.src=src
 }
 
 
-async function tentarQRImagem(src){
-return new Promise((resolve)=>{
+async function tentarQRImagem(){
+return new Promise(async(resolve)=>{
 try{
+
+if(!window.arquivoOCR){
+resolve(null)
+return
+}
 
 let temp=document.createElement("div")
 temp.id="qr-temp"
@@ -1248,7 +1260,7 @@ document.body.appendChild(temp)
 
 const html5QrCode=new Html5Qrcode("qr-temp")
 
-html5QrCode.scanFile(src,true)
+html5QrCode.scanFile(window.arquivoOCR,true)
 .then(decodedText=>{
 html5QrCode.clear()
 temp.remove()
@@ -1729,41 +1741,45 @@ async function processarCupomCompleto(){
 if(!previewOCR.src)return alert("Capture o cupom primeiro")
 
 iaBox.style.display="block"
-iaBox.innerHTML="🔍 Lendo cupom..."
+iaBox.innerHTML="✂️ Ajustando imagem automaticamente..."
 
 try{
 
-/* 1️⃣ TENTA QR */
+/* 🔥 1. AUTO RECORTE */
+let recortada=await autoRecorteCupom(previewOCR.src)
+previewOCR.src=recortada
+
+/* 🔥 2. TENTA QR PRIMEIRO (MAIS RÁPIDO) */
+iaBox.innerHTML="🔳 Buscando QR..."
+
 let qr=null
 if(typeof tentarQRImagem==="function"){
-qr=await tentarQRImagem(previewOCR.src)
+qr=await tentarQRImagem()
 }
 
 if(qr){
-iaBox.innerHTML="🔳 QR detectado! Buscando dados..."
+iaBox.innerHTML="🔳 QR detectado!"
 await processarQRCompleto(qr)
 return
 }
 
-/* 2️⃣ FALLBACK OCR */
-iaBox.innerHTML="🔍 Aplicando OCR inteligente..."
+/* 🔥 3. OCR */
+iaBox.innerHTML="🔍 Aplicando OCR..."
 
-let img=await preprocessarImagem(previewOCR.src)
+let img=await preprocessarImagem(recortada)
 
 const worker=await Tesseract.createWorker("por")
-await worker.setParameters({
-tessedit_char_whitelist:"0123456789.,R$KMGLASODIESEL"
-})
 
 const {data:{text}}=await worker.recognize(img)
+
 await worker.terminate()
 
-if(!text||text.length<10){
+if(!text || text.length<10){
 iaBox.innerHTML="❌ Não foi possível ler. Recorte melhor."
 return
 }
 
-/* 3️⃣ IA DE EXTRAÇÃO */
+/* 🔥 4. IA */
 let dados=extrairDadosIA(text)
 
 preencherFormulario(dados)
@@ -1863,7 +1879,84 @@ buscarPostoPorCNPJ(d.cnpj)
 
 }
 
-  
+async function autoRecorteCupom(src){
+return new Promise(resolve=>{
+let img=new Image()
+img.onload=()=>{
+let canvas=document.createElement("canvas")
+let ctx=canvas.getContext("2d")
+canvas.width=img.width
+canvas.height=img.height
+ctx.drawImage(img,0,0)
+
+/* 🔥 PRETO/BRANCO SUAVE */
+let imageData=ctx.getImageData(0,0,canvas.width,canvas.height)
+let data=imageData.data
+
+for(let i=0;i<data.length;i+=4){
+let avg=(data[i]+data[i+1]+data[i+2])/3
+let val=avg>160?255:0
+data[i]=val
+data[i+1]=val
+data[i+2]=val
+}
+ctx.putImageData(imageData,0,0)
+
+/* 🔥 DETECTAR ÁREA DO CUPOM */
+let top=canvas.height
+let bottom=0
+let left=canvas.width
+let right=0
+
+for(let y=0;y<canvas.height;y++){
+for(let x=0;x<canvas.width;x++){
+let i=(y*canvas.width+x)*4
+if(data[i]<200){ // pixel escuro
+if(y<top)top=y
+if(y>bottom)bottom=y
+if(x<left)left=x
+if(x>right)right=x
+}
+}
+}
+
+/* 🔥 MARGEM */
+let margem=20
+top=Math.max(0,top-margem)
+left=Math.max(0,left-margem)
+bottom=Math.min(canvas.height,bottom+margem)
+right=Math.min(canvas.width,right+margem)
+
+let w=right-left
+let h=bottom-top
+
+if(w<50 || h<50){
+console.warn("⚠️ Recorte inválido, usando imagem original")
+resolve(src)
+return
+}
+/* 🔥 CORTAR */
+let recorte=document.createElement("canvas")
+recorte.width=w
+recorte.height=h
+
+recorte.getContext("2d").drawImage(
+canvas,
+left,top,w,h,
+0,0,w,h
+)
+
+resolve(recorte.toDataURL())
+}
+img.src=src
+})
+}
+
+async function executarAutoRecorte(){
+if(!previewOCR.src)return
+let r=await autoRecorteCupom(previewOCR.src)
+previewOCR.src=r
+}
 
 
   
