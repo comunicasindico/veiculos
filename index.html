@@ -70,25 +70,6 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 </style>
 
 <body>
-<!-- LOGIN -->
-<div id="telaLogin">
-<div style="width:100%;max-width:420px;background:rgba(15,23,42,0.75);backdrop-filter:blur(12px);padding:20px;border-radius:20px;border:1px solid rgba(255,255,255,0.1)">
-<h2 style="text-align:center;margin-bottom:10px">🚗 Veículos - Carro e Moto</h2>
-<input id="user" placeholder="Usuário ou e-mail" style="margin-bottom:8px">
-<input id="pass" type="password" placeholder="Senha" style="margin-bottom:12px">
-<button class="btnSave" onclick="login()" style="margin-bottom:10px">Entrar</button>
-<button onclick="abrirCadastro()" style="width:100%;background:transparent;border:1px solid #22c55e;color:#22c55e;padding:10px;border-radius:10px">Criar Conta</button>
-</div>
-</div>
-
-<div id="menuHome" style="position:fixed;bottom:18px;left:0;width:100%;display:flex;justify-content:center;gap:14px;z-index:50;padding:0 10px">
-<button onclick="abrirTela('combustivel')" class="btnFloat">⛽</button>
-<button onclick="abrirTela('motorista')" class="btnFloat">👨</button>
-<button onclick="abrirTela('veiculo')" class="btnFloat">🚗</button>
-<button onclick="abrirTela('posto')" class="btnFloat">🏪</button>
-<button onclick="logout()" class="btnFloat btnSair">🚪</button>
-</div>
-  
 <!-- APP -->
 <div id="app" class="container" style="display:none">
 
@@ -107,72 +88,87 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <!-- 🔥 TELA COMBUSTÍVEL -->
 <!-- ========================= -->
 <div id="tela_combustivel" class="tela">
-<div id="iaBox" class="card" style="display:none"></div>
-<div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="executarAutoRecorte()">🤖 Autorrecorte</button>
-<button onclick="capturaInteligente()" style="flex:1;background:#22c55e;color:#000;border-radius:10px;padding:10px">📲 Inteligente</button>
-<button onclick="abrirQR()" style="flex:1;background:#16a34a;color:#fff;border-radius:10px;padding:10px">🔳 QR</button>
-<button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff;border-radius:10px;padding:10px">📷 OCR</button>
-</div>
-  
-<!-- DASHBOARD -->
+
+<!-- 🔥 FILTRO -->
 <div class="card">
-<div onclick="toggleDash()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-<h3>📊 Dashboard do Veículo</h3>
-<span id="dashIcon">⬇️</span>
-</div>
-<div id="dashContent">
-<div id="kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div>
-<canvas id="graficoConsumo"></canvas>
-<canvas id="graficoGasto"></canvas>
+<div style="display:flex;gap:6px">
+<input type="date" id="filtroInicio">
+<input type="date" id="filtroFim">
+<button onclick="aplicarFiltro()" style="background:#22c55e;color:#000">Filtrar</button>
 </div>
 </div>
 
-<!-- FORM -->
+<!-- 🔥 DASHBOARD -->
 <div class="card">
+<div style="display:flex;justify-content:space-between">
+<h3>📊 Dashboard do Veículo</h3>
+</div>
+
+<!-- 🔥 KPIs -->
+<div id="kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px"></div>
+
+<!-- 🔥 BOTÕES DE TROCA -->
+<div style="display:flex;gap:6px;margin-top:6px">
+<button onclick="trocarGrafico('total')">💰</button>
+<button onclick="trocarGrafico('litros')">⛽</button>
+<button onclick="trocarGrafico('consumo')">📈</button>
+</div>
+
+<canvas id="graficoPrincipal"></canvas>
+</div>
+
+<!-- 🔥 FORM ABASTECIMENTO -->
+<div class="card">
+
 <div class="field">
 <label>🚗 Veículo</label>
 <select id="veiculoSel"></select>
 </div>
+
 <div class="field">
 <label>📅 Data</label>
 <input id="data" type="date">
 </div>
+
 <div class="field">
 <label>🏪 Posto</label>
-<input id="postoInput" placeholder="Digite ou selecione o posto">
-<input id="p_endereco" placeholder="Endereço">
-<input id="p_numero" placeholder="Número">
-<input id="p_uf" placeholder="UF">
-<input id="p_cep" placeholder="CEP">
+<input id="postoInput" placeholder="Digite o posto">
 <select id="postoSel"></select>
 </div>
+
 <div class="field">
 <label>💰 Valor Total (R$)</label>
-<input id="valor" placeholder="Ex: 250,00">
+<input id="valor">
 </div>
+
 <div class="field">
 <label>⛽ Litros</label>
-<input id="litros" placeholder="Ex: 40,50">
+<input id="litros">
 </div>
+
 <div class="field">
 <label>💲 Valor por Litro</label>
-<input id="valor_litro" placeholder="Automático ou manual">
+<input id="valor_litro">
 </div>
+
 <div class="field">
 <label>📏 KM Atual</label>
-<input id="km" placeholder="Ex: 52340">
+<input id="km">
 </div>
+
 <div class="field">
-<label>⛽ Tipo de abastecimento</label>
+<label>⛽ Tipo</label>
 <select id="tanque">
 <option value="cheio">Tanque cheio</option>
 <option value="parcial">Parcial</option>
 </select>
 </div>
+
 <button class="btnSave" onclick="salvar()">Salvar Abastecimento</button>
+
 </div>
 
+<!-- 🔥 LISTA -->
 <div id="lista"></div>
 
 </div>
@@ -182,53 +178,42 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <!-- ========================= -->
 <div id="tela_motorista" class="tela">
 
-<div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="toggleForm('formMotorista')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Motorista</button>
-</div>
+<button onclick="toggleForm('formMotorista')" style="background:#3b82f6">➕ Novo Motorista</button>
 
-<!-- 🔥 LISTA (SEMPRE VISÍVEL) -->
 <div id="listaMotoristas"></div>
 
-<!-- 🔥 FORM (OCULTO) -->
-<div id="formMotorista" class="card" style="display:none;margin-top:10px">
-<input id="m_nome" placeholder="Nome do motorista">
+<div id="formMotorista" class="card" style="display:none">
+<input id="m_nome" placeholder="Nome">
 <input id="m_cpf" placeholder="CPF">
 <input id="m_tel" placeholder="Telefone">
-<button class="btnSave" onclick="salvarMotorista()">Salvar Motorista</button>
-<button onclick="cancelarMotorista()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
+<button class="btnSave" onclick="salvarMotorista()">Salvar</button>
 </div>
 
 </div>
+
 <!-- ========================= -->
 <!-- 🚗 VEÍCULO -->
 <!-- ========================= -->
 <div id="tela_veiculo" class="tela">
 
-<div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="toggleForm('formVeiculo')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Veículo</button>
-</div>
+<button onclick="toggleForm('formVeiculo')" style="background:#3b82f6">➕ Novo Veículo</button>
 
-<!-- 🔥 LISTA -->
 <div id="listaVeiculos"></div>
 
-<!-- 🔥 FORM -->
-<div id="formVeiculo" class="card" style="display:none;margin-top:10px">
+<div id="formVeiculo" class="card" style="display:none">
+
 <input id="v_placa" placeholder="Placa">
 <input id="v_marca" placeholder="Marca">
 <input id="v_modelo" placeholder="Modelo">
 <input id="v_ano" placeholder="Ano">
 <input id="v_cor" placeholder="Cor">
 <input id="v_renavam" placeholder="Renavam">
-<input id="v_combustivel" placeholder="Combustível principal">
-<input id="v_km" placeholder="KM atual">
-<label style="font-size:11px;color:#94a3b8">📅 Vencimento IPVA</label>
-<input id="v_ipva" type="date">
-<label style="font-size:11px;color:#94a3b8">📅 Licenciamento</label>
-<input id="v_licenciamento" type="date">
-<label style="font-size:11px;color:#94a3b8">👨‍🔧 Motorista</label>
+
+<label>Motorista</label>
 <select id="v_motorista"></select>
-<button class="btnSave" onclick="salvarVeiculo()">Salvar Veículo</button>
-<button onclick="cancelarVeiculo()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
+
+<button class="btnSave" onclick="salvarVeiculo()">Salvar</button>
+
 </div>
 
 </div>
@@ -238,1376 +223,93 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <!-- ========================= -->
 <div id="tela_posto" class="tela">
 
-<div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="toggleForm('formPosto')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Posto</button>
-</div>
+<button onclick="toggleForm('formPosto')" style="background:#3b82f6">➕ Novo Posto</button>
 
-<!-- 🔥 LISTA -->
 <div id="listaPostos"></div>
 
-<!-- 🔥 FORM -->
-<div id="formPosto" class="card" style="display:none;margin-top:10px">
+<div id="formPosto" class="card" style="display:none">
+
 <input id="p_nome" placeholder="Nome do posto">
+
+<!-- 🔥 CNPJ VISÍVEL (CORRIGIDO) -->
 <input id="p_cnpj" placeholder="CNPJ">
+
 <input id="p_cidade" placeholder="Cidade">
 <input id="p_endereco" placeholder="Endereço">
 <input id="p_numero" placeholder="Número">
 <input id="p_uf" placeholder="UF">
 <input id="p_cep" placeholder="CEP">
-<button class="btnSave" onclick="salvarPosto()">Salvar Posto</button>
-<button onclick="cancelarPosto()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
-</div>
+
+<button class="btnSave" onclick="salvarPosto()">Salvar</button>
 
 </div>
 
+</div>
 
 </div>
 
 
 <script>
-
-let iaBox
-window.addEventListener("DOMContentLoaded",()=>{
-iaBox = document.getElementById("iaBox")
-})
-  
-function calcularIndicadores(lista){
-if(!lista.length)return null
-let totalGasto=0
-let totalLitros=0
-let consumos=[]
-let totalKm=0
-for(let i=0;i<lista.length;i++){
-let atual=lista[i]
-let anterior=lista[i+1]
-totalGasto+=Number(atual.valor_total||0)
-totalLitros+=Number(atual.litros||0)
-if(anterior && atual.quilometragem && anterior.quilometragem){
-let km=atual.quilometragem-anterior.quilometragem
-if(km>0 && atual.litros>0){
-let consumo=km/atual.litros
-consumos.push(consumo)
-totalKm+=km
-}
-}
-}
-let mediaConsumo=consumos.length?(consumos.reduce((a,b)=>a+b,0)/consumos.length):0
-let melhor=Math.max(...consumos,0)
-let pior=Math.min(...consumos,0)
-let custoKm=totalKm>0?(totalGasto/totalKm):0
-return{
-totalGasto,
-totalLitros,
-mediaConsumo,
-melhor,
-pior,
-custoKm,
-totalAbastecimentos:lista.length
-}
-}
-function renderKPIs(d){
-let el=document.getElementById("kpis")
-if(!el||!d)return
-let total=Number(d.totalGasto||0)
-let litros=Number(d.totalLitros||0)
-let media=Number(d.mediaConsumo||0)
-let custo=Number(d.custoKm||0)
-let melhor=Number(d.melhor||0)
-let pior=Number(d.pior||0)
-let qtd=Number(d.totalAbastecimentos||0)
-el.innerHTML=`
-<div class="item">💰 Total<br><b>R$ ${total.toLocaleString("pt-BR",{minimumFractionDigits:2})}</b></div>
-<div class="item">⛽ Litros<br><b>${litros.toLocaleString("pt-BR",{minimumFractionDigits:1})}</b></div>
-<div class="item">📈 Km/L<br><b>${media.toLocaleString("pt-BR",{minimumFractionDigits:2})}</b></div>
-<div class="item">🚗 Custo/KM<br><b>R$ ${custo.toLocaleString("pt-BR",{minimumFractionDigits:2})}</b></div>
-<div class="item">🏆 Melhor<br><b>${melhor.toLocaleString("pt-BR",{minimumFractionDigits:2})}</b></div>
-<div class="item">⚠️ Pior<br><b>${pior.toLocaleString("pt-BR",{minimumFractionDigits:2})}</b></div>
-<div class="item">📊 Registros<br><b>${qtd}</b></div>
-`
-}
-  
-function renderDashboard(lista){
-if(!Array.isArray(lista)||!lista.length)return
-let dados=[...lista].sort((a,b)=>new Date(b.data_abastecimento)-new Date(a.data_abastecimento))
-let labels=dados.map(x=>fData(x.data_abastecimento))
-let consumo=[]
-for(let i=0;i<dados.length-1;i++){
-let atual=dados[i]
-let anterior=dados[i+1]
-if(atual.tanque!=="cheio")continue
-if(anterior.tanque!=="cheio")continue
-let kmAtual=Number(atual.quilometragem||0)
-let kmAnterior=Number(anterior.quilometragem||0)
-let litros=Number(atual.litros||0)
-let kmRodado=kmAtual-kmAnterior
-if(kmRodado>0 && litros>0){
-consumo.push(kmRodado/litros)
-}
-}
-let valores=dados.map(x=>Number(x.valor_total||0))
-if(graficoConsumo)graficoConsumo.destroy()
-if(graficoGasto)graficoGasto.destroy()
-graficoConsumo=new Chart(graficoConsumoEl,{
-type:"line",
-data:{
-labels:labels,
-datasets:[{
-label:"Km/L",
-data:consumo,
-borderWidth:2,
-tension:0.3
-}]
-},
-options:{
-plugins:{legend:{display:true}},
-scales:{
-y:{beginAtZero:true}
-}
-}
-})
-const cores=["#22c55e","#3b82f6","#f59e0b","#ef4444","#a855f7","#06b6d4","#84cc16","#f97316","#e11d48","#14b8a6"]
-let ano=""
-if(dados.length&&dados[0].data_abastecimento){
-ano=dados[0].data_abastecimento.split("-")[0]
-}
-graficoGasto=new Chart(graficoGastoEl,{
-type:"bar",
-data:{
-labels:labels,
-datasets:[{
-data:valores,
-backgroundColor:valores.map((_,i)=>cores[i%cores.length]),
-borderRadius:6
-}]
-},
-options:{
-plugins:{
-legend:{display:false},
-title:{display:true,text:"Gastos "+ano}
-},
-scales:{
-y:{
-beginAtZero:true,
-ticks:{
-callback:(v)=>"R$ "+Number(v).toLocaleString("pt-BR")
-}
-}
-}
-}
-})
-let indicadores=calcularIndicadores(dados)
-renderKPIs(indicadores)
-let auto=calcularAutonomia(lista)
-if(auto){
-let el=document.getElementById("kpis")
-el.innerHTML+=`
-<div class="item">🚗 Autonomia<br><b>${auto.autonomia.toFixed(0)} km</b></div>
-<div class="item">⛽ Consumo Médio<br><b>${auto.media.toFixed(2)} km/L</b></div>
-`
-}
-}
-
-function calcularAutonomia(lista){
-if(!Array.isArray(lista)||lista.length<2)return null
-let dados=[...lista].sort((a,b)=>new Date(b.data_abastecimento)-new Date(a.data_abastecimento))
-let consumos=[]
-for(let i=0;i<dados.length-1;i++){
-let a=dados[i],b=dados[i+1]
-if(a.tanque!=="cheio"||b.tanque!=="cheio")continue
-let kmA=Number(a.quilometragem||0),kmB=Number(b.quilometragem||0),lit=Number(a.litros||0)
-let rodado=kmA-kmB
-if(rodado>0&&lit>0)consumos.push(rodado/lit)
-}
-if(!consumos.length)return null
-let media=consumos.reduce((x,y)=>x+y,0)/consumos.length
-let ultimoKm=Number(dados[0].quilometragem||0)
-/* 🔧 ajuste aqui se quiser por veículo no futuro */
-let capacidade=60
-let autonomia=media*capacidade
-return{media,autonomia,capacidade,ultimoKm}
-}
-
-
-/* 003 CONFIG */
-const db=supabase.createClient(
-"https://gspdlrenyrzbkxlvyugc.supabase.co",
-"sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw"
-)
-
-/* 🔥 OCR LOG */
-Tesseract.setLogging(true)
-
-
-/* 004 ESTADO */
-let VID=null,graficoConsumo,graficoGasto
-
-/* 005 UTILS */
-function fData(d){
-if(!d)return "-"
-let x=d.split("T")[0].split("-")
-return x[2]+"/"+x[1]
-}
-
-/* 006 LOGIN */
-async function login(){
-let usuario=(user.value||"").trim()
-let senha=(pass.value||"").trim()
-if(!usuario||!senha){alert("Informe usuário e senha");return}
-let {data,error}=await db.from("usuarios").select("*").ilike("usuario_apelido",usuario)
-if(error){console.error(error);alert("Erro conexão");return}
-if(!data||!data.length){alert("Usuário não encontrado");return}
-let userDB=data[0]
-if(userDB.senha_hash!==senha){alert("Senha incorreta");return}
-localStorage.setItem("empresa",userDB.empresa_id)
-init()
-}
-
-/* 007 INIT */
-async function init(){
-document.body.classList.remove("login")
-document.getElementById("menuHome").style.display="none"
-telaLogin.style.display="none"
-app.style.display="block"
-await carregarTudo()
-bindPostoInput()
-bindPostoEdicao()
-setTimeout(()=>carregarSelectsPadrao(),50)
-abrirTela("combustivel")
-render()
-
-}
-/* 008 UI */
-function abrirTela(t){
-document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
-let el=document.getElementById("tela_"+t)
-if(!el)return
-el.style.display="block"
-if(t==="combustivel"){
-carregarTudo()
-}
-}
-
-async function carregarTudo(){
-let emp=null
-
-/* 🔥 1. tenta VEÍCULO (PRIORIDADE MÁXIMA) */
-let {data:vCheck}=await db.from("veiculos").select("empresa_id").limit(1)
-if(vCheck&&vCheck.length){
-emp=vCheck[0].empresa_id
-}
-
-/* 🔥 2. fallback abastecimento */
-if(!emp){
-let {data:abast}=await db.from("abastecimentos").select("empresa_id").limit(1)
-if(abast&&abast.length){
-emp=abast[0].empresa_id
-}
-}
-
-/* 🔥 3. fallback motoristas */
-if(!emp){
-let {data:mot}=await db.from("motoristas").select("empresa_id").limit(1)
-if(mot&&mot.length){
-emp=mot[0].empresa_id
-}
-}
-
-/* 🔥 salva corretamente */
-if(emp){
-localStorage.setItem("empresa",emp)
-}
-
-if(!emp){
-console.error("❌ empresa não encontrada")
-return
-}
-
-console.log("🚀 EMPRESA CORRETA:",emp)
-if(!emp)return console.error("empresa não encontrada")
-console.log("EMPRESA ATIVA:",emp)
-let elMotoristas=document.getElementById("listaMotoristas")
-let elPostos=document.getElementById("listaPostos")
-let elVeiculos=document.getElementById("listaVeiculos")
-let selMotorista=document.getElementById("v_motorista")
-let selPosto=document.getElementById("postoSel")
-let selPostoEdit=document.getElementById("e_posto")
-let selVeiculo=document.getElementById("veiculoSel")
-
-/* 🔥 MOTORISTAS */
-let m=[]
-let {data:motoristas,error:e1}=await db.from("motoristas").select("*")
-if(e1){console.error("motoristas erro:",e1);motoristas=[]}
-motoristas=(motoristas||[]).filter(x=>x.empresa_id===emp)
-m=Array.isArray(motoristas)?motoristas:[]
-console.log("motoristas filtrados:",m)
-
-if(elMotoristas){
-elMotoristas.innerHTML=m.length?m.map(x=>`<div class="item"><div class="itemContent"><div><b>${x.nome||"-"}</b></div><div style="font-size:11px;color:#94a3b8">CPF: <span id="cpf_${x.id}">***.***.***-**</span></div><div style="font-size:11px;color:#94a3b8">Tel: ${x.telefone||"-"}</div></div><div class="actions"><button class="btnEye" onclick="toggleCPF('${x.id}','${x.cpf||""}')">👁</button><button class="btnEdit" onclick="editarMotorista('${x.id}','${(x.nome||"").replace(/'/g,"")}','${(x.telefone||"").replace(/'/g,"")}','${(x.cpf||"").replace(/'/g,"")}')">✏️</button><button class="btnDel" onclick="excluir('motoristas','${x.id}')">🗑</button></div></div>`).join(""):`<div class="item">Nenhum motorista</div>`
-}
-
-if(selMotorista){
-selMotorista.innerHTML=m.length?m.map(x=>`<option value="${x.id}">${x.nome||"-"}</option>`).join(""):`<option value="">Sem motoristas</option>`
-}
-
-/* 🔥 POSTOS */
-let p=[]
-let {data:postos,error:e2}=await db.from("postos").select("*").eq("empresa_id",emp)
-if(e2){console.error("postos erro:",e2);postos=[]}
-p=Array.isArray(postos)?postos:[]
-console.log("postos:",p)
-
-if(elPostos){
-elPostos.innerHTML=p.length?p.map(x=>`<div class="item"><div class="itemContent"><div><b>${x.nome_posto||"-"}</b></div><div style="font-size:11px;color:#94a3b8">${x.cidade||"-"} | ${x.uf||"-"} | ${x.cnpj||"-"}</div><div style="font-size:11px;color:#64748b">${x.endereco||""} ${x.numero||""} ${x.cep||""}</div></div><div class="actions"><button class="btnEdit" onclick="editarPosto('${x.id}','${(x.nome_posto||"").replace(/'/g,"")}','${(x.cidade||"").replace(/'/g,"")}','${(x.cnpj||"").replace(/'/g,"")}')">✏️</button><button class="btnDel" onclick="excluir('postos','${x.id}')">🗑</button></div></div>`).join(""):`<div class="item">Nenhum posto</div>`
-}
-
-if(selPosto){
-selPosto.innerHTML=p.length?p.map(x=>`<option value="${x.id}">${x.nome_posto||"-"}</option>`).join(""):`<option value="">Sem postos</option>`
-}
-
-if(selPostoEdit&&selPosto){
-selPostoEdit.innerHTML=selPosto.innerHTML
-}
-
-/* 🔥 VEÍCULOS */
-let v=[]
-let {data:veiculos,error:e3}=await db.from("veiculos").select("*").eq("empresa_id",emp)
-if(e3){console.error("veiculos erro:",e3);veiculos=[]}
-v=Array.isArray(veiculos)?veiculos:[]
-console.log("veiculos:",v)
-
-let mapMotoristas={}
-m.forEach(mo=>{mapMotoristas[mo.id]=mo})
-
-if(selVeiculo){
-selVeiculo.innerHTML=v.length?v.map(x=>`<option value="${x.id}">${x.modelo||x.placa||"Veículo"}</option>`).join(""):`<option value="">Nenhum veículo</option>`
-}
-
-/* 🔥 GARANTE VID */
-if(v.length){
-VID=selVeiculo&&selVeiculo.value?selVeiculo.value:v[0].id
-}else{
-VID=null
-console.warn("⚠️ Nenhum veículo")
-}
-
-/* 🔥 LISTA VEÍCULOS */
-if(elVeiculos){
-elVeiculos.innerHTML=v.length?v.map(x=>{
-let mot=mapMotoristas[x.motorista_id]||{}
-let renavamSafe=(x.renavam||"").replace(/'/g,"")
-return `<div class="item"><div class="itemContent"><div><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div><div style="font-size:11px;color:#94a3b8">${x.marca||"-"} | ${x.ano||"-"} | ${x.cor||"-"}</div><div style="font-size:11px;color:#94a3b8">KM ${x.km_atual||"-"} | Comb: ${x.combustivel_principal||"-"}</div><div style="font-size:11px;color:#94a3b8">Motorista: ${mot.nome||"-"}</div><div style="font-size:11px;color:#94a3b8">Renavam: <span id="renavam_${x.id}">***</span></div><div style="font-size:11px;color:#64748b">IPVA: ${x.vencimento_ipva?fData(x.vencimento_ipva):"-"} | Lic: ${x.vencimento_licenciamento?fData(x.vencimento_licenciamento):"-"}</div></div><div class="actions"><button class="btnEye" onclick="toggleRenavam('${x.id}','${renavamSafe}')">👁</button><button class="btnEdit" onclick="editarVeiculo('${x.id}','${(x.placa||"").replace(/'/g,"")}','${(x.marca||"").replace(/'/g,"")}','${(x.modelo||"").replace(/'/g,"")}','${x.ano||""}','${(x.cor||"").replace(/'/g,"")}','${renavamSafe}','${(x.combustivel_principal||"").replace(/'/g,"")}','${x.km_atual||""}','${x.vencimento_ipva||""}','${x.vencimento_licenciamento||""}','${x.motorista_id||""}')">✏️</button><button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button></div></div>`
-}).join(""):`<div class="item">Nenhum veículo</div>`
-}
-
-/* 🔥 ATUALIZA ABASTECIMENTOS */
-setTimeout(()=>{
-if(VID){
-render()
-}else{
-console.warn("Sem VID → não renderiza abastecimentos")
-}
-},100)
-}
-
-async function garantirPosto(){
-let nome=(p_nome.value||"").trim()
-if(!nome)return
-let emp=localStorage.getItem("empresa")
-let {data}=await db.from("postos")
-.select("*")
-.ilike("nome_posto",nome)
-if(data && data.length){
-postoSel.value=data[0].id
-return
-}
-/* 🆕 CRIA POSTO SEM CNPJ */
-let {data:novo}=await db.from("postos")
-.insert({
-empresa_id:emp,
-nome_posto:nome,
-cidade:""
-})
-.select()
-.single()
-await carregarTudo()
-setTimeout(()=>{
-postoSel.value=novo.id
-},300)
-}
-
-/* 010 SALVAR */
-async function salvar(){
-if(!data.value){
-data.value=new Date().toISOString().slice(0,10)
-}
-if(!VID)return alert("Selecione um veículo")
-
-let emp=localStorage.getItem("empresa")
-  
-let nomeDigitado=(postoInput?.value||"").trim()
-let postoId=null
-if(nomeDigitado){
-/* 🔍 VERIFICA SE JÁ EXISTE */
-let {data:existente}=await db.from("postos")
-.select("*")
-.ilike("nome_posto",nomeDigitado)
-.eq("empresa_id",emp)
-.limit(1)
-if(existente && existente.length){
-postoId=existente[0].id
-}else{
-/* ➕ CRIA NOVO POSTO */
-let {data:novo,error}=await db.from("postos").insert({
-empresa_id:emp,
-nome_posto:nomeDigitado
-}).select().single()
-if(!error && novo){
-postoId=novo.id
-await carregarTudo()
-postoSel.value=postoId
-}
-}
-}
-
-let v_total=parseFloat(valor.value)||0
-let v_litros=parseFloat(litros.value)||0
-let v_km=parseFloat(km.value)||0
-let tipo=tanque?.value||"cheio"
-let v_data=data.value
-
-if(!v_data)return alert("Informe a data")
-if(v_total<=0)return alert("Valor inválido")
-if(v_litros<=0)return alert("Litros inválido")
-
-/* 🔥 CALCULA VALOR/LITRO AUTOMÁTICO */
-let v_valorLitro=v_litros>0?(v_total/v_litros):0
-
-/* 🔥 INSERT */
-let {error}=await db.from("abastecimentos").insert({
-empresa_id:emp,
-veiculo_id:VID,
-posto_id:postoId,
-valor_total:parseFloat(v_total.toFixed(2)),
-litros:parseFloat(v_litros.toFixed(3)),
-quilometragem:v_km,
-data_abastecimento:v_data,
-valor_litro:parseFloat(v_valorLitro.toFixed(3)),
-tanque:tipo
-})
-
-if(error){
-console.error(error)
-return alert("Erro ao salvar")
-}
-
-/* 🔥 LIMPA FORM */
-valor.value=""
-litros.value=""
-km.value=""
-
-/* 🔥 FEEDBACK */
-alert("✅ Abastecimento salvo com Sucesso")
-
-/* 🔥 ATUALIZA TELA */
-render()
-setTimeout(async()=>{
-let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:false}).limit(10)
-renderIA(data)
-},500)
-}
-
-/* 011 RENDER */
-async function render(){
-
-let vs=document.getElementById("veiculoSel")
-if(vs && vs.value){
-VID=vs.value
-}
-
-if(!VID)return
-
-let listaEl=document.getElementById("lista")
-if(!listaEl)return
-
-let {data,error}=await db
-.from("abastecimentos")
-.select("*,postos(nome_posto)")
-.eq("veiculo_id",VID)
-.order("data_abastecimento",{ascending:false})
-
-if(error){
-console.error(error)
-listaEl.innerHTML="<div class='item'>Erro ao carregar</div>"
-return
-}
-
-if(!data || !data.length){
-listaEl.innerHTML="<div class='item'>Sem histórico</div>"
-renderDashboard([])
-return
-}
-listaEl.innerHTML=data.map(a=>{
-let valor=Number(a.valor_total||0)
-let litros=Number(a.litros||0)
-let km=Number(a.quilometragem||0)
-return `
-<div class="item">
-<div class="itemContent">
-<div><b>${fData(a.data_abastecimento)}</b> | ${a.postos?.nome_posto||"-"}</div>
-<div style="font-size:11px;color:#94a3b8">
-R$ ${valor.toFixed(2)} | ${litros}L | KM ${km}
-<br><span style="font-size:10px;color:${a.tanque==="cheio"?"#22c55e":"#f59e0b"}">
-${a.tanque==="cheio"?"🟢 Tanque cheio":"🟡 Parcial"}
-</span>
-</div>
-</div>
-<div class="actions">
-<button class="btnEdit" onclick="editarAbastecimento('${a.id}',${valor},${litros},${km},'${a.data_abastecimento}','${a.posto_id}')">✏️</button>
-<button class="btnDel" onclick="excluir('abastecimentos','${a.id}')">🗑</button>
-</div>
-</div>
-`
-}).join("")
-renderDashboard(data)
-/* bind change */
-if(vs && !vs._bind){
-vs.addEventListener("change",()=>{
-VID=vs.value
-render()
-})
-vs._bind=true
-}
-renderIA(data)
-}
-
-/* 012 DASHBOARD */
-
-
-/* CRUD */
-async function salvarMotorista(){
-
-let emp=localStorage.getItem("empresa")
-
-let nome=(m_nome.value||"").trim()
-let tel=(m_tel.value||"").trim()
-let cpf=(typeof m_cpf!=="undefined" && m_cpf)?(m_cpf.value||"").trim():""
-
-if(!nome)return alert("Informe o nome")
-
-let payload={
-empresa_id:emp,
-nome:nome,
-telefone:tel,
-cpf:cpf
-}
-
-let error=null
-
-if(window.editMotoristaId){
-({error}=await db.from("motoristas").update(payload).eq("id",window.editMotoristaId))
-window.editMotoristaId=null
-}else{
-({error}=await db.from("motoristas").insert(payload))
-}
-
-if(error){
-console.error(error)
-return alert("Erro ao salvar motorista")
-}
-
-/* 🔥 FEEDBACK */
-alert("✅ Motorista salvo")
-
-/* 🔥 VOLTA PARA LISTA */
-cancelarMotorista()
-
-/* 🔥 RECARREGA */
-await carregarTudo()
-}
-
-
-async function salvarVeiculo(){
-
-let emp=localStorage.getItem("empresa")
-
-let placa=(v_placa.value||"").toUpperCase().trim()
-let modelo=(v_modelo.value||"").trim()
-
-if(!placa)return alert("Informe a placa")
-if(!modelo)return alert("Informe o modelo")
-
-let payload={
-empresa_id:emp,
-placa:placa,
-marca:(v_marca.value||"").trim(),
-modelo:modelo,
-ano:parseInt(v_ano.value)||null,
-cor:(v_cor.value||"").trim(),
-renavam:(v_renavam.value||"").trim(),
-combustivel_principal:(v_combustivel.value||"").trim(),
-km_atual:parseFloat(v_km.value)||0,
-vencimento_ipva:v_ipva.value||null,
-vencimento_licenciamento:v_licenciamento.value||null,
-motorista_id:v_motorista.value||null
-}
-
-let error=null
-
-if(window.editVeiculoId){
-({error}=await db.from("veiculos").update(payload).eq("id",window.editVeiculoId))
-window.editVeiculoId=null
-}else{
-({error}=await db.from("veiculos").insert(payload))
-}
-
-if(error){
-console.error(error)
-return alert("Erro ao salvar veículo")
-}
-
-alert("✅ Veículo salvo")
-
-cancelarVeiculo()
-await carregarTudo()
-}
-
-async function salvarPosto(){
-
-let emp=localStorage.getItem("empresa")
-
-let nome=(p_nome.value||"").trim()
-if(!nome)return alert("Informe o nome do posto")
-
-let payload={
-empresa_id:emp,
-nome_posto:nome,
-cidade:(p_cidade.value||"").trim(),
-cnpj:(p_cnpj.value||"").trim(),
-endereco:(p_endereco.value||"").trim(),
-numero:(p_numero.value||"").trim(),
-uf:(p_uf.value||"").trim(),
-cep:(p_cep.value||"").trim()
-}
-
-let error=null
-
-if(window.editPostoId){
-({error}=await db.from("postos").update(payload).eq("id",window.editPostoId))
-window.editPostoId=null
-}else{
-({error}=await db.from("postos").insert(payload))
-}
-
-if(error){
-console.error(error)
-return alert("Erro ao salvar posto")
-}
-
-alert("✅ Posto salvo")
-
-cancelarPosto()
-await carregarTudo()
-}
-
-window.editPostoId=null
-window.editarPosto=function(id,nome,cidade,cnpj){
-window.editPostoId=id
-p_nome.value=nome||""
-p_cidade.value=cidade||""
-p_cnpj.value=cnpj||""
-let form=document.getElementById("formPosto")
-let lista=document.getElementById("listaPostos")
-if(form)form.style.display="block"
-if(lista)lista.style.display="none"
-}
-
-window.editVeiculoId=null
-window.editarVeiculo=function(id,placa,marca,modelo,ano,cor,renavam,comb,kilometragem,ipva,lic,motorista){
-window.editVeiculoId=id
-v_placa.value=placa||""
-v_marca.value=marca||""
-v_modelo.value=modelo||""
-v_ano.value=ano||""
-v_cor.value=cor||""
-v_renavam.value=renavam||""
-v_combustivel.value=comb||""
-v_km.value=kilometragem||""
-v_ipva.value=(ipva||"").split("T")[0]
-v_licenciamento.value=(lic||"").split("T")[0]
-v_motorista.value=motorista||""
-let form=document.getElementById("formVeiculo")
-let lista=document.getElementById("listaVeiculos")
-if(form)form.style.display="block"
-if(lista)lista.style.display="none"
-}
-
-window.editarAbastecimento=function(id,valor,litros,km,data,posto){
-let nomePostoTexto = e_posto.options[e_posto.selectedIndex]?.text || ""
-e_postoInput.value = nomePostoTexto
-window.editAbastecimentoId=id
-modalEditar.style.display="flex"
-e_valor.value=Number(valor||0).toFixed(2)
-e_litros.value=Number(litros||0)
-e_km.value=Number(km||0)
-e_data.value=(data||"").split("T")[0]
-e_posto.value=posto||""
-}
-
-window.editMotoristaId=null
-window.editarMotorista=function(id,nome,tel,cpf){
-window.editMotoristaId=id
-
-if(typeof m_nome!=="undefined" && m_nome){
-m_nome.value=nome||""
-}
-if(typeof m_tel!=="undefined" && m_tel){
-m_tel.value=tel||""
-}
-if(typeof m_cpf!=="undefined" && m_cpf){
-m_cpf.value=cpf||""
-}
-
-/* 🔥 MOSTRAR FORM E ESCONDER LISTA */
-let form=document.getElementById("formMotorista")
-let lista=document.getElementById("listaMotoristas")
-
-if(form)form.style.display="block"
-if(lista)lista.style.display="none"
-}
-
-async function excluir(t,id){
-if(!confirm("Excluir?"))return
-/* 🔒 NÃO APAGAR ABASTECIMENTOS (DADOS CONSOLIDADOS) */
-if(t==="abastecimentos"){
-alert("⚠️ Registro consolidado não pode ser excluído.\nUse edição.")
-return
-}
-/* 🔒 PROTEÇÃO EXTRA */
-let {data}=await db.from(t).select("id").eq("id",id).limit(1)
-if(!data||!data.length){
-alert("Registro não encontrado")
-return
-}
-await db.from(t).delete().eq("id",id)
-await carregarTudo()
-render()
-}
-/* LOGOUT */
-function logout(){
-localStorage.removeItem("empresa")
-document.getElementById("app").style.display="none"
-document.getElementById("telaLogin").style.display="flex"
-document.body.classList.add("login")
-document.getElementById("menuHome").style.display="flex"
-user.value=""
-pass.value=""
-}
-
-/* START */
-document.addEventListener("DOMContentLoaded",()=>{
-document.body.classList.add("login")
-window.graficoConsumoEl=document.getElementById("graficoConsumo")
-window.graficoGastoEl=document.getElementById("graficoGasto")
-if(localStorage.getItem("empresa")){
-document.body.classList.remove("login")
-init()
-}
-})
-
-let editId=null
-
-function abrirEditar(id,valor,litros,km,data,posto){
-editId=id
-modalEditar.style.display="flex"
-
-/* preenche */
-e_valor.value=valor||""
-e_litros.value=litros||""
-e_km.value=km||""
-e_data.value=(data||"").split("T")[0]||""
-e_posto.value=posto||""
-}
-
-
-async function salvarEdicao(){
-let emp=localStorage.getItem("empresa")
-let nomeDigitado=(e_postoInput?.value||"").trim()
-let postoId=null
-if(nomeDigitado){
-let {data:existente}=await db.from("postos")
-.select("*")
-.ilike("nome_posto",nomeDigitado)
-.eq("empresa_id",emp)
-.limit(1)
-if(existente && existente.length){
-postoId=existente[0].id
-}else{
-let {data:novo,error}=await db.from("postos").insert({
-empresa_id:emp,
-nome_posto:nomeDigitado
-}).select().single()
-if(!error && novo){
-postoId=novo.id
-await carregarTudo()
-}
-}
-}
-await db.from("abastecimentos").update({
-valor_total:Number(parseFloat(e_valor.value||0).toFixed(2)),
-litros:parseFloat(e_litros.value)||0,
-quilometragem:parseFloat(e_km.value)||0,
-posto_id:postoId,
-data_abastecimento:e_data.value
-}).eq("id",editAbastecimentoId)
-modalEditar.style.display="none"
-render()
-}
-
-function fecharEditar(){
-modalEditar.style.display="none"
-}
-function toggleDash(){
-let el=document.getElementById("dashContent")
-let icon=document.getElementById("dashIcon")
-if(!el)return
-if(el.style.display==="none"){
-el.style.display="block"
-icon.innerText="⬇️"
-}else{
-el.style.display="none"
-icon.innerText="⬆️"
-}
-}
-function toggleCPF(id,valor){
-let el=document.getElementById("cpf_"+id)
-if(!el)return
-el.innerText=el.innerText==="***"?valor||"-":"***"
-}
+const db=supabase.createClient("https://gspdlrenyrzbkxlvyugc.supabase.co","sb_publishable_MQRr8O1saGmGz3nsMg1g-Q_8ZIK6yrw")
+let VID=null,graficoPrincipal,dadosGlobal=[],tipoGrafico="total",filtroInicio=null,filtroFim=null
+function fData(d){if(!d)return"-";let x=d.split("T")[0].split("-");return x[2]+"/"+x[1]}
+document.addEventListener("DOMContentLoaded",async()=>{if(window.data)data.value=new Date().toISOString().slice(0,10);if(localStorage.getItem("empresa")){document.getElementById("telaLogin").style.display="none";document.getElementById("app").style.display="block";await carregarTudo();render()}else{document.body.classList.add("login")}})
+async function login(){let usuario=(user.value||"").trim(),senha=(pass.value||"").trim();if(!usuario||!senha)return alert("Informe usuário e senha");let{data,error}=await db.from("usuarios").select("*").ilike("usuario_apelido",usuario);if(error)return alert("Erro conexão");if(!data||!data.length)return alert("Usuário não encontrado");let u=data[0];if(u.senha_hash!==senha)return alert("Senha incorreta");localStorage.setItem("empresa",u.empresa_id);document.getElementById("telaLogin").style.display="none";document.getElementById("app").style.display="block";await carregarTudo();render()}
+function logout(){localStorage.removeItem("empresa");location.reload()}
+function aplicarFiltro(){filtroInicio=document.getElementById("filtroInicio").value||null;filtroFim=document.getElementById("filtroFim").value||null;render()}
+function trocarGrafico(t){tipoGrafico=t;renderGrafico(dadosGlobal)}
+async function carregarTudo(){let emp=localStorage.getItem("empresa");if(!emp)return;let{data:veiculos}=await db.from("veiculos").select("*").eq("empresa_id",emp);let{data:postos}=await db.from("postos").select("*").eq("empresa_id",emp);let{data:motoristas}=await db.from("motoristas").select("*").eq("empresa_id",emp);if(veiculoSel){veiculoSel.innerHTML=veiculos&&veiculos.length?veiculos.map(v=>`<option value="${v.id}">${v.modelo||v.placa||"Veículo"}</option>`).join(""):`<option value="">Nenhum veículo</option>`;VID=veiculos&&veiculos.length?veiculos[0].id:null}if(postoSel){postoSel.innerHTML=postos&&postos.length?postos.map(p=>`<option value="${p.id}">${p.nome_posto||"-"}</option>`).join(""):`<option value="">Sem postos</option>`}if(v_motorista){v_motorista.innerHTML=motoristas&&motoristas.length?motoristas.map(m=>`<option value="${m.id}">${m.nome||"-"}</option>`).join(""):`<option value="">Sem motoristas</option>`}}
+async function render(){if(veiculoSel&&veiculoSel.value)VID=veiculoSel.value;if(!VID)return;let query=db.from("abastecimentos").select("*,postos(nome_posto)").eq("veiculo_id",VID);if(filtroInicio)query=query.gte("data_abastecimento",filtroInicio);if(filtroFim)query=query.lte("data_abastecimento",filtroFim);let{data,error}=await query.order("data_abastecimento",{ascending:false});if(error)return console.error(error);dadosGlobal=data||[];if(!dadosGlobal.length){lista.innerHTML="<div class='item'>Sem histórico</div>";renderGrafico([]);return}lista.innerHTML=dadosGlobal.map(a=>`<div class="item"><div class="itemContent"><div><b>${fData(a.data_abastecimento)}</b> | ${a.postos?.nome_posto||"-"}</div><div style="font-size:11px;color:#94a3b8">R$ ${Number(a.valor_total||0).toFixed(2)} | ${a.litros}L | KM ${a.quilometragem||"-"}</div></div></div>`).join("");renderGrafico(dadosGlobal)}
+function renderGrafico(lista){if(!lista||!lista.length)return;let dados=[...lista].sort((a,b)=>new Date(a.data_abastecimento)-new Date(b.data_abastecimento));let labels=dados.map(x=>fData(x.data_abastecimento));let dataset=[];if(tipoGrafico==="total"){dataset=dados.map(x=>Number(x.valor_total||0))}if(tipoGrafico==="litros"){dataset=dados.map(x=>Number(x.litros||0))}if(tipoGrafico==="consumo"){dataset=[];for(let i=1;i<dados.length;i++){let km=dados[i].quilometragem-dados[i-1].quilometragem;let l=dados[i].litros;if(km>0&&l>0)dataset.push(km/l)}}if(graficoPrincipal)graficoPrincipal.destroy();graficoPrincipal=new Chart(document.getElementById("graficoPrincipal"),{type:"line",data:{labels:labels,datasets:[{label:tipoGrafico,data:dataset,borderWidth:2,tension:.3}]}});renderKPIs(dados)}
+function renderKPIs(lista){let total=lista.reduce((s,x)=>s+Number(x.valor_total||0),0);let litros=lista.reduce((s,x)=>s+Number(x.litros||0),0);let consumo=0;if(lista.length>1){let km=lista[lista.length-1].quilometragem-lista[0].quilometragem;if(litros>0)consumo=km/litros}kpis.innerHTML=`<div class="item" onclick="trocarGrafico('total')">💰 R$ ${total.toFixed(2)}</div><div class="item" onclick="trocarGrafico('litros')">⛽ ${litros.toFixed(1)}</div><div class="item" onclick="trocarGrafico('consumo')">📈 ${consumo.toFixed(2)} km/l</div>`}
+async function salvar(){if(!data.value)data.value=new Date().toISOString().slice(0,10);if(!VID)return alert("Selecione veículo");let emp=localStorage.getItem("empresa");let postoId=postoSel.value||null;let v_total=parseFloat(valor.value)||0;let v_litros=parseFloat(litros.value)||0;let v_km=parseFloat(km.value)||0;if(v_total<=0||v_litros<=0)return alert("Dados inválidos");let v_valorLitro=v_litros>0?(v_total/v_litros):0;let{error}=await db.from("abastecimentos").insert({empresa_id:emp,veiculo_id:VID,posto_id:postoId,valor_total:v_total,litros:v_litros,quilometragem:v_km,data_abastecimento:data.value,valor_litro:v_valorLitro,tanque:"cheio"});if(error)return alert("Erro ao salvar");valor.value="";litros.value="";km.value="";render()}
+if(window.veiculoSel&&!veiculoSel._bind){veiculoSel.addEventListener("change",()=>{VID=veiculoSel.value;render()});veiculoSel._bind=true}
+function abrirTela(t){document.querySelectorAll(".tela").forEach(e=>e.style.display="none");let el=document.getElementById("tela_"+t);if(el)el.style.display="block"}
+</script>
+
+  <script>
+async function executarAutoRecorte(){if(!previewOCR.src)return;let r=await autoRecorteCupom(previewOCR.src);previewOCR.src=r}
+async function autoRecorteCupom(src){return new Promise(resolve=>{let img=new Image();img.onload=()=>{let canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");canvas.width=img.width;canvas.height=img.height;ctx.drawImage(img,0,0);let imageData=ctx.getImageData(0,0,canvas.width,canvas.height),data=imageData.data;for(let i=0;i<data.length;i+=4){let avg=(data[i]+data[i+1]+data[i+2])/3;let val=avg>160?255:0;data[i]=val;data[i+1]=val;data[i+2]=val}ctx.putImageData(imageData,0,0);let top=canvas.height,bottom=0,left=canvas.width,right=0;for(let y=0;y<canvas.height;y++){for(let x=0;x<canvas.width;x++){let i=(y*canvas.width+x)*4;if(data[i]<200){if(y<top)top=y;if(y>bottom)bottom=y;if(x<left)left=x;if(x>right)right=x}}}let margem=20;top=Math.max(0,top-margem);left=Math.max(0,left-margem);bottom=Math.min(canvas.height,bottom+margem);right=Math.min(canvas.width,right+margem);let w=right-left,h=bottom-top;if(w<50||h<50){resolve(src);return}let recorte=document.createElement("canvas");recorte.width=w;recorte.height=h;recorte.getContext("2d").drawImage(canvas,left,top,w,h,0,0,w,h);resolve(recorte.toDataURL())};img.src=src})}
+async function abrirCameraOCR(){modalOCR.style.display="flex";previewOCR.style.display="none";let stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});videoOCR.srcObject=stream}
+function capturarImagem(){let canvas=canvasOCR,video=videoOCR,ctx=canvas.getContext("2d");canvas.width=video.videoWidth;canvas.height=video.videoHeight;ctx.drawImage(video,0,0);let img=canvas.toDataURL("image/jpeg",0.95);previewOCR.src=img;previewOCR.style.display="block"}
+async function processarCupomCompleto(){if(!previewOCR.src)return alert("Capture primeiro");iaBox.style.display="block";iaBox.innerHTML="Processando...";let recortada=await autoRecorteCupom(previewOCR.src);previewOCR.src=recortada;let qr=await tentarQRImagem();if(qr){await processarQRCompleto(qr);return}let worker=await Tesseract.createWorker("por");let {data:{text}}=await worker.recognize(recortada);await worker.terminate();if(!text||text.length<10){iaBox.innerHTML="Erro OCR";return}let dados=extrairDadosIA(text);preencherFormulario(dados);iaBox.innerHTML="OK"}
+async function tentarQRImagem(){try{if(!window.arquivoOCR)return null;const html5QrCode=new Html5Qrcode("qr-temp");let res=await html5QrCode.scanFile(window.arquivoOCR,true);html5QrCode.clear();return res}catch(e){return null}}
+async function processarQRCompleto(url){try{let res=await fetch(url);let html=await res.text();let total=(html.match(/R\$ ?([\d\.,]+)/)||[])[1];let litros=(html.match(/([\d\.,]+)\s*l/)||[])[1];preencherFormulario({total:total,litros:litros,valor_litro:total&&litros?(parseFloat(total.replace(",", "."))/parseFloat(litros.replace(",", "."))).toFixed(3):""});iaBox.innerHTML="QR OK"}catch(e){processarCupomCompleto()}}
+function extrairDadosIA(text){text=text.replace(/\r/g,"\n").toLowerCase();let dados={};dados.cnpj=(text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[""])[0];dados.total=(text.match(/total\s*[r\$]*\s*([\d\.,]+)/)||[])[1];dados.litros=(text.match(/(\d+[\.,]\d+)\s*l/)||[])[1];dados.valor_litro=(text.match(/(\d+[\.,]\d+)\s*(?:\/l|litro)/)||[])[1];dados.km=(text.match(/km[\s:]*([\d]{3,7})/)||[])[1];if(text.includes("aditiv"))dados.combustivel="Gasolina Aditivada";else if(text.includes("gasolina"))dados.combustivel="Gasolina";else if(text.includes("etanol")||text.includes("alcool"))dados.combustivel="Álcool";else if(text.includes("diesel"))dados.combustivel="Diesel";if(!dados.valor_litro&&dados.total&&dados.litros){dados.valor_litro=(parseFloat(dados.total.replace(",", "."))/parseFloat(dados.litros.replace(",", "."))).toFixed(3)}return dados}
+function preencherFormulario(d){if(d.total)valor.value=d.total.replace(",",".");if(d.litros)litros.value=d.litros.replace(",",".");if(d.valor_litro)valor_litro.value=d.valor_litro;if(d.km)km.value=d.km;if(d.cnpj)buscarPostoPorCNPJ(d.cnpj)}
+async function buscarPostoPorCNPJ(cnpj){try{let limpo=cnpj.replace(/\D/g,"");let res=await fetch("https://receitaws.com.br/v1/cnpj/"+limpo);let json=await res.json();if(!json.nome)return;postoInput.value=json.nome}catch(e){}}
+function fecharOCR(){modalOCR.style.display="none";let stream=videoOCR.srcObject;if(stream)stream.getTracks().forEach(t=>t.stop())}
+function ativarCrop(){cropMode=true}
+function startCrop(e){if(!cropMode)return;startX=e.offsetX;startY=e.offsetY}
+function endCrop(e){if(!cropMode)return;endX=e.offsetX;endY=e.offsetY;let canvas=canvasOCR,ctx=canvas.getContext("2d"),img=new Image();img.src=previewOCR.src;img.onload=function(){let w=Math.abs(endX-startX),h=Math.abs(endY-startY);canvas.width=w;canvas.height=h;ctx.drawImage(img,startX,startY,w,h,0,0,w,h);previewOCR.src=canvas.toDataURL("image/jpeg",1);cropMode=false}}
+let cropMode=false,startX,startY,endX,endY
+let qrScanner=null
+function abrirQR(){modalQR.style.display="flex";qrScanner=new Html5Qrcode("readerQR");qrScanner.start({facingMode:"environment"},{fps:10,qrbox:250},(msg)=>{processarQR(msg);fecharQR()})}
+function fecharQR(){modalQR.style.display="none";if(qrScanner)qrScanner.stop().then(()=>qrScanner.clear())}
+async function processarQR(url){if(!url.includes("sefaz"))return alert("QR inválido");let res=await fetch(url);let html=await res.text();let total=(html.match(/R\$ ?([\d\.,]+)/)||[])[1];if(total)valor.value=total.replace(",",".");alert("QR OK")}
 function toggleForm(id){
-let el=document.getElementById(id)
-let lista=document.getElementById("listaMotoristas")
-if(el.style.display==="none"){
-el.style.display="block"
+let form=document.getElementById(id)
+let lista=id==="formMotorista"?listaMotoristas:id==="formVeiculo"?listaVeiculos:listaPostos
+if(!form||!lista)return
+if(form.style.display==="none"||!form.style.display){
+form.style.display="block"
 lista.style.display="none"
 }else{
-el.style.display="none"
+form.style.display="none"
 lista.style.display="block"
 }
 }
-
 function cancelarMotorista(){
-document.getElementById("formMotorista").style.display="none"
-document.getElementById("listaMotoristas").style.display="block"
+formMotorista.style.display="none"
+listaMotoristas.style.display="block"
+m_nome.value=""
+m_tel.value=""
+if(m_cpf)m_cpf.value=""
 window.editMotoristaId=null
-if(window.m_nome)m_nome.value=""
-if(window.m_tel)m_tel.value=""
-if(window.m_cpf)m_cpf.value=""
-}
-
-function toggleRenavam(id,valor){
-let el=document.getElementById("renavam_"+id)
-if(!el)return
-el.innerText=el.innerText==="***"?valor||"-":"***"
-}
-async function carregarSelectsPadrao(){
-
-/* VEÍCULO */
-if(window.veiculoSel && veiculoSel && veiculoSel.options){
-if(veiculoSel.options.length>0){
-VID=veiculoSel.value||null
-}else{
-VID=null
-}
-}else{
-VID=null
-}
-/* POSTO */
-if(window.postoSel && postoSel && postoSel.options){
-if(postoSel.options.length>0){
-postoSel.value=postoSel.options[0].value
-}
-}
-/* MODAL */
-if(window.e_posto && window.postoSel && postoSel){
-e_posto.innerHTML=postoSel.innerHTML
-}
-}
-async function abrirCadastro(){
-let usuario=prompt("Crie um usuário:")
-if(!usuario)return
-let senha=prompt("Crie uma senha:")
-if(!senha)return
-let empresa=crypto.randomUUID()
-let {error}=await db.from("usuarios").insert({
-usuario_apelido:usuario,
-senha_hash:senha,
-empresa_id:empresa
-})
-if(error){
-console.error(error)
-alert("Erro ao criar conta")
-return
-}
-alert("Conta criada com sucesso!")
-user.value=usuario
-pass.value=senha
-}
-
-async function abrirCameraOCR(){
-modalOCR.style.display="flex"
-previewOCR.style.display="none"
-
-let stream=await navigator.mediaDevices.getUserMedia({
-video:{
-facingMode:"environment",
-width:{ideal:1280},
-height:{ideal:720}
-}
-})
-
-videoOCR.srcObject=stream
-
-await new Promise(res=>{
-videoOCR.onloadedmetadata=()=>res()
-})
-}
-
-function capturarImagem(){
-let canvas=canvasOCR
-let video=videoOCR
-let ctx=canvas.getContext("2d")
-/* 🔥 GARANTE TAMANHO REAL */
-canvas.width=video.videoWidth||1280
-canvas.height=video.videoHeight||720
-
-ctx.drawImage(video,0,0,canvas.width,canvas.height)
-/* 🔥 MELHORA CONTRASTE */
-let imgData=ctx.getImageData(0,0,canvas.width,canvas.height)
-let data=imgData.data
-for(let i=0;i<data.length;i+=4){
-let avg=(data[i]+data[i+1]+data[i+2])/3
-let v=avg>140?255:0
-data[i]=data[i+1]=data[i+2]=v
-}
-ctx.putImageData(imgData,0,0)
-
-let img=canvas.toDataURL("image/jpeg",0.95)
-previewOCR.src=img
-previewOCR.style.display="block"
-
-setTimeout(async()=>{
-try{
-if(typeof tentarQRImagem==="function"){
-let qr=await tentarQRImagem(previewOCR.src)
-if(qr){
-alert("🔳 QR detectado automaticamente!")
-await processarQR(qr)
-fecharOCR()
-}
-}else{
-console.warn("⚠️ Função tentarQRImagem não definida")
-}
-}catch(e){
-console.error("Erro QR:",e)
-}
-},300)
-}
-
-function preprocessarImagem(src){
-return new Promise(resolve=>{
-let img=new Image()
-img.onload=()=>{
-let canvas=document.createElement("canvas")
-let ctx=canvas.getContext("2d")
-
-canvas.width=img.width
-canvas.height=img.height
-
-ctx.drawImage(img,0,0)
-
-let imageData=ctx.getImageData(0,0,canvas.width,canvas.height)
-let data=imageData.data
-
-for(let i=0;i<data.length;i+=4){
-let avg=(data[i]+data[i+1]+data[i+2])/3
-
-// 🔥 ajuste profissional (não estoura)
-let val=avg>140?255:0
-
-data[i]=val
-data[i+1]=val
-data[i+2]=val
-}
-
-ctx.putImageData(imageData,0,0)
-
-resolve(canvas.toDataURL())
-}
-img.src=src
-})
-}
-
-
-async function tentarQRImagem(){
-return new Promise(async(resolve)=>{
-try{
-
-if(!window.arquivoOCR){
-resolve(null)
-return
-}
-
-let temp=document.createElement("div")
-temp.id="qr-temp"
-temp.style.display="none"
-document.body.appendChild(temp)
-
-const html5QrCode=new Html5Qrcode("qr-temp")
-
-html5QrCode.scanFile(window.arquivoOCR,true)
-.then(decodedText=>{
-html5QrCode.clear()
-temp.remove()
-resolve(decodedText)
-})
-.catch(()=>{
-html5QrCode.clear()
-temp.remove()
-resolve(null)
-})
-
-}catch(e){
-console.error("QR erro:",e)
-resolve(null)
-}
-})
-}
-
-
-async function processarOCR(){
-previewOCR.style.opacity="0.5"
-if(!previewOCR.src)return alert("Capture primeiro")
-
-iaBox.style.display="block"
-iaBox.innerHTML="🔍 Processando cupom..."
-
-try{
-const worker=await Tesseract.createWorker("por")
-await worker.setParameters({
-tessedit_char_whitelist:"0123456789.,R$LKMGASOLINAETANOLDIESEL"
-})
-
-let imgProcessada=await preprocessarImagem(previewOCR.src)
-const {data:{text}}=await worker.recognize(imgProcessada)
-
-await worker.terminate()
-
-console.log("OCR TEXTO:",text)
-
-if(!text||text.length<10){
-alert("❌ OCR não conseguiu ler. Tente recortar melhor.")
-return
-}
-
-processarCupomInteligente(text)
-
-}catch(err){
-console.error(err)
-alert("Erro no OCR")
-setTimeout(()=>{
-alert("Se travar, recorte melhor o cupom")
-},4000)
-}
-previewOCR.style.opacity="1"
-}
-
-
-function processarCupomInteligente(text){
-text=text.replace(/\r/g,"\n").toLowerCase()
-
-/* 🔥 CNPJ */
-let cnpj=(text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[""])[0]
-
-/* 🔥 NOME DO POSTO (MELHORADO) */
-let nomePosto=""
-let matchPosto=text.match(/(?:posto|auto\s?posto|rede)\s+([a-z0-9\s\-]+)/i)
-if(matchPosto && matchPosto[1]){
-nomePosto=matchPosto[1].trim()
-}
-
-/* 🔥 VALORES */
-let total=(text.match(/total\s*[r\$]*\s*([\d\.,]+)/)||[])[1]
-let litros=(text.match(/(\d+[\.,]\d+)\s*l/)||[])[1]
-let valorLitro=(text.match(/(\d+[\.,]\d+)\s*(?:\/l|litro)/)||[])[1]
-
-/* 🔥 KM */
-let km=(text.match(/km[\s:]*([\d]{3,7})/)||[])[1]
-
-/* 🔥 COMBUSTÍVEL (MAIS COMPLETO) */
-let combustivelRaw=(text.match(/gasolina\s+aditivada|gasolina|etanol|álcool|diesel\s?s10|diesel|gnv/i)||[""])[0]
-
-/* 🔥 NORMALIZA */
-if(total)total=total.replace(",",".")
-if(litros)litros=litros.replace(",",".")
-if(valorLitro)valorLitro=valorLitro.replace(",",".")
-if(!valorLitro && total && litros){
-valorLitro=(parseFloat(total)/parseFloat(litros)).toFixed(3)
-}
-
-/* 🔥 NORMALIZA COMBUSTÍVEL */
-let combustivel=normalizarCombustivel(combustivelRaw)
-
-/* 🔥 PREENCHE MODAL CONFIRMAÇÃO */
-c_valor.value=total||""
-c_litros.value=litros||""
-c_valorLitro.value=valorLitro||""
-c_km.value=km||""
-c_combustivel.value=combustivel||""
-c_cnpj.value=cnpj||""
-c_posto.value=nomePosto?nomePosto.toUpperCase():""
-
-/* 🔥 BUSCA CNPJ (se existir) */
-if(cnpj)buscarPostoPorCNPJ(cnpj)
-
-/* 🔥 ABRE CONFIRMAÇÃO */
-modalConfirmacao.style.display="flex"
-}
-
-function normalizarCombustivel(c){
-c=c.toLowerCase()
-if(c.includes("aditiv"))return "Gasolina Aditivada"
-if(c.includes("gasolina"))return "Gasolina Comum"
-if(c.includes("etanol")||c.includes("alcool"))return "Álcool"
-if(c.includes("diesel"))return "Diesel"
-if(c.includes("gnv"))return "GNV"
-return "Gasolina Comum"
-}
-  
-async function buscarPostoPorCNPJ(cnpj){
-try{
-let limpo=cnpj.replace(/\D/g,"")
-let emp=localStorage.getItem("empresa")
-
-let res=await fetch("https://receitaws.com.br/v1/cnpj/"+limpo)
-let json=await res.json()
-
-if(!json.nome)return
-
-let nome=json.nome
-let cidade=json.municipio+"-"+json.uf
-
-/* 🔍 VERIFICA EXISTENTE */
-let {data}=await db.from("postos")
-.select("*")
-.eq("cnpj",cnpj)
-
-let postoId=null
-
-if(data && data.length){
-postoId=data[0].id
-}else{
-/* 🆕 CRIA NOVO POSTO */
-let {data:novo,error}=await db.from("postos")
-.insert({
-empresa_id:emp,
-nome_posto:nome,
-cidade:cidade,
-cnpj:cnpj
-})
-.select()
-.single()
-
-if(error){
-console.error(error)
-return
-}
-
-postoId=novo.id
-}
-
-/* 🔥 ATUALIZA LISTA */
-await carregarTudo()
-
-/* 🔥 SELECIONA AUTOMATICAMENTE */
-setTimeout(()=>{
-if(window.postoSel && postoId){
-postoSel.value=postoId
-}
-},300)
-
-}catch(e){
-console.log("Erro ao buscar CNPJ:",e)
-}
-}
-
-function confirmarOCR(){
-let nomePosto=(c_posto.value||"").trim()
-let cnpj=(c_cnpj.value||"").trim()
-let emp=localStorage.getItem("empresa")
-
-if(nomePosto){
-
-db.from("postos")
-.select("*")
-.ilike("nome_posto",nomePosto)
-.eq("empresa_id",emp)
-.limit(1)
-.then(async({data})=>{
-let postoId=null
-
-if(data && data.length){
-postoId=data[0].id
-}else{
-let {data:novo}=await db.from("postos").insert({
-empresa_id:emp,
-nome_posto:nomePosto,
-cnpj:cnpj
-}).select().single()
-if(novo)postoId=novo.id
-}
-
-if(postoId)postoSel.value=postoId
-})
-}
-
-valor.value=c_valor.value.replace(",",".")
-litros.value=c_litros.value.replace(",",".")
-valor_litro.value=c_valorLitro.value.replace(",",".")
-km.value=c_km.value
-
-fecharConfirmacao()
-fecharOCR()
-}
-
-function fecharConfirmacao(){
-modalConfirmacao.style.display="none"
-}
-function validarAbastecimentoAvancado(){
-let v=parseFloat(valor.value)||0
-let l=parseFloat(litros.value)||0
-let kmAtual=parseFloat(km.value)||0
-if(v<=0||l<=0)return
-let preco=v/l
-if(preco>10||preco<2){
-alert("⚠️ Valor por litro fora do padrão")
-}
-if(l>120){
-alert("🚨 Volume alto incomum")
-}
-if(kmAtual<1000){
-alert("⚠️ KM muito baixo, verifique")
-}
-/* 🔥 ALERTA DE POSSÍVEL FRAUDE */
-if(preco>8.5){
-alert("🚨 Possível combustível adulterado ou erro")
-}
-}
-  
-function fecharOCR(){
-modalOCR.style.display="none"
-let stream=videoOCR.srcObject
-if(stream){stream.getTracks().forEach(t=>t.stop())}
-}
-function analisarAbastecimentos(lista){
-if(!lista||lista.length<2)return null
-let dados=[...lista].sort((a,b)=>new Date(b.data_abastecimento)-new Date(a.data_abastecimento))
-let alertas=[]
-let sugestoes=[]
-let consumos=[]
-for(let i=0;i<dados.length-1;i++){
-let atual=dados[i]
-let anterior=dados[i+1]
-let kmAtual=Number(atual.quilometragem||0)
-let kmAnterior=Number(anterior.quilometragem||0)
-let litros=Number(atual.litros||0)
-let valor=Number(atual.valor_total||0)
-let kmRodado=kmAtual-kmAnterior
-if(atual.tanque==="cheio" && anterior.tanque==="cheio" && kmRodado>0 && litros>0){
-let consumo=kmRodado/litros
-consumos.push(consumo)
-if(consumo<5)alertas.push("⚠️ Consumo muito baixo detectado")
-if(consumo>20)alertas.push("⚠️ Consumo muito alto (possível erro)")
-}
-if(valor/litros>10)alertas.push("⚠️ Valor por litro muito alto")
-if(kmRodado<0)alertas.push("🚨 KM inconsistente (Inconsistência. Reveja a edição dos dados)")
-}
-let media=consumos.reduce((a,b)=>a+b,0)/consumos.length||0
-let ultimo=consumos[0]||0
-if(ultimo<media*0.8)sugestoes.push("🔻 Consumo abaixo do normal, verificar veículo ou realizar manutenção")
-if(ultimo>media*1.2)sugestoes.push("🔺 Consumo melhorou, manter padrão, tire o pé do acelerador e sinta no bolso")
-return{alertas,sugestoes,media,ultimo}
-}
-  
-function renderIA(lista){
-let analise=analisarAbastecimentos(lista)
-if(!analise)return
-let el=document.getElementById("iaBox")
-if(!el)return
-el.style.display="block"
-el.innerHTML=`
-<div style="font-weight:bold;margin-bottom:6px">🤖 Análise Inteligente</div>
-<div style="font-size:12px;margin-bottom:6px">Média: ${analise.media.toFixed(2)} km/l | Último: ${analise.ultimo.toFixed(2)}</div>
-${analise.alertas.map(a=>`<div style="color:#f59e0b;font-size:12px">${a}</div>`).join("")}
-${analise.sugestoes.map(s=>`<div style="color:#22c55e;font-size:12px">${s}</div>`).join("")}
-`
-let mp=melhorPosto(lista)
-if(mp&&mp.posto){
-el.innerHTML+=`<div style="margin-top:6px;font-size:12px">🏪 Melhor posto: ${mp.posto} (R$ ${mp.preco.toFixed(2)}/L)</div>`
-}
-}
-
-function melhorPosto(lista){
-let mapa={}
-lista.forEach(x=>{
-let nome=x.postos?.nome_posto||"Desconhecido"
-let litros=Number(x.litros||0)
-let valor=Number(x.valor_total||0)
-if(!mapa[nome])mapa[nome]={litros:0,valor:0}
-mapa[nome].litros+=litros
-mapa[nome].valor+=valor
-})
-let melhor=null
-let menor=999
-Object.keys(mapa).forEach(p=>{
-let media=mapa[p].valor/mapa[p].litros
-if(media<menor){
-menor=media
-melhor=p
-}
-})
-return{posto:melhor,preco:menor}
-}
-          
-function bindPostoInput(){
-if(!postoSel||!postoInput)return
-postoSel.addEventListener("change",()=>{
-if(!postoInput.value){ // 🔥 só preenche se estiver vazio
-let txt=postoSel.options[postoSel.selectedIndex]?.text||""
-postoInput.value=txt
-}
-})
-postoInput.addEventListener("input",()=>{
-postoSel.value="" // 🔥 limpa seleção quando digita
-})
-}
-function bindPostoEdicao(){
-if(!e_posto||!e_postoInput)return
-e_posto.addEventListener("change",()=>{
-if(!e_postoInput.value){
-let txt=e_posto.options[e_posto.selectedIndex]?.text||""
-e_postoInput.value=txt
-}
-})
-e_postoInput.addEventListener("input",()=>{
-e_posto.value=""
-})
 }
 function cancelarVeiculo(){
-let form=document.getElementById("formVeiculo")
-let lista=document.getElementById("listaVeiculos")
-if(form)form.style.display="none"
-if(lista)lista.style.display="block"
-window.editVeiculoId=null
+formVeiculo.style.display="none"
+listaVeiculos.style.display="block"
 v_placa.value=""
 v_marca.value=""
 v_modelo.value=""
@@ -1618,438 +320,262 @@ v_combustivel.value=""
 v_km.value=""
 v_ipva.value=""
 v_licenciamento.value=""
+window.editVeiculoId=null
 }
-
 function cancelarPosto(){
-let form=document.getElementById("formPosto")
-let lista=document.getElementById("listaPostos")
-if(form)form.style.display="none"
-if(lista)lista.style.display="block"
-window.editPostoId=null
+formPosto.style.display="none"
+listaPostos.style.display="block"
 p_nome.value=""
-p_cidade.value=""
 p_cnpj.value=""
+p_cidade.value=""
 p_endereco.value=""
 p_numero.value=""
 p_uf.value=""
 p_cep.value=""
+window.editPostoId=null
 }
-
-let cropMode=false
-let startX,startY,endX,endY
-
-function ativarCrop(){
-cropMode=true
-alert("Arraste na imagem para recortar")
-previewOCR.addEventListener("mousedown",startCrop)
-previewOCR.addEventListener("mouseup",endCrop)
-}
-
-function startCrop(e){
-if(!cropMode)return
-startX=e.offsetX
-startY=e.offsetY
-}
-
-function endCrop(e){
-if(!cropMode)return
-endX=e.offsetX
-endY=e.offsetY
-
-let canvas=canvasOCR
-let ctx=canvas.getContext("2d")
-
-let img=new Image()
-img.src=previewOCR.src
-
-img.onload=function(){
-let w=Math.abs(endX-startX)
-let h=Math.abs(endY-startY)
-canvas.width=w
-canvas.height=h
-ctx.drawImage(img,startX,startY,w,h,0,0,w,h)
-
-previewOCR.src=canvas.toDataURL("image/jpeg",1)
-cropMode=false
-}
-}
-
-let qrScanner=null
-function abrirQR(){
-modalQR.style.display="flex"
-qrScanner=new Html5Qrcode("readerQR")
-qrScanner.start(
-{facingMode:"environment"},
-{fps:10,qrbox:250},
-(qrCodeMessage)=>{
-console.log("QR:",qrCodeMessage)
-processarQR(qrCodeMessage)
-fecharQR()
-},
-(error)=>{}
-)
-}
-function fecharQR(){
-modalQR.style.display="none"
-if(qrScanner){
-qrScanner.stop().then(()=>{qrScanner.clear()})
-}
-}
-
-async function processarQR(url){
-try{
-if(!url.includes("sefaz")){
-alert("QR não reconhecido como cupom fiscal")
-return
-}
-let res=await fetch(url)
-let html=await res.text()
-
-/* 🔥 NOME POSTO */
-let nome=(html.match(/Razão Social<\/td><td>(.*?)<\/td>/i)||[])[1]
-
-/* 🔥 CNPJ */
-let cnpj=(html.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[])[0]
-
-/* 🔥 TOTAL */
-let total=(html.match(/Valor Total.*?([\d\.,]+)/i)||[])[1]
-
-if(nome){
-postoInput.value=nome
-}
-if(total){
-valor.value=total.replace(",",".")
-}
-if(cnpj){
-buscarPostoPorCNPJ(cnpj)
-}
-
-alert("✅ Dados capturados via QR")
-
-}catch(e){
-console.error(e)
-alert("Erro ao ler QR")
-}
-}
-
-async function capturaInteligente(){
-abrirCameraOCR()
-setTimeout(()=>{
-alert("📷 Aponte primeiro para o QR do cupom.\nSe não detectar, capture normalmente.")
-},400)
-}
-
-  window.addEventListener("load",()=>{
-if(window.Tesseract){
-console.log("✅ OCR pronto")
+async function salvarMotorista(){
+let emp=localStorage.getItem("empresa")
+let payload={empresa_id:emp,nome:(m_nome.value||""),telefone:(m_tel.value||""),cpf:(m_cpf?.value||"")}
+let error=null
+if(window.editMotoristaId){
+({error}=await db.from("motoristas").update(payload).eq("id",window.editMotoristaId))
 }else{
-console.warn("⚠️ OCR não carregou")
+({error}=await db.from("motoristas").insert(payload))
 }
-})
-  
-async function processarCupomCompleto(){
-
-if(!previewOCR.src)return alert("Capture o cupom primeiro")
-
-iaBox.style.display="block"
-iaBox.innerHTML="✂️ Ajustando imagem automaticamente..."
-
-try{
-
-/* 🔥 1. AUTO RECORTE */
-let recortada=await autoRecorteCupom(previewOCR.src)
-previewOCR.src=recortada
-
-/* 🔥 2. TENTA QR PRIMEIRO (MAIS RÁPIDO) */
-iaBox.innerHTML="🔳 Buscando QR..."
-
-let qr=null
-if(typeof tentarQRImagem==="function"){
-qr=await tentarQRImagem()
+if(error)return alert("Erro")
+cancelarMotorista()
+await carregarTudo()
 }
-
-if(qr){
-iaBox.innerHTML="🔳 QR detectado!"
-await processarQRCompleto(qr)
-return
+window.editarMotorista=function(id,nome,tel,cpf){
+window.editMotoristaId=id
+m_nome.value=nome||""
+m_tel.value=tel||""
+if(m_cpf)m_cpf.value=cpf||""
+formMotorista.style.display="block"
+listaMotoristas.style.display="none"
 }
-
-/* 🔥 3. OCR */
-iaBox.innerHTML="🔍 Aplicando OCR..."
-
-let img=await preprocessarImagem(recortada)
-
-const worker=await Tesseract.createWorker("por")
-
-const {data:{text}}=await worker.recognize(img)
-
-await worker.terminate()
-
-if(!text || text.length<10){
-iaBox.innerHTML="❌ Não foi possível ler. Recorte melhor."
-return
+async function salvarVeiculo(){
+let emp=localStorage.getItem("empresa")
+let payload={
+empresa_id:emp,
+placa:(v_placa.value||"").toUpperCase(),
+marca:v_marca.value,
+modelo:v_modelo.value,
+ano:parseInt(v_ano.value)||null,
+cor:v_cor.value,
+renavam:v_renavam.value,
+combustivel_principal:v_combustivel.value,
+km_atual:parseFloat(v_km.value)||0,
+vencimento_ipva:v_ipva.value||null,
+vencimento_licenciamento:v_licenciamento.value||null,
+motorista_id:v_motorista.value||null
 }
-
-/* 🔥 4. IA */
-let dados=extrairDadosIA(text)
-
-preencherFormulario(dados)
-
-iaBox.innerHTML="✅ Dados extraídos com sucesso"
-
-}catch(e){
-console.error(e)
-iaBox.innerHTML="❌ Erro ao processar"
+let error=null
+if(window.editVeiculoId){
+({error}=await db.from("veiculos").update(payload).eq("id",window.editVeiculoId))
+}else{
+({error}=await db.from("veiculos").insert(payload))
 }
+if(error)return alert("Erro")
+cancelarVeiculo()
+await carregarTudo()
 }
-
-function extrairDadosIA(text){
-
-text=text.replace(/\r/g,"\n").toLowerCase()
-
-let dados={}
-
-/* 🔥 CNPJ */
-dados.cnpj=(text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[""])[0]
-
-/* 🔥 VALOR TOTAL */
-dados.total=(text.match(/total\s*[r\$]*\s*([\d\.,]+)/)||[])[1]
-
-/* 🔥 LITROS */
-dados.litros=(text.match(/(\d+[\.,]\d+)\s*l/)||[])[1]
-
-/* 🔥 VALOR/LITRO */
-dados.valor_litro=(text.match(/(\d+[\.,]\d+)\s*(?:\/l|litro)/)||[])[1]
-
-/* 🔥 KM */
-dados.km=(text.match(/km[\s:]*([\d]{3,7})/)||[])[1]
-
-/* 🔥 COMBUSTÍVEL INTELIGENTE */
-if(text.includes("aditivada"))dados.combustivel="Gasolina Aditivada"
-else if(text.includes("gasolina"))dados.combustivel="Gasolina Comum"
-else if(text.includes("etanol")||text.includes("alcool"))dados.combustivel="Álcool"
-else if(text.includes("diesel"))dados.combustivel="Diesel"
-else if(text.includes("gnv"))dados.combustivel="GNV"
-else dados.combustivel="Gasolina Comum"
-
-/* 🔥 AUTO-CÁLCULO */
-if(!dados.valor_litro && dados.total && dados.litros){
-dados.valor_litro=(parseFloat(dados.total.replace(",", "."))/parseFloat(dados.litros.replace(",", "."))).toFixed(3)
+window.editarVeiculo=function(id,placa,marca,modelo,ano,cor,renavam,comb,km,ipva,lic,motorista){
+window.editVeiculoId=id
+v_placa.value=placa||""
+v_marca.value=marca||""
+v_modelo.value=modelo||""
+v_ano.value=ano||""
+v_cor.value=cor||""
+v_renavam.value=renavam||""
+v_combustivel.value=comb||""
+v_km.value=km||""
+v_ipva.value=(ipva||"").split("T")[0]
+v_licenciamento.value=(lic||"").split("T")[0]
+v_motorista.value=motorista||""
+formVeiculo.style.display="block"
+listaVeiculos.style.display="none"
 }
-
-return dados
+async function salvarPosto(){
+let emp=localStorage.getItem("empresa")
+let payload={
+empresa_id:emp,
+nome_posto:p_nome.value,
+cnpj:p_cnpj.value,
+cidade:p_cidade.value,
+endereco:p_endereco.value,
+numero:p_numero.value,
+uf:p_uf.value,
+cep:p_cep.value
 }
-
-
-async function processarQRCompleto(url){
-
-try{
-
-iaBox.innerHTML="🌐 Consultando SEFAZ..."
-
-let res=await fetch(url)
-let html=await res.text()
-
-/* 🔥 EXTRAÇÃO SIMPLES DO HTML */
-let total=(html.match(/R\$ ?([\d\.,]+)/)||[])[1]
-let litros=(html.match(/([\d\.,]+)\s*l/)||[])[1]
-
-let dados={
-total:total,
-litros:litros,
-valor_litro: total&&litros ? (parseFloat(total.replace(",", "."))/parseFloat(litros.replace(",", "."))).toFixed(3):"",
-combustivel:"Gasolina Comum"
+let error=null
+if(window.editPostoId){
+({error}=await db.from("postos").update(payload).eq("id",window.editPostoId))
+}else{
+({error}=await db.from("postos").insert(payload))
 }
-
-preencherFormulario(dados)
-
-iaBox.innerHTML="✅ Dados via QR carregados"
-
-}catch(e){
-console.error(e)
-iaBox.innerHTML="⚠️ QR falhou, usando OCR..."
-processarCupomCompleto()
+if(error)return alert("Erro")
+cancelarPosto()
+await carregarTudo()
+}
+window.editarPosto=function(id,nome,cidade,cnpj){
+window.editPostoId=id
+p_nome.value=nome||""
+p_cidade.value=cidade||""
+p_cnpj.value=cnpj||""
+formPosto.style.display="block"
+listaPostos.style.display="none"
+}
+async function excluir(t,id){
+if(!confirm("Excluir?"))return
+if(t==="abastecimentos")return alert("Registro protegido")
+await db.from(t).delete().eq("id",id)
+await carregarTudo()
+render()
+}
+function renderListas(motoristas,veiculos,postos){
+if(listaMotoristas){
+listaMotoristas.innerHTML=motoristas.map(x=>`
+<div class="item">
+<div>${x.nome}</div>
+<div class="actions">
+<button onclick="editarMotorista('${x.id}','${x.nome}','${x.telefone}','${x.cpf}')">✏️</button>
+<button onclick="excluir('motoristas','${x.id}')">🗑</button>
+</div>
+</div>`).join("")
+}
+if(listaVeiculos){
+listaVeiculos.innerHTML=veiculos.map(x=>`
+<div class="item">
+<div>${x.modelo} | ${x.placa}</div>
+<div class="actions">
+<button onclick="editarVeiculo('${x.id}','${x.placa}','${x.marca}','${x.modelo}','${x.ano}','${x.cor}','${x.renavam}','${x.combustivel_principal}','${x.km_atual}','${x.vencimento_ipva}','${x.vencimento_licenciamento}','${x.motorista_id}')">✏️</button>
+<button onclick="excluir('veiculos','${x.id}')">🗑</button>
+</div>
+</div>`).join("")
+}
+if(listaPostos){
+listaPostos.innerHTML=postos.map(x=>`
+<div class="item">
+<div>${x.nome_posto} | ${x.cnpj||"-"}</div>
+<div class="actions">
+<button onclick="editarPosto('${x.id}','${x.nome_posto}','${x.cidade}','${x.cnpj}')">✏️</button>
+<button onclick="excluir('postos','${x.id}')">🗑</button>
+</div>
+</div>`).join("")
 }
 }
 
-function preencherFormulario(d){
+renderListas(motoristas||[],veiculos||[],postos||[])
 
-if(d.total)valor.value=d.total.replace(",",".")
-if(d.litros)litros.value=d.litros.replace(",",".")
-if(d.valor_litro)valor_litro.value=d.valor_litro
-if(d.km)km.value=d.km
-
-if(d.combustivel){
-v_combustivel.value=d.combustivel
-}
-
-/* 🔥 POSTO POR CNPJ */
-if(d.cnpj){
-buscarPostoPorCNPJ(d.cnpj)
-}
-
-}
-
-async function autoRecorteCupom(src){
-return new Promise(resolve=>{
-let img=new Image()
-img.onload=()=>{
-let canvas=document.createElement("canvas")
-let ctx=canvas.getContext("2d")
-canvas.width=img.width
-canvas.height=img.height
-ctx.drawImage(img,0,0)
-
-/* 🔥 PRETO/BRANCO SUAVE */
-let imageData=ctx.getImageData(0,0,canvas.width,canvas.height)
-let data=imageData.data
-
-for(let i=0;i<data.length;i+=4){
-let avg=(data[i]+data[i+1]+data[i+2])/3
-let val=avg>160?255:0
-data[i]=val
-data[i+1]=val
-data[i+2]=val
-}
-ctx.putImageData(imageData,0,0)
-
-/* 🔥 DETECTAR ÁREA DO CUPOM */
-let top=canvas.height
-let bottom=0
-let left=canvas.width
-let right=0
-
-for(let y=0;y<canvas.height;y++){
-for(let x=0;x<canvas.width;x++){
-let i=(y*canvas.width+x)*4
-if(data[i]<200){ // pixel escuro
-if(y<top)top=y
-if(y>bottom)bottom=y
-if(x<left)left=x
-if(x>right)right=x
-}
-}
-}
-
-/* 🔥 MARGEM */
-let margem=20
-top=Math.max(0,top-margem)
-left=Math.max(0,left-margem)
-bottom=Math.min(canvas.height,bottom+margem)
-right=Math.min(canvas.width,right+margem)
-
-let w=right-left
-let h=bottom-top
-
-if(w<50 || h<50){
-console.warn("⚠️ Recorte inválido, usando imagem original")
-resolve(src)
-return
-}
-/* 🔥 CORTAR */
-let recorte=document.createElement("canvas")
-recorte.width=w
-recorte.height=h
-
-recorte.getContext("2d").drawImage(
-canvas,
-left,top,w,h,
-0,0,w,h
-)
-
-resolve(recorte.toDataURL())
-}
-img.src=src
-})
-}
-
-async function executarAutoRecorte(){
-if(!previewOCR.src)return
-let r=await autoRecorteCupom(previewOCR.src)
-previewOCR.src=r
-}
-
-
-  
   
 </script>
+  
 
-
-
-
+<!-- ========================= -->
+<!-- ✏️ EDITAR ABASTECIMENTO -->
+<!-- ========================= -->
 <div id="modalEditar" class="modal">
 <div class="modalBox">
 <h3 style="margin-bottom:10px">✏️ Editar Abastecimento</h3>
+
 <div class="field">
 <label>📅 Data</label>
 <input id="e_data" type="date">
 </div>
+
 <div class="field">
 <label>🏪 Posto</label>
 <input id="e_postoInput" placeholder="Digite ou selecione o posto">
 <select id="e_posto"></select>
 </div>
+
 <div class="field">
 <label>💰 Valor (R$)</label>
 <input id="e_valor" type="number" step="0.01">
 </div>
+
 <div class="field">
 <label>⛽ Litros</label>
 <input id="e_litros" type="number" step="0.01">
 </div>
+
+<div class="field">
+<label>💲 Valor por Litro</label>
+<input id="e_valor_litro" type="number" step="0.001">
+</div>
+
 <div class="field">
 <label>📏 KM</label>
 <input id="e_km" type="number">
 </div>
-<div style="display:flex;gap:10px;margin-top:15px">
-<button class="btnSave" style="flex:1" onclick="salvarEdicao()">
-✔ Salvar
-</button>
-<button style="flex:1;background:#64748b;color:#fff;border-radius:8px" onclick="fecharEditar()">
-✖ Cancelar
-</button>
+
+<div class="field">
+<label>⛽ Tipo</label>
+<select id="e_tanque">
+<option value="cheio">Tanque cheio</option>
+<option value="parcial">Parcial</option>
+</select>
 </div>
+
+<div style="display:flex;gap:10px;margin-top:15px">
+<button class="btnSave" style="flex:1" onclick="salvarEdicao()">✔ Salvar</button>
+<button style="flex:1;background:#64748b;color:#fff;border-radius:8px" onclick="fecharEditar()">✖ Cancelar</button>
+</div>
+
 </div>
 </div>
 
+<!-- ========================= -->
+<!-- 📷 OCR -->
+<!-- ========================= -->
 <div id="modalOCR" class="modal">
 <div class="modalBox" style="max-width:520px">
+
 <h3 style="margin-bottom:8px">📷 Capturar Cupom</h3>
+
 <video id="videoOCR" autoplay playsinline style="width:100%;border-radius:10px;background:#000"></video>
 <canvas id="canvasOCR" style="display:none"></canvas>
 <img id="previewOCR" style="width:100%;margin-top:8px;border-radius:10px;display:none">
+
 <div style="position:sticky;bottom:0;background:#1e293b;padding:10px;display:flex;gap:6px">
 <button onclick="ativarCrop()" style="background:#f59e0b;color:#000">✂️ Recortar</button>
 <button class="btnSave" onclick="capturarImagem()">📸</button>
 <button onclick="processarCupomCompleto()">✔ Ler</button>
 <button onclick="fecharOCR()" style="background:#64748b;color:#fff;border-radius:8px">✖</button>
 </div>
+
 </div>
 </div>
 
+<!-- ========================= -->
+<!-- 📋 CONFIRMAÇÃO OCR -->
+<!-- ========================= -->
 <div id="modalConfirmacao" class="modal">
 <div class="modalBox">
+
 <h3>📋 Confirmar Dados</h3>
-<div class="field"><label>Valor</label><input id="c_valor"></div>
-<div class="field"><label>Litros</label><input id="c_litros"></div>
-<div class="field"><label>Valor/L</label><input id="c_valorLitro"></div>
-<div class="field"><label>KM</label><input id="c_km"></div>
-<div class="field"><label>Combustível</label><input id="c_combustivel"></div>
-<div style="display:flex;gap:6px;margin-top:10px">
-<button class="btnSave" onclick="confirmarOCR()">✔ Salvar</button>
-<button onclick="fecharConfirmacao()" style="background:#64748b;color:#fff">✖</button>
-</div>
+
+<div class="field"><label>💰 Valor</label><input id="c_valor"></div>
+<div class="field"><label>⛽ Litros</label><input id="c_litros"></div>
+<div class="field"><label>💲 Valor/L</label><input id="c_valorLitro"></div>
+<div class="field"><label>📏 KM</label><input id="c_km"></div>
+
 <div class="field">
 <label>🏪 Posto</label>
 <input id="c_posto">
 </div>
+
 <div class="field">
 <label>🧾 CNPJ</label>
 <input id="c_cnpj">
 </div>
+
+<!-- 🔥 CORRIGIDO: ID ÚNICO -->
 <div class="field">
 <label>⛽ Combustível</label>
-<input id="c_combustivel" list="combustiveis">
+<input id="c_combustivel_tipo" list="combustiveis">
 <datalist id="combustiveis">
 <option>Gasolina Comum</option>
 <option>Gasolina Aditivada</option>
@@ -2059,9 +585,18 @@ previewOCR.src=r
 <option>Híbrido/Gas</option>
 </datalist>
 </div>
+
+<div style="display:flex;gap:6px;margin-top:10px">
+<button class="btnSave" onclick="confirmarOCR()">✔ Salvar</button>
+<button onclick="fecharConfirmacao()" style="background:#64748b;color:#fff">✖</button>
+</div>
+
 </div>
 </div>
 
+<!-- ========================= -->
+<!-- 🔳 QR CODE -->
+<!-- ========================= -->
 <div id="modalQR" class="modal">
 <div class="modalBox">
 <h3>🔳 Ler QR do Cupom</h3>
@@ -2069,7 +604,6 @@ previewOCR.src=r
 <button onclick="fecharQR()" style="margin-top:10px;background:#64748b;color:#fff">Fechar</button>
 </div>
 </div>
-
 
 </body>
 </html>
