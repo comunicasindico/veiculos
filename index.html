@@ -354,14 +354,13 @@ if(!validarCNPJ(cnpj)){
 alert("CNPJ inválido")
 return
 }
-/* 🔥 CACHE */
 let cache=getCacheCNPJ(cnpj)
 if(cache){
 preencherPosto(cache)
 return
 }
 let dados=null
-/* 🔥 API 1 — BRASILAPI (RÁPIDA) */
+/* 🔥 BRASILAPI */
 try{
 let r=await fetch("https://brasilapi.com.br/api/cnpj/v1/"+cnpj)
 if(r.ok){
@@ -376,8 +375,8 @@ cep:j.cep
 }
 }
 }catch(e){}
-/* 🔥 API 2 — RECEITAWS (FALLBACK) */
-if(!dados){
+/* 🔥 SE FALTAR DADOS → RECEITAWS */
+if(!dados || !dados.logradouro){
 try{
 let r=await fetch("https://receitaws.com.br/v1/cnpj/"+cnpj)
 let j=await r.json()
@@ -397,20 +396,18 @@ if(!dados){
 alert("Não foi possível consultar o CNPJ")
 return
 }
-/* 🔥 CACHE */
 setCacheCNPJ(cnpj,dados)
-/* 🔥 PREENCHER */
 preencherPosto(dados)
 }
 
 function preencherPosto(d){
 p_nome.value=d.nome||""
 p_cidade.value=(d.cidade||"")+"-"+(d.uf||"")
-p_endereco.value=d.logradouro||""
-p_numero.value=d.numero||""
+p_endereco.value=d.logradouro||"NÃO INFORMADO"
+p_numero.value=d.numero||"-"
 p_uf.value=d.uf||""
 p_cep.value=(d.cep||"").replace(/\D/g,"")
-p_cnpj.value=(cnpjBusca.value||"")
+p_cnpj.value=cnpjBusca.value||""
 if(postoInput)postoInput.value=d.nome||""
 }
 
