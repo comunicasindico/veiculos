@@ -328,23 +328,30 @@ el.innerHTML=`
   
 function renderDashboard(lista){
 if(!Array.isArray(lista)||!lista.length)return
-let dados=[...lista].sort((a,b)=>new Date(b.data_abastecimento)-new Date(a.data_abastecimento))
+let dados=[...lista]
+if(filtroInicio)dados=dados.filter(x=>x.data_abastecimento>=filtroInicio)
+if(filtroFim)dados=dados.filter(x=>x.data_abastecimento<=filtroFim)
+dados=dados.sort((a,b)=>new Date(a.data_abastecimento)-new Date(b.data_abastecimento))
 let labels=dados.map(x=>fData(x.data_abastecimento))
 let consumo=[]
-for(let i=0;i<dados.length-1;i++){
+for(let i=1;i<dados.length;i++){
 let atual=dados[i]
-let anterior=dados[i+1]
-if(atual.tanque!=="cheio")continue
-if(anterior.tanque!=="cheio")continue
+let anterior=dados[i-1]
+if(atual.tanque!=="cheio"||anterior.tanque!=="cheio"){consumo.push(null);continue}
 let kmAtual=Number(atual.quilometragem||0)
 let kmAnterior=Number(anterior.quilometragem||0)
 let litros=Number(atual.litros||0)
 let kmRodado=kmAtual-kmAnterior
-if(kmRodado>0 && litros>0){
-consumo.push(kmRodado/litros)
+if(kmRodado>0&&litros>0){consumo.push(kmRodado/litros)}else{consumo.push(null)}
 }
-}
-let valores=dados.map(x=>Number(x.valor_total||0))
+let valoresTotal=dados.map(x=>Number(x.valor_total||0))
+let valoresLitros=dados.map(x=>Number(x.litros||0))
+let tipo=tipoGrafico||"consumo"
+let dataset=[]
+let labelGrafico=""
+if(tipo==="consumo"){dataset=consumo;labelGrafico="Km/L"}
+if(tipo==="total"){dataset=valoresTotal;labelGrafico="Total R$"}
+if(tipo==="litros"){dataset=valoresLitros;labelGrafico="Litros"}
 if(graficoConsumo)graficoConsumo.destroy()
 if(graficoGasto)graficoGasto.destroy()
 graficoConsumo=new Chart(graficoConsumoEl,{
@@ -352,58 +359,42 @@ type:"line",
 data:{
 labels:labels,
 datasets:[{
-label:"Km/L",
-data:consumo,
+label:labelGrafico,
+data:dataset,
 borderWidth:2,
-tension:0.3
+tension:0.3,
+pointRadius:4
 }]
 },
 options:{
 plugins:{legend:{display:true}},
-scales:{
-y:{beginAtZero:true}
-}
+scales:{y:{beginAtZero:true}}
 }
 })
 const cores=["#22c55e","#3b82f6","#f59e0b","#ef4444","#a855f7","#06b6d4","#84cc16","#f97316","#e11d48","#14b8a6"]
 let ano=""
-if(dados.length&&dados[0].data_abastecimento){
-ano=dados[0].data_abastecimento.split("-")[0]
-}
+if(dados.length&&dados[dados.length-1].data_abastecimento){ano=dados[dados.length-1].data_abastecimento.split("-")[0]}
 graficoGasto=new Chart(graficoGastoEl,{
 type:"bar",
 data:{
 labels:labels,
 datasets:[{
-data:valores,
-backgroundColor:valores.map((_,i)=>cores[i%cores.length]),
+data:valoresTotal,
+backgroundColor:valoresTotal.map((_,i)=>cores[i%cores.length]),
 borderRadius:6
 }]
 },
 options:{
-plugins:{
-legend:{display:false},
-title:{display:true,text:"Gastos "+ano}
-},
-scales:{
-y:{
-beginAtZero:true,
-ticks:{
-callback:(v)=>"R$ "+Number(v).toLocaleString("pt-BR")
-}
-}
-}
+plugins:{legend:{display:false},title:{display:true,text:"Gastos "+ano}},
+scales:{y:{beginAtZero:true,ticks:{callback:(v)=>"R$ "+Number(v).toLocaleString("pt-BR")}}}
 }
 })
 let indicadores=calcularIndicadores(dados)
 renderKPIs(indicadores)
-let auto=calcularAutonomia(lista)
+let auto=calcularAutonomia(dados)
 if(auto){
 let el=document.getElementById("kpis")
-el.innerHTML+=`
-<div class="item">🚗 Autonomia<br><b>${auto.autonomia.toFixed(0)} km</b></div>
-<div class="item">⛽ Consumo Médio<br><b>${auto.media.toFixed(2)} km/L</b></div>
-`
+el.innerHTML+=`<div class="item">🚗 Autonomia<br><b>${auto.autonomia.toFixed(0)} km</b></div><div class="item">⛽ Consumo Médio<br><b>${auto.media.toFixed(2)} km/L</b></div>`
 }
 }
 
