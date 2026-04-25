@@ -501,10 +501,11 @@ let selVeiculo=document.getElementById("veiculoSel")
 
 /* 🔥 MOTORISTAS */
 let m=[]
-let {data:motoristas,error:e1}=await db.from("motoristas").select("*").eq("empresa_id",emp)
+let {data:motoristas,error:e1}=await db.from("motoristas").select("*")
 if(e1){console.error("motoristas erro:",e1);motoristas=[]}
+motoristas=(motoristas||[]).filter(x=>x.empresa_id===emp)
 m=Array.isArray(motoristas)?motoristas:[]
-console.log("motoristas:",m)
+console.log("motoristas filtrados:",m)
 
 if(elMotoristas){
 elMotoristas.innerHTML=m.length?m.map(x=>`<div class="item"><div class="itemContent"><div><b>${x.nome||"-"}</b></div><div style="font-size:11px;color:#94a3b8">CPF: <span id="cpf_${x.id}">***.***.***-**</span></div><div style="font-size:11px;color:#94a3b8">Tel: ${x.telefone||"-"}</div></div><div class="actions"><button class="btnEye" onclick="toggleCPF('${x.id}','${x.cpf||""}')">👁</button><button class="btnEdit" onclick="editarMotorista('${x.id}','${(x.nome||"").replace(/'/g,"")}','${(x.telefone||"").replace(/'/g,"")}','${(x.cpf||"").replace(/'/g,"")}')">✏️</button><button class="btnDel" onclick="excluir('motoristas','${x.id}')">🗑</button></div></div>`).join(""):`<div class="item">Nenhum motorista</div>`
