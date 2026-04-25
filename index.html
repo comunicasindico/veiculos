@@ -133,6 +133,10 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <div class="field">
 <label>🏪 Posto</label>
 <input id="postoInput" placeholder="Digite ou selecione o posto">
+<input id="p_endereco" placeholder="Endereço">
+<input id="p_numero" placeholder="Número">
+<input id="p_uf" placeholder="UF">
+<input id="p_cep" placeholder="CEP">
 <select id="postoSel"></select>
 </div>
 <div class="field">
@@ -455,27 +459,12 @@ if(!emp)return console.error("empresa não encontrada")
 
 /* MOTORISTAS */
 let {data:m,error:e1}=await db.from("motoristas").select("*").eq("empresa_id",emp)
+console.log("motoristas:",m)
 if(e1){console.error("motoristas:",e1);m=[]}
 m=m||[]
-if(window.listaMotoristas){
-listaMotoristas.innerHTML=m.map(x=>`
-<div class="item">
-<div class="itemContent">
-<div><b>${x.nome||"-"}</b></div>
-<div style="font-size:11px;color:#94a3b8">
-CPF: <span id="cpf_${x.id}">***.***.***-**</span>
-</div>
-<div style="font-size:11px;color:#94a3b8">
-Tel: ${x.telefone||"-"}
-</div>
-</div>
-<div class="actions">
-<button class="btnEye" onclick="toggleCPF('${x.id}','${x.cpf||""}')">👁</button>
-<button class="btnEdit" onclick="editarMotorista('${x.id}','${x.nome||""}','${x.telefone||""}','${x.cpf||""}')">✏️</button>
-<button class="btnDel" onclick="excluir('motoristas','${x.id}')">🗑</button>
-</div>
-</div>
-`).join("")
+let elMotoristas=document.getElementById("listaMotoristas")
+if(elMotoristas){
+elMotoristas.innerHTML=m.map(x=>`<div class="item"><div class="itemContent"><div><b>${x.nome||"-"}</b></div><div style="font-size:11px;color:#94a3b8">CPF: <span id="cpf_${x.id}">***.***.***-**</span></div><div style="font-size:11px;color:#94a3b8">Tel: ${x.telefone||"-"}</div></div><div class="actions"><button class="btnEye" onclick="toggleCPF('${x.id}','${x.cpf||""}')">👁</button><button class="btnEdit" onclick="editarMotorista('${x.id}','${x.nome||""}','${x.telefone||""}','${x.cpf||""}')">✏️</button><button class="btnDel" onclick="excluir('motoristas','${x.id}')">🗑</button></div></div>`).join("")
 }
 if(window.v_motorista){
 v_motorista.innerHTML=m.map(x=>`<option value="${x.id}">${x.nome||"-"}</option>`).join("")
@@ -811,8 +800,9 @@ window.editVeiculoId=null
 }
 
 if(error){
-console.error(error)
-return alert("Erro ao salvar veículo")
+console.error("ERRO VEICULO:",error)
+alert("Erro: "+(error.message||JSON.stringify(error)))
+return
 }
 
 /* LIMPA */
@@ -834,42 +824,40 @@ await carregarTudo()
 }
 
 async function salvarPosto(){
-
 let emp=localStorage.getItem("empresa")
-
 let nome=(p_nome.value||"").trim()
-
 if(!nome)return alert("Informe o nome do posto")
-
 let payload={
 empresa_id:emp,
 nome_posto:nome,
 cidade:(p_cidade.value||"").trim(),
-cnpj:(p_cnpj.value||"").trim()
+cnpj:(p_cnpj.value||"").trim(),
+endereco:(p_endereco?.value||"").trim(),
+numero:(p_numero?.value||"").trim(),
+uf:(p_uf?.value||"").trim(),
+cep:(p_cep?.value||"").trim()
 }
-
 let error=null
-
 if(window.editPostoId){
 ({error}=await db.from("postos").update(payload).eq("id",window.editPostoId))
 window.editPostoId=null
 }else{
 ({error}=await db.from("postos").insert(payload))
 }
-
 if(error){
 console.error(error)
 return alert("Erro ao salvar posto")
 }
-
-/* LIMPA */
+alert("✅ Posto salvo")
 p_nome.value=""
 p_cidade.value=""
 p_cnpj.value=""
-
-/* FEEDBACK */
-alert("✅ Posto salvo")
-
+if(p_endereco)p_endereco.value=""
+if(p_numero)p_numero.value=""
+if(p_uf)p_uf.value=""
+if(p_cep)p_cep.value=""
+let form=document.getElementById("formPosto")
+if(form)form.style.display="none"
 await carregarTudo()
 }
 
