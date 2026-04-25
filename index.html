@@ -1410,12 +1410,12 @@ if(consumo<5)alertas.push("⚠️ Consumo muito baixo detectado")
 if(consumo>20)alertas.push("⚠️ Consumo muito alto (possível erro)")
 }
 if(valor/litros>10)alertas.push("⚠️ Valor por litro muito alto")
-if(kmRodado<0)alertas.push("🚨 KM inconsistente (possível fraude)")
+if(kmRodado<0)alertas.push("🚨 KM inconsistente (Inconsistência. Reveja a edição dos dados)")
 }
 let media=consumos.reduce((a,b)=>a+b,0)/consumos.length||0
 let ultimo=consumos[0]||0
-if(ultimo<media*0.8)sugestoes.push("🔻 Consumo piorou, verificar veículo")
-if(ultimo>media*1.2)sugestoes.push("🔺 Consumo melhorou, manter padrão")
+if(ultimo<media*0.8)sugestoes.push("🔻 Consumo abaixo do normal, verificar veículo ou realizar manutenção")
+if(ultimo>media*1.2)sugestoes.push("🔺 Consumo melhorou, manter padrão, tire o pé do acelerador e sinta no bolso")
 return{alertas,sugestoes,media,ultimo}
 }
   
