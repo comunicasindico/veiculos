@@ -385,18 +385,29 @@ id:'labels',
 afterDatasetsDraw(chart){
 const{ctx}=chart
 ctx.save()
-ctx.font="bold 10px Arial"
-ctx.fillStyle=corLinha
+ctx.font="bold 11px Arial"
+ctx.fillStyle="#000"
 ctx.textAlign="center"
 chart.data.datasets.forEach((dataset,i)=>{
 const meta=chart.getDatasetMeta(i)
 meta.data.forEach((point,index)=>{
 let val=dataset.data[index]
 if(val===null||val===undefined)return
-ctx.fillText(Number(val).toFixed(1),point.x,point.y-8)
+ctx.fillText(Number(val).toFixed(1),point.x,point.y-12)
 })
 })
 ctx.restore()
+}
+}
+const neonPlugin={
+id:'neon',
+beforeDatasetsDraw(chart){
+const{ctx}=chart
+ctx.save()
+ctx.shadowColor="#ffffff"
+ctx.shadowBlur=12
+ctx.shadowOffsetX=0
+ctx.shadowOffsetY=0
 }
 }
 if(graficoConsumo)graficoConsumo.destroy()
@@ -433,9 +444,19 @@ return Number(v).toFixed(2)
 }
 }
 },
-scales:{y:{beginAtZero:true},x:{grid:{display:false}}}
+scales:{
+y:{
+beginAtZero:true,
+grid:{display:false},
+ticks:{color:"#e5e7eb"}
 },
-plugins:[labelPlugin]
+x:{
+grid:{display:false},
+ticks:{color:"#e5e7eb"}
+}
+}
+},
+plugins:[labelPlugin,neonPlugin]
 })
 const cores=["#22c55e","#3b82f6","#f59e0b","#ef4444","#a855f7","#06b6d4","#84cc16","#f97316","#e11d48","#14b8a6"]
 let ano=""
@@ -445,9 +466,18 @@ type:"bar",
 data:{
 labels:labels,
 datasets:[{
-data:valoresTotal,
-backgroundColor:valoresTotal.map((_,i)=>cores[i%cores.length]),
-borderRadius:6
+label:labelGrafico,
+data:dataset,
+borderColor:"#ffffff",
+backgroundColor:"rgba(255,255,255,0.06)",
+borderWidth:3,
+tension:0.4,
+fill:true,
+pointBackgroundColor:"#ffffff",
+pointBorderColor:"#ffffff",
+pointBorderWidth:2,
+pointRadius:4,
+pointHoverRadius:6
 }]
 },
 options:{
