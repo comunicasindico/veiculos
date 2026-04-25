@@ -173,30 +173,38 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <!-- 👨 MOTORISTA -->
 <!-- ========================= -->
 <div id="tela_motorista" class="tela">
+
 <div style="display:flex;gap:6px;margin-bottom:8px">
 <button onclick="toggleForm('formMotorista')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Motorista</button>
 </div>
-<div id="formMotorista" class="card" style="display:none">
-<div class="card">
+
+<!-- 🔥 LISTA (SEMPRE VISÍVEL) -->
+<div id="listaMotoristas"></div>
+
+<!-- 🔥 FORM (OCULTO) -->
+<div id="formMotorista" class="card" style="display:none;margin-top:10px">
 <input id="m_nome" placeholder="Nome do motorista">
 <input id="m_cpf" placeholder="CPF">
 <input id="m_tel" placeholder="Telefone">
 <button class="btnSave" onclick="salvarMotorista()">Salvar Motorista</button>
-</div>
-<div id="listaMotoristas"></div>
 <button onclick="cancelarMotorista()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
 </div>
-</div>
 
+</div>
 <!-- ========================= -->
 <!-- 🚗 VEÍCULO -->
 <!-- ========================= -->
 <div id="tela_veiculo" class="tela">
+
 <div style="display:flex;gap:6px;margin-bottom:8px">
 <button onclick="toggleForm('formVeiculo')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Veículo</button>
 </div>
-<div id="formVeiculo" class="card" style="display:none">
-<div class="card">
+
+<!-- 🔥 LISTA -->
+<div id="listaVeiculos"></div>
+
+<!-- 🔥 FORM -->
+<div id="formVeiculo" class="card" style="display:none;margin-top:10px">
 <input id="v_placa" placeholder="Placa">
 <input id="v_marca" placeholder="Marca">
 <input id="v_modelo" placeholder="Modelo">
@@ -212,29 +220,37 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <label style="font-size:11px;color:#94a3b8">👨‍🔧 Motorista</label>
 <select id="v_motorista"></select>
 <button class="btnSave" onclick="salvarVeiculo()">Salvar Veículo</button>
+<button onclick="cancelarVeiculo()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
 </div>
-<div id="listaVeiculos"></div>
-</div>
+
 </div>
 
 <!-- ========================= -->
 <!-- 🏪 POSTO -->
 <!-- ========================= -->
 <div id="tela_posto" class="tela">
+
 <div style="display:flex;gap:6px;margin-bottom:8px">
 <button onclick="toggleForm('formPosto')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Posto</button>
 </div>
-<div id="formPosto" class="card" style="display:none">
-<div class="card">
+
+<!-- 🔥 LISTA -->
+<div id="listaPostos"></div>
+
+<!-- 🔥 FORM -->
+<div id="formPosto" class="card" style="display:none;margin-top:10px">
 <input id="p_nome" placeholder="Nome do posto">
 <input id="p_cnpj" placeholder="CNPJ">
 <input id="p_cidade" placeholder="Cidade">
+<input id="p_endereco" placeholder="Endereço">
+<input id="p_numero" placeholder="Número">
+<input id="p_uf" placeholder="UF">
+<input id="p_cep" placeholder="CEP">
 <button class="btnSave" onclick="salvarPosto()">Salvar Posto</button>
-</div>
-<div id="listaPostos"></div>
-</div>
+<button onclick="cancelarPosto()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
 </div>
 
+</div>
 
 
 </div>
@@ -790,14 +806,10 @@ if(typeof m_cpf!=="undefined" && m_cpf)m_cpf.value=""
 alert("✅ Motorista salvo")
 
 await carregarTudo()
+document.getElementById("formMotorista").style.display="none"
+document.getElementById("listaMotoristas").style.display="block"
 }
 
-function cancelarMotorista(){
-window.editMotoristaId=null
-m_nome.value=""
-m_tel.value=""
-m_cpf.value=""
-}
 
 async function salvarVeiculo(){
 
@@ -1055,9 +1067,25 @@ el.innerText=el.innerText==="***"?valor||"-":"***"
 }
 function toggleForm(id){
 let el=document.getElementById(id)
-if(!el)return
-el.style.display=(el.style.display==="none")?"block":"none"
+let lista=document.getElementById("listaMotoristas")
+if(el.style.display==="none"){
+el.style.display="block"
+lista.style.display="none"
+}else{
+el.style.display="none"
+lista.style.display="block"
 }
+}
+
+function cancelarMotorista(){
+document.getElementById("formMotorista").style.display="none"
+document.getElementById("listaMotoristas").style.display="block"
+window.editMotoristaId=null
+if(window.m_nome)m_nome.value=""
+if(window.m_tel)m_tel.value=""
+if(window.m_cpf)m_cpf.value=""
+}
+
 function toggleRenavam(id,valor){
 let el=document.getElementById("renavam_"+id)
 if(!el)return
@@ -1455,7 +1483,30 @@ e_postoInput.addEventListener("input",()=>{
 e_posto.value=""
 })
 }
-  
+function cancelarVeiculo(){
+document.getElementById("formVeiculo").style.display="none"
+document.getElementById("listaVeiculos").style.display="block"
+window.editVeiculoId=null
+if(window.v_placa)v_placa.value=""
+if(window.v_marca)v_marca.value=""
+if(window.v_modelo)v_modelo.value=""
+if(window.v_ano)v_ano.value=""
+if(window.v_cor)v_cor.value=""
+if(window.v_renavam)v_renavam.value=""
+if(window.v_km)v_km.value=""
+}
+function cancelarPosto(){
+document.getElementById("formPosto").style.display="none"
+document.getElementById("listaPostos").style.display="block"
+window.editPostoId=null
+if(window.p_nome)p_nome.value=""
+if(window.p_cnpj)p_cnpj.value=""
+if(window.p_cidade)p_cidade.value=""
+if(window.p_endereco)p_endereco.value=""
+if(window.p_numero)p_numero.value=""
+if(window.p_uf)p_uf.value=""
+if(window.p_cep)p_cep.value=""
+}
   
   
 </script>
