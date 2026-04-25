@@ -149,6 +149,10 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <div class="field">
 <label>📅 Data</label>
 <input id="data" type="date">
+<div class="field">
+<label>🧾 CNPJ</label>
+<input id="cnpjBusca" placeholder="00.000.000/0000-00" maxlength="18">
+</div>
 </div>
 <div class="field">
 <label>🏪 Posto</label>
@@ -277,6 +281,7 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 
 
 <script>
+
 /* ESTADO GLOBAL */
 let iaBox
 let VID=null
@@ -284,6 +289,7 @@ let graficoConsumo,graficoGasto
 let tipoGrafico="consumo"
 let filtroInicio=null
 let filtroFim=null
+let ultimoCNPJBuscado=null
   
 window.addEventListener("DOMContentLoaded",()=>{
 iaBox=document.getElementById("iaBox")
@@ -293,6 +299,113 @@ function aplicarFiltro(){
 filtroInicio=document.getElementById("filtroInicio")?.value||null
 filtroFim=document.getElementById("filtroFim")?.value||null
 render()
+}
+
+const cnpjInput=document.getElementById("cnpjBusca")
+if(cnpjInput){
+cnpjInput.addEventListener("input",()=>{
+let v=cnpjInput.value.replace(/\D/g,"")
+v=v.replace(/^(\d{2})(\d)/,"$1.$2")
+v=v.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3")
+v=v.replace(/\.(\d{3})(\d)/,".$1/$2")
+v=v.replace(/(\d{4})(\d)/,"$1-$2")
+cnpjInput.value=v
+if(v.replace(/\D/g,"").length===14){
+buscarCNPJ_PRO(v)
+}
+})
+let limpo=v.replace(/\D/g,"")
+if(limpo.length===14 && limpo!==ultimoCNPJBuscado){
+ultimoCNPJBuscado=limpo
+buscarCNPJ_PRO(limpo)
+}
+}
+
+function getCacheCNPJ(cnpj){
+return JSON.parse(localStorage.getItem("cnpj_"+cnpj)||"null")
+}
+function setCacheCNPJ(cnpj,data){
+localStorage.setItem("cnpj_"+cnpj,JSON.stringify(data))
+}
+
+function validarCNPJ(cnpj){
+cnpj=cnpj.replace(/\D/g,"")
+if(cnpj.length!==14)return false
+if(/^(\d)\1+$/.test(cnpj))return false
+let t=cnpj.length-2,d=cnpj.substring(0,t),dv=cnpj.substring(t),s=0,p=t-7
+for(let i=t;i>=1;i--){s+=d.charAt(t-i)*p--;if(p<2)p=9}
+let r=s%11<2?0:11-s%11
+if(r!=dv.charAt(0))return false
+t=t+1;d=cnpj.substring(0,t);s=0;p=t-7
+for(let i=t;i>=1;i--){s+=d.charAt(t-i)*p--;if(p<2)p=9}
+r=s%11<2?0:11-s%11
+return r==dv.charAt(1)
+}
+  
+async function buscarCNPJ_PRO(cnpjRaw){
+let cnpj=cnpjRaw.replace(/\D/g,"")
+if(!validarCNPJ(cnpj)){
+alert("CNPJ inválido")
+return
+}
+/* 🔥 CACHE */
+let cache=getCacheCNPJ(cnpj)
+if(cache){
+preencherPosto(cache)
+return
+}
+let dados=null
+/* 🔥 API 1 — BRASILAPI (RÁPIDA) */
+try{
+let r=await fetch("https://brasilapi.com.br/api/cnpj/v1/"+cnpj)
+if(r.ok){
+let j=await r.json()
+dados={
+nome:j.razao_social,
+cidade:j.municipio,
+uf:j.uf,
+logradouro:j.logradouro,
+numero:j.numero,
+cep:j.cep
+}
+}
+}catch(e){}
+/* 🔥 API 2 — RECEITAWS (FALLBACK) */
+if(!dados){
+try{
+let r=await fetch("https://receitaws.com.br/v1/cnpj/"+cnpj)
+let j=await r.json()
+if(j.status!=="ERROR"){
+dados={
+nome:j.nome,
+cidade:j.municipio,
+uf:j.uf,
+logradouro:j.logradouro,
+numero:j.numero,
+cep:j.cep
+}
+}
+}catch(e){}
+}
+if(!dados){
+alert("Não foi possível consultar o CNPJ")
+return
+}
+/* 🔥 CACHE */
+setCacheCNPJ(cnpj,dados)
+/* 🔥 PREENCHER */
+preencherPosto(dados)
+}
+
+function preencherPosto(d){
+p_nome.value=d.nome||""
+p_cidade.value=(d.cidade||"")+"-"+(d.uf||"")
+p_endereco.value=d.logradouro||""
+p_numero.value=d.numero||""
+p_uf.value=d.uf||""
+p_cep.value=(d.cep||"").replace(/\D/g,"")
+p_cnpj.value=(cnpjBusca.value||"")
+if(postoInput)postoInput.value=d.nome||""
 }
 
 function trocarGrafico(tipo){
@@ -707,6 +820,7 @@ postoId=existente[0].id
 let {data:novo,error}=await db.from("postos").insert({
 empresa_id:emp,
 nome_posto:nomeDigitado
+cnpj:p_cnpj.value||null
 }).select().single()
 if(!error && novo){
 postoId=novo.id
