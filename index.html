@@ -383,40 +383,31 @@ if(tipo==="litros"){corLinha="#c2410c";corFundo="rgba(249,115,22,0.12)"}
 const labelPlugin={
 id:'labels',
 afterDatasetsDraw(chart){
+if(chart.canvas.id!=="graficoConsumo")return
 const{ctx}=chart
 ctx.save()
-ctx.font="bold 11px Arial"
-ctx.fillStyle="#000"
 ctx.textAlign="center"
 chart.data.datasets.forEach((dataset,i)=>{
 const meta=chart.getDatasetMeta(i)
 meta.data.forEach((point,index)=>{
 let val=dataset.data[index]
 if(val===null||val===undefined)return
-ctx.fillText(Number(val).toFixed(1),point.x,point.y-12)
+let yOffset=index%2===0?-12:14
+let cor=index%2===0?"#000":"#2563eb"
+ctx.font="bold 11px Arial"
+ctx.fillStyle=cor
+ctx.fillText(Number(val).toFixed(1),point.x,point.y+yOffset)
 })
 })
 ctx.restore()
 }
 }
-const neonPlugin={
-id:'neon',
-beforeDatasetsDraw(chart){
-const{ctx}=chart
-ctx.save()
-ctx.shadowColor="#ffffff"
-ctx.shadowBlur=12
-ctx.shadowOffsetX=0
-ctx.shadowOffsetY=0
-}
-}
+const barLabelPlugin={id:'barLabels',afterDatasetsDraw(chart){if(chart.canvas.id!=="graficoGasto")return;const{ctx}=chart;ctx.save();ctx.font="bold 11px Arial";ctx.fillStyle="#111";ctx.textAlign="center";chart.data.datasets.forEach((dataset,i)=>{const meta=chart.getDatasetMeta(i);meta.data.forEach((bar,index)=>{let val=dataset.data[index];if(!val)return;ctx.fillText("R$ "+Number(val).toFixed(0),bar.x,bar.y-6)})});ctx.restore()}}
+const neonPlugin={id:'neon',beforeDatasetsDraw(chart){if(chart.canvas.id!=="graficoConsumo")return;const{ctx}=chart;ctx.save();ctx.shadowColor="#ffffff";ctx.shadowBlur=12},afterDatasetsDraw(chart){if(chart.canvas.id!=="graficoConsumo")return;chart.ctx.restore()}}
 if(graficoConsumo)graficoConsumo.destroy()
 if(graficoGasto)graficoGasto.destroy()
-graficoConsumo=new Chart(graficoConsumoEl,{
-type:"line",
-data:{
-labels:labels,
-datasets:[{
+graficoConsumo=new Chart(graficoConsumoEl,{type:"line",data:{labels:labels,datasets:[
+{
 label:labelGrafico,
 data:dataset,
 borderColor:corLinha,
@@ -424,67 +415,32 @@ backgroundColor:corFundo,
 borderWidth:3,
 tension:0.4,
 fill:true,
-pointBackgroundColor:"#fff",
+pointBackgroundColor:dataset.map(v=>{
+if(v===null)return"#fff"
+let vals=dataset.filter(x=>x!=null)
+if(v===Math.max(...vals))return"#22c55e"
+if(v===Math.min(...vals))return"#ef4444"
+return"#fff"
+}),
 pointBorderColor:corLinha,
 pointBorderWidth:2,
-pointRadius:4,
-pointHoverRadius:6
-}]
+pointRadius:5,
+pointHoverRadius:7
 },
-options:{
-plugins:{
-legend:{display:true},
-tooltip:{
-callbacks:{
-label:(ctx)=>{
-let v=ctx.raw||0
-if(tipo==="total")return "R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2})
-return Number(v).toFixed(2)
+{
+label:"Tendência",
+data:mediaMovel(dataset,3),
+borderColor:"rgba(255,255,255,0.4)",
+borderWidth:2,
+tension:0.4,
+pointRadius:0,
+borderDash:[6,6]
 }
-}
-}
-},
-scales:{
-y:{
-beginAtZero:true,
-grid:{display:false},
-ticks:{color:"#e5e7eb"}
-},
-x:{
-grid:{display:false},
-ticks:{color:"#e5e7eb"}
-}
-}
-},
-plugins:[labelPlugin,neonPlugin]
-})
+]},options:{plugins:{legend:{display:true},tooltip:{callbacks:{label:(ctx)=>{let v=ctx.raw||0;if(tipo==="total")return"R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2});return Number(v).toFixed(2)}}}},scales:{y:{beginAtZero:true,grid:{display:false},ticks:{color:"#e5e7eb"}},x:{grid:{display:false},ticks:{color:"#e5e7eb"}}}},plugins:[labelPlugin,neonPlugin]})
 const cores=["#22c55e","#3b82f6","#f59e0b","#ef4444","#a855f7","#06b6d4","#84cc16","#f97316","#e11d48","#14b8a6"]
 let ano=""
 if(dados.length&&dados[dados.length-1].data_abastecimento){ano=dados[dados.length-1].data_abastecimento.split("-")[0]}
-graficoGasto=new Chart(graficoGastoEl,{
-type:"bar",
-data:{
-labels:labels,
-datasets:[{
-label:labelGrafico,
-data:dataset,
-borderColor:"#ffffff",
-backgroundColor:"rgba(255,255,255,0.06)",
-borderWidth:3,
-tension:0.4,
-fill:true,
-pointBackgroundColor:"#ffffff",
-pointBorderColor:"#ffffff",
-pointBorderWidth:2,
-pointRadius:4,
-pointHoverRadius:6
-}]
-},
-options:{
-plugins:{legend:{display:false},title:{display:true,text:"Gastos "+ano}},
-scales:{y:{beginAtZero:true,ticks:{callback:(v)=>"R$ "+Number(v).toLocaleString("pt-BR")}}}
-}
-})
+graficoGasto=new Chart(graficoGastoEl,{type:"bar",data:{labels:labels,datasets:[{data:valoresTotal,backgroundColor:valoresTotal.map((_,i)=>cores[i%cores.length]),borderRadius:8,borderSkipped:false,barThickness:18}]},options:{plugins:{legend:{display:false},title:{display:true,text:"Gastos "+ano}},scales:{y:{beginAtZero:true,ticks:{callback:(v)=>"R$ "+Number(v).toLocaleString("pt-BR")}}}},plugins:[barLabelPlugin]})
 let indicadores=calcularIndicadores(dados)
 renderKPIs(indicadores)
 let auto=calcularAutonomia(dados)
@@ -492,6 +448,20 @@ if(auto){
 let el=document.getElementById("kpis")
 el.innerHTML+=`<div class="item">🚗 Autonomia<br><b>${auto.autonomia.toFixed(0)} km</b></div><div class="item">⛽ Consumo Médio<br><b>${auto.media.toFixed(2)} km/L</b></div>`
 }
+}
+function mediaMovel(arr,periodo){
+let res=[]
+for(let i=0;i<arr.length;i++){
+let soma=0,cont=0
+for(let j=i-periodo+1;j<=i;j++){
+if(j>=0&&arr[j]!=null){
+soma+=arr[j]
+cont++
+}
+}
+res.push(cont?soma/cont:null)
+}
+return res
 }
 
 function calcularAutonomia(lista){
