@@ -1669,57 +1669,52 @@ cropMode=false
 }
 
 let qrScanner=null
-function abrirQR(){
+async function abrirQR(){
 modalQR.style.display="flex"
+if(qrScanner){
+try{await qrScanner.stop();await qrScanner.clear()}catch(e){}
+qrScanner=null
+}
 qrScanner=new Html5Qrcode("readerQR")
 qrScanner.start(
 {facingMode:"environment"},
 {fps:10,qrbox:250},
-(qrCodeMessage)=>{
-console.log("QR:",qrCodeMessage)
-processarQR(qrCodeMessage)
+async (decodedText)=>{
+console.log("QR:",decodedText)
+await processarQR(decodedText)
 fecharQR()
 },
-(error)=>{}
+(err)=>{}
 )
 }
-function fecharQR(){
+async function fecharQR(){
 modalQR.style.display="none"
 if(qrScanner){
-qrScanner.stop().then(()=>{qrScanner.clear()})
+try{
+await qrScanner.stop()
+await qrScanner.clear()
+}catch(e){}
+qrScanner=null
 }
 }
 
 async function processarQR(url){
 try{
-if(!url.includes("sefaz")){
-alert("QR não reconhecido como cupom fiscal")
+if(!url || !url.includes("http")){
+alert("QR inválido")
 return
 }
 let res=await fetch(url)
 let html=await res.text()
-
-/* 🔥 NOME POSTO */
-let nome=(html.match(/Razão Social<\/td><td>(.*?)<\/td>/i)||[])[1]
-
-/* 🔥 CNPJ */
-let cnpj=(html.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[])[0]
-
-/* 🔥 TOTAL */
 let total=(html.match(/Valor Total.*?([\d\.,]+)/i)||[])[1]
-
-if(nome){
-postoInput.value=nome
-}
-if(total){
-valor.value=total.replace(",",".")
-}
-if(cnpj){
-buscarPostoPorCNPJ(cnpj)
-}
-
-alert("✅ Dados capturados via QR")
-
+let litros=(html.match(/([\d\.,]+)\s*l/i)||[])[1]
+let cnpj=(html.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[])[0]
+let nome=(html.match(/Razão Social.*?>(.*?)</i)||[])[1]
+if(total)valor.value=total.replace(",",".")
+if(litros)litros.value=litros.replace(",",".")
+if(nome)postoInput.value=nome
+if(cnpj)buscarPostoPorCNPJ(cnpj)
+alert("✅ QR processado")
 }catch(e){
 console.error(e)
 alert("Erro ao ler QR")
@@ -2059,11 +2054,10 @@ previewOCR.src=r
 <div id="modalQR" class="modal">
 <div class="modalBox">
 <h3>🔳 Ler QR do Cupom</h3>
-<div id="readerQR" style="width:100%"></div>
+<div id="readerQR" style="width:100%;min-height:250px"></div>
 <button onclick="fecharQR()" style="margin-top:10px;background:#64748b;color:#fff">Fechar</button>
 </div>
 </div>
-
 
 </body>
 </html>
