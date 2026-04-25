@@ -20,8 +20,8 @@ body{margin:0;font-family:Arial;color:#fff;background:#020617;overflow-x:hidden}
 body.login{background:url("img/bcveiculos.png") center center no-repeat;background-size:cover;background-attachment:fixed}
 @media(max-width:768px){body.login{background-position:center top;background-size:cover}}
 @media(min-width:769px){body.login{background-position:center;background-size:cover}}
-body.login::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(2,6,23,0.35),rgba(2,6,23,0.85));z-index:0}
-body:not(.login)::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.85);z-index:-1}
+body.login::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(2,6,23,0.35),rgba(2,6,23,0.85));z-index:0;pointer-events:none; /* 🔥 LIBERA CLIQUE */}
+body:not(.login)::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.85);z-index:-1;pointer-events:none; /* 🔥 LIBERA CLIQUE */}
 .tela{display:none}
 .container{max-width:720px;width:100%;margin:auto;padding:10px}
 .card{width:100%;background:rgba(30,41,59,0.65);backdrop-filter:blur(10px);padding:12px;border-radius:18px;margin-top:10px;border:1px solid rgba(255,255,255,0.05);box-shadow:0 6px 20px rgba(0,0,0,0.4)}
@@ -60,7 +60,11 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 #telaLogin{display:flex;justify-content:center;align-items:flex-start; /* 🔥 sobe o box */height:100vh;padding:20px;padding-top:40px; /* 🔥 distância do topo */position:relative;z-index:2;}
 @media(max-width:600px){#telaLogin{transform:translateY(-20px);}}
 @media(max-width:768px){#telaLogin{padding-top:20px; /* mais alto ainda no mobile */}#telaLogin > div{margin-top:0;}}
-
+.actions{position:relative;z-index:9999;display:flex;gap:6px;}
+.actions button{pointer-events:auto;z-index:10000;position:relative;}
+.itemContent{pointer-events:none}
+.card,.item{position:relative}
+  
 
   
 </style>
