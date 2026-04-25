@@ -72,6 +72,16 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <body>
 <!-- APP -->
 <div id="app" class="container" style="display:none">
+document.addEventListener("DOMContentLoaded",()=>{
+if(localStorage.getItem("empresa")){
+document.getElementById("telaLogin").style.display="none"
+document.getElementById("app").style.display="block"
+init()
+}else{
+document.getElementById("telaLogin").style.display="flex"
+document.getElementById("app").style.display="none"
+}
+})
 
 <!-- MENU -->
 <div class="headerApp">
@@ -258,7 +268,43 @@ async function login(){let usuario=(user.value||"").trim(),senha=(pass.value||""
 function logout(){localStorage.removeItem("empresa");location.reload()}
 function aplicarFiltro(){filtroInicio=document.getElementById("filtroInicio").value||null;filtroFim=document.getElementById("filtroFim").value||null;render()}
 function trocarGrafico(t){tipoGrafico=t;renderGrafico(dadosGlobal)}
-async function carregarTudo(){let emp=localStorage.getItem("empresa");if(!emp)return;let{data:veiculos}=await db.from("veiculos").select("*").eq("empresa_id",emp);let{data:postos}=await db.from("postos").select("*").eq("empresa_id",emp);let{data:motoristas}=await db.from("motoristas").select("*").eq("empresa_id",emp);if(veiculoSel){veiculoSel.innerHTML=veiculos&&veiculos.length?veiculos.map(v=>`<option value="${v.id}">${v.modelo||v.placa||"Veículo"}</option>`).join(""):`<option value="">Nenhum veículo</option>`;VID=veiculos&&veiculos.length?veiculos[0].id:null}if(postoSel){postoSel.innerHTML=postos&&postos.length?postos.map(p=>`<option value="${p.id}">${p.nome_posto||"-"}</option>`).join(""):`<option value="">Sem postos</option>`}if(v_motorista){v_motorista.innerHTML=motoristas&&motoristas.length?motoristas.map(m=>`<option value="${m.id}">${m.nome||"-"}</option>`).join(""):`<option value="">Sem motoristas</option>`}}
+async function carregarTudo(){
+let emp=localStorage.getItem("empresa")
+if(!emp)return
+
+let {data:veiculos,error:e1}=await db.from("veiculos").select("*").eq("empresa_id",emp)
+let {data:postos,error:e2}=await db.from("postos").select("*").eq("empresa_id",emp)
+let {data:motoristas,error:e3}=await db.from("motoristas").select("*").eq("empresa_id",emp)
+
+veiculos=veiculos||[]
+postos=postos||[]
+motoristas=motoristas||[]
+
+/* SELECT VEÍCULO */
+if(veiculoSel){
+veiculoSel.innerHTML=veiculos.length
+?veiculos.map(v=>`<option value="${v.id}">${v.modelo||v.placa||"Veículo"}</option>`).join("")
+:`<option value="">Nenhum veículo</option>`
+}
+
+/* SELECT POSTO */
+if(postoSel){
+postoSel.innerHTML=postos.length
+?postos.map(p=>`<option value="${p.id}">${p.nome_posto||"-"}</option>`).join("")
+:`<option value="">Sem postos</option>`
+}
+
+/* SELECT MOTORISTA */
+if(v_motorista){
+v_motorista.innerHTML=motoristas.length
+?motoristas.map(m=>`<option value="${m.id}">${m.nome||"-"}</option>`).join("")
+:`<option value="">Sem motoristas</option>`
+}
+
+/* 🔥 AGORA SEGURO */
+renderListas(motoristas,veiculos,postos)
+}
+function renderListas(motoristas=[],veiculos=[],postos=[]){
 async function render(){if(veiculoSel&&veiculoSel.value)VID=veiculoSel.value;if(!VID)return;let query=db.from("abastecimentos").select("*,postos(nome_posto)").eq("veiculo_id",VID);if(filtroInicio)query=query.gte("data_abastecimento",filtroInicio);if(filtroFim)query=query.lte("data_abastecimento",filtroFim);let{data,error}=await query.order("data_abastecimento",{ascending:false});if(error)return console.error(error);dadosGlobal=data||[];if(!dadosGlobal.length){lista.innerHTML="<div class='item'>Sem histórico</div>";renderGrafico([]);return}lista.innerHTML=dadosGlobal.map(a=>`<div class="item"><div class="itemContent"><div><b>${fData(a.data_abastecimento)}</b> | ${a.postos?.nome_posto||"-"}</div><div style="font-size:11px;color:#94a3b8">R$ ${Number(a.valor_total||0).toFixed(2)} | ${a.litros}L | KM ${a.quilometragem||"-"}</div></div></div>`).join("");renderGrafico(dadosGlobal)}
 function renderGrafico(lista){if(!lista||!lista.length)return;let dados=[...lista].sort((a,b)=>new Date(a.data_abastecimento)-new Date(b.data_abastecimento));let labels=dados.map(x=>fData(x.data_abastecimento));let dataset=[];if(tipoGrafico==="total"){dataset=dados.map(x=>Number(x.valor_total||0))}if(tipoGrafico==="litros"){dataset=dados.map(x=>Number(x.litros||0))}if(tipoGrafico==="consumo"){dataset=[];for(let i=1;i<dados.length;i++){let km=dados[i].quilometragem-dados[i-1].quilometragem;let l=dados[i].litros;if(km>0&&l>0)dataset.push(km/l)}}if(graficoPrincipal)graficoPrincipal.destroy();graficoPrincipal=new Chart(document.getElementById("graficoPrincipal"),{type:"line",data:{labels:labels,datasets:[{label:tipoGrafico,data:dataset,borderWidth:2,tension:.3}]}});renderKPIs(dados)}
 function renderKPIs(lista){let total=lista.reduce((s,x)=>s+Number(x.valor_total||0),0);let litros=lista.reduce((s,x)=>s+Number(x.litros||0),0);let consumo=0;if(lista.length>1){let km=lista[lista.length-1].quilometragem-lista[0].quilometragem;if(litros>0)consumo=km/litros}kpis.innerHTML=`<div class="item" onclick="trocarGrafico('total')">💰 R$ ${total.toFixed(2)}</div><div class="item" onclick="trocarGrafico('litros')">⛽ ${litros.toFixed(1)}</div><div class="item" onclick="trocarGrafico('consumo')">📈 ${consumo.toFixed(2)} km/l</div>`}
@@ -267,7 +313,7 @@ if(window.veiculoSel&&!veiculoSel._bind){veiculoSel.addEventListener("change",()
 function abrirTela(t){document.querySelectorAll(".tela").forEach(e=>e.style.display="none");let el=document.getElementById("tela_"+t);if(el)el.style.display="block"}
 </script>
 
-  <script>
+<script>
 async function executarAutoRecorte(){if(!previewOCR.src)return;let r=await autoRecorteCupom(previewOCR.src);previewOCR.src=r}
 async function autoRecorteCupom(src){return new Promise(resolve=>{let img=new Image();img.onload=()=>{let canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");canvas.width=img.width;canvas.height=img.height;ctx.drawImage(img,0,0);let imageData=ctx.getImageData(0,0,canvas.width,canvas.height),data=imageData.data;for(let i=0;i<data.length;i+=4){let avg=(data[i]+data[i+1]+data[i+2])/3;let val=avg>160?255:0;data[i]=val;data[i+1]=val;data[i+2]=val}ctx.putImageData(imageData,0,0);let top=canvas.height,bottom=0,left=canvas.width,right=0;for(let y=0;y<canvas.height;y++){for(let x=0;x<canvas.width;x++){let i=(y*canvas.width+x)*4;if(data[i]<200){if(y<top)top=y;if(y>bottom)bottom=y;if(x<left)left=x;if(x>right)right=x}}}let margem=20;top=Math.max(0,top-margem);left=Math.max(0,left-margem);bottom=Math.min(canvas.height,bottom+margem);right=Math.min(canvas.width,right+margem);let w=right-left,h=bottom-top;if(w<50||h<50){resolve(src);return}let recorte=document.createElement("canvas");recorte.width=w;recorte.height=h;recorte.getContext("2d").drawImage(canvas,left,top,w,h,0,0,w,h);resolve(recorte.toDataURL())};img.src=src})}
 async function abrirCameraOCR(){modalOCR.style.display="flex";previewOCR.style.display="none";let stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});videoOCR.srcObject=stream}
