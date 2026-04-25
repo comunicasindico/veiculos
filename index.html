@@ -7,6 +7,7 @@
 <title>Veículo SaaS MASTER</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <link rel="icon" href="./favicon.ico">
 </head>
 
@@ -57,12 +58,14 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <button onclick="abrirCadastro()" style="width:100%;background:transparent;border:1px solid #22c55e;color:#22c55e;padding:10px;border-radius:10px">Criar Conta</button>
 </div>
 </div>
+
 <div id="menuHome" style="position:fixed;bottom:20px;left:0;width:100%;display:flex;justify-content:center;gap:10px;z-index:2">
 <button onclick="abrirTela('combustivel')" class="btnHome">⛽</button>
 <button onclick="abrirTela('motorista')" class="btnHome">👨</button>
 <button onclick="abrirTela('veiculo')" class="btnHome">🚗</button>
 <button onclick="abrirTela('posto')" class="btnHome">🏪</button>
 </div>
+
 <!-- APP -->
 <div id="app" class="container" style="display:none">
 
@@ -73,7 +76,18 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <button onclick="abrirTela('motorista')">👨‍🔧</button>
 <button onclick="abrirTela('veiculo')">🚗</button>
 <button onclick="abrirTela('posto')">🏪</button>
+<button onclick="logout()" style="background:#dc2626">🚪</button>
 </div>
+</div>
+
+<!-- ========================= -->
+<!-- 🔥 TELA COMBUSTÍVEL -->
+<!-- ========================= -->
+<div id="tela_combustivel" class="tela">
+
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<button onclick="document.getElementById('data').focus()" style="flex:1;background:#22c55e">⛽ Novo Abastecimento</button>
+<input type="file" accept="image/*" capture="environment" onchange="lerCupomOCR(this)" style="flex:1;background:#3b82f6;color:#fff;border-radius:8px;padding:6px">
 </div>
 
 <!-- DASHBOARD -->
@@ -82,26 +96,14 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <h3>📊 Dashboard do Veículo</h3>
 <span id="dashIcon">⬇️</span>
 </div>
-
 <div id="dashContent">
-
 <div id="kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div>
-
 <canvas id="graficoConsumo"></canvas>
 <canvas id="graficoGasto"></canvas>
-
 </div>
 </div>
 
-<!-- ========================= -->
-<!-- 🔥 TELA COMBUSTÍVEL -->
-<!-- ========================= -->
-<div id="tela_combustivel" class="tela">
-<div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="document.getElementById('data').focus()" style="flex:1;background:#22c55e">
-⛽ Novo Abastecimento
-</button>
-</div>
+<!-- FORM -->
 <div class="card">
 <div class="field">
 <label>🚗 Veículo</label>
@@ -133,7 +135,9 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 </div>
 <button class="btnSave" onclick="salvar()">Salvar Abastecimento</button>
 </div>
+
 <div id="lista"></div>
+
 </div>
 
 <!-- ========================= -->
@@ -141,9 +145,7 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <!-- ========================= -->
 <div id="tela_motorista" class="tela">
 <div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="toggleForm('formMotorista')" style="flex:1;background:#3b82f6;color:#fff">
-➕ Novo Motorista
-</button>
+<button onclick="toggleForm('formMotorista')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Motorista</button>
 </div>
 <div id="formMotorista" class="card" style="display:none">
 <div class="card">
@@ -156,18 +158,16 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <button onclick="cancelarMotorista()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
 </div>
 </div>
+
 <!-- ========================= -->
 <!-- 🚗 VEÍCULO -->
 <!-- ========================= -->
 <div id="tela_veiculo" class="tela">
 <div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="toggleForm('formVeiculo')" style="flex:1;background:#3b82f6;color:#fff">
-➕ Novo Veículo
-</button>
+<button onclick="toggleForm('formVeiculo')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Veículo</button>
 </div>
 <div id="formVeiculo" class="card" style="display:none">
 <div class="card">
-
 <input id="v_placa" placeholder="Placa">
 <input id="v_marca" placeholder="Marca">
 <input id="v_modelo" placeholder="Modelo">
@@ -176,22 +176,15 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <input id="v_renavam" placeholder="Renavam">
 <input id="v_combustivel" placeholder="Combustível principal">
 <input id="v_km" placeholder="KM atual">
-
 <label style="font-size:11px;color:#94a3b8">📅 Vencimento IPVA</label>
 <input id="v_ipva" type="date">
-
 <label style="font-size:11px;color:#94a3b8">📅 Licenciamento</label>
 <input id="v_licenciamento" type="date">
-
 <label style="font-size:11px;color:#94a3b8">👨‍🔧 Motorista</label>
 <select id="v_motorista"></select>
-
 <button class="btnSave" onclick="salvarVeiculo()">Salvar Veículo</button>
-
 </div>
-
 <div id="listaVeiculos"></div>
-
 </div>
 </div>
 
@@ -200,9 +193,7 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <!-- ========================= -->
 <div id="tela_posto" class="tela">
 <div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="toggleForm('formPosto')" style="flex:1;background:#3b82f6;color:#fff">
-➕ Novo Posto
-</button>
+<button onclick="toggleForm('formPosto')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Posto</button>
 </div>
 <div id="formPosto" class="card" style="display:none">
 <div class="card">
@@ -213,14 +204,15 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 </div>
 <div id="listaPostos"></div>
 </div>
+</div>
 
 <!-- FOOTER -->
-<div class="footerBar">
+<div class="footerBar" style="justify-content:flex-end">
 <button onclick="logout()" class="btnLogout">🚪 Sair</button>
-</div>
 </div>
 
 </div>
+
 
 <script>
 function calcularIndicadores(lista){
