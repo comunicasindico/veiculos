@@ -130,6 +130,7 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 </div>
 <div class="field">
 <label>🏪 Posto</label>
+<input id="postoInput" placeholder="Digite ou selecione o posto">
 <select id="postoSel"></select>
 </div>
 <div class="field">
@@ -428,9 +429,11 @@ document.getElementById("menuHome").style.display="none"
 telaLogin.style.display="none"
 app.style.display="block"
 await carregarTudo()
+bindPostoInput()
 setTimeout(()=>carregarSelectsPadrao(),50)
 abrirTela("combustivel")
 render()
+
 }
 /* 008 UI */
 function abrirTela(t){
@@ -580,6 +583,19 @@ data.value=new Date().toISOString().slice(0,10)
 if(!VID)return alert("Selecione um veículo")
 
 let emp=localStorage.getItem("empresa")
+let postoId=postoSel?.value||null
+let nomePosto=(postoInput?.value||"").trim()
+if(!postoId && nomePosto){
+let {data:novo,error:errPosto}=await db.from("postos").insert({
+empresa_id:emp,
+nome_posto:nomePosto
+}).select().single()
+if(!errPosto && novo){
+postoId=novo.id
+await carregarTudo()
+postoSel.value=postoId
+}
+}
 
 let v_total=parseFloat(valor.value)||0
 let v_litros=parseFloat(litros.value)||0
@@ -598,7 +614,7 @@ let v_valorLitro=v_litros>0?(v_total/v_litros):0
 let {error}=await db.from("abastecimentos").insert({
 empresa_id:emp,
 veiculo_id:VID,
-posto_id:postoSel?.value||null,
+posto_id:postoId,
 valor_total:parseFloat(v_total.toFixed(2)),
 litros:parseFloat(v_litros.toFixed(3)),
 quilometragem:v_km,
@@ -1327,7 +1343,14 @@ melhor=p
 return{posto:melhor,preco:menor}
 }
           
-  
+function bindPostoInput(){
+if(!postoSel||!postoInput)return
+postoSel.addEventListener("change",()=>{
+let txt=postoSel.options[postoSel.selectedIndex]?.text||""
+postoInput.value=txt
+})
+}
+
   
   
   
