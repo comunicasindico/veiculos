@@ -123,7 +123,13 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 </div>
 <div id="dashContent">
 <div id="kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div>
-<!-- 🔥 COLE AQUI -->
+<!-- 🔥 PESQUISAR PERÍODO -->
+<div style="display:flex;gap:6px;margin-top:6px">
+<input type="date" id="filtroInicio" style="flex:1">
+<input type="date" id="filtroFim" style="flex:1">
+<button onclick="aplicarFiltro()" style="background:#22c55e;color:#000;font-weight:600">Filtrar</button>
+</div>
+<!-- 🔥 GRÁFICOS PERÍODO -->
 <div style="display:flex;gap:6px;margin-top:6px">
 <button onclick="trocarGrafico('consumo')" style="flex:1;border-radius:10px;font-weight:600;background:#3b82f6">📈 Km/L</button>
 <button onclick="trocarGrafico('total')" style="flex:1;border-radius:10px;font-weight:600;background:#22c55e;color:#000">💰 Total</button>
@@ -271,7 +277,14 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 
 
 <script>
-let iaBox,VID=null,graficoConsumo,graficoGasto,tipoGrafico="consumo",filtroInicio=null,filtroFim=null
+/* ESTADO GLOBAL */
+let iaBox
+let VID=null
+let graficoConsumo,graficoGasto
+let tipoGrafico="consumo"
+let filtroInicio=null
+let filtroFim=null
+  
 window.addEventListener("DOMContentLoaded",()=>{
 iaBox=document.getElementById("iaBox")
 if(window.data)data.value=new Date().toISOString().slice(0,10)
@@ -281,6 +294,7 @@ filtroInicio=document.getElementById("filtroInicio")?.value||null
 filtroFim=document.getElementById("filtroFim")?.value||null
 render()
 }
+
 function trocarGrafico(tipo){
 tipoGrafico=tipo||"consumo"
 render()
@@ -337,6 +351,11 @@ if(!Array.isArray(lista)||!lista.length)return
 let dados=[...lista]
 if(filtroInicio)dados=dados.filter(x=>x.data_abastecimento>=filtroInicio)
 if(filtroFim)dados=dados.filter(x=>x.data_abastecimento<=filtroFim)
+if(!dados.length){
+if(graficoConsumo)graficoConsumo.destroy()
+if(graficoGasto)graficoGasto.destroy()
+return
+}
 dados=dados.sort((a,b)=>new Date(a.data_abastecimento)-new Date(b.data_abastecimento))
 let labels=dados.map(x=>fData(x.data_abastecimento))
 let consumo=[]
