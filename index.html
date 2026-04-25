@@ -289,24 +289,13 @@ let graficoConsumo,graficoGasto
 let tipoGrafico="consumo"
 let filtroInicio=null
 let filtroFim=null
-let ultimoCNPJBuscado=null
-  
+/* CNPJ AUTO (VERSÃO LIMPA E CORRETA) */
+let timerCNPJ=null
+
 window.addEventListener("DOMContentLoaded",()=>{
-iaBox=document.getElementById("iaBox")
-if(window.data)data.value=new Date().toISOString().slice(0,10)
-})
-function aplicarFiltro(){
-filtroInicio=document.getElementById("filtroInicio")?.value||null
-filtroFim=document.getElementById("filtroFim")?.value||null
-render()
-}
-
 const cnpjInput=document.getElementById("cnpjBusca")
-if(cnpjInput){
-let ultimoCNPJBuscado=null
+if(!cnpjInput)return
 
-const cnpjInput=document.getElementById("cnpjBusca")
-if(cnpjInput){
 cnpjInput.addEventListener("input",()=>{
 let v=cnpjInput.value.replace(/\D/g,"")
 
@@ -319,13 +308,18 @@ cnpjInput.value=v
 
 let limpo=v.replace(/\D/g,"")
 
-if(limpo.length===14 && limpo!==ultimoCNPJBuscado){
+clearTimeout(timerCNPJ)
+
+if(limpo.length===14){
+timerCNPJ=setTimeout(()=>{
+if(limpo!==ultimoCNPJBuscado){
 ultimoCNPJBuscado=limpo
 buscarCNPJ_PRO(limpo)
 }
+},600)
+}
 })
-}
-}
+})
 
 function getCacheCNPJ(cnpj){
 return JSON.parse(localStorage.getItem("cnpj_"+cnpj)||"null")
