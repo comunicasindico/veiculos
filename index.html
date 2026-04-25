@@ -123,6 +123,12 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 </div>
 <div id="dashContent">
 <div id="kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div>
+<!-- 🔥 COLE AQUI -->
+<div style="display:flex;gap:6px;margin-top:6px">
+<button onclick="trocarGrafico('consumo')" style="flex:1;border-radius:10px;font-weight:600;background:#3b82f6">📈 Km/L</button>
+<button onclick="trocarGrafico('total')" style="flex:1;border-radius:10px;font-weight:600;background:#22c55e;color:#000">💰 Total</button>
+<button onclick="trocarGrafico('litros')" style="flex:1;border-radius:10px;font-weight:600;background:#f59e0b;color:#000">⛽ Litros</button>
+</div>
 <canvas id="graficoConsumo"></canvas>
 <canvas id="graficoGasto"></canvas>
 </div>
@@ -265,12 +271,20 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 
 
 <script>
-
-let iaBox
+let iaBox,VID=null,graficoConsumo,graficoGasto,tipoGrafico="consumo",filtroInicio=null,filtroFim=null
 window.addEventListener("DOMContentLoaded",()=>{
-iaBox = document.getElementById("iaBox")
+iaBox=document.getElementById("iaBox")
+if(window.data)data.value=new Date().toISOString().slice(0,10)
 })
-  
+function aplicarFiltro(){
+filtroInicio=document.getElementById("filtroInicio")?.value||null
+filtroFim=document.getElementById("filtroFim")?.value||null
+render()
+}
+function trocarGrafico(tipo){
+tipoGrafico=tipo||"consumo"
+render()
+}
 function calcularIndicadores(lista){
 if(!lista.length)return null
 let totalGasto=0
@@ -282,9 +296,9 @@ let atual=lista[i]
 let anterior=lista[i+1]
 totalGasto+=Number(atual.valor_total||0)
 totalLitros+=Number(atual.litros||0)
-if(anterior && atual.quilometragem && anterior.quilometragem){
+if(anterior&&atual.quilometragem&&anterior.quilometragem){
 let km=atual.quilometragem-anterior.quilometragem
-if(km>0 && atual.litros>0){
+if(km>0&&atual.litros>0){
 let consumo=km/atual.litros
 consumos.push(consumo)
 totalKm+=km
@@ -295,15 +309,7 @@ let mediaConsumo=consumos.length?(consumos.reduce((a,b)=>a+b,0)/consumos.length)
 let melhor=Math.max(...consumos,0)
 let pior=Math.min(...consumos,0)
 let custoKm=totalKm>0?(totalGasto/totalKm):0
-return{
-totalGasto,
-totalLitros,
-mediaConsumo,
-melhor,
-pior,
-custoKm,
-totalAbastecimentos:lista.length
-}
+return{totalGasto,totalLitros,mediaConsumo,melhor,pior,custoKm,totalAbastecimentos:lista.length}
 }
 function renderKPIs(d){
 let el=document.getElementById("kpis")
