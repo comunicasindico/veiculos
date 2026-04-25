@@ -1724,7 +1724,149 @@ console.warn("⚠️ OCR não carregou")
 }
 })
   
+async function processarCupomCompleto(){
 
+if(!previewOCR.src)return alert("Capture o cupom primeiro")
+
+iaBox.style.display="block"
+iaBox.innerHTML="🔍 Lendo cupom..."
+
+try{
+
+/* 1️⃣ TENTA QR */
+let qr=null
+if(typeof tentarQRImagem==="function"){
+qr=await tentarQRImagem(previewOCR.src)
+}
+
+if(qr){
+iaBox.innerHTML="🔳 QR detectado! Buscando dados..."
+await processarQRCompleto(qr)
+return
+}
+
+/* 2️⃣ FALLBACK OCR */
+iaBox.innerHTML="🔍 Aplicando OCR inteligente..."
+
+let img=await preprocessarImagem(previewOCR.src)
+
+const worker=await Tesseract.createWorker("por")
+await worker.setParameters({
+tessedit_char_whitelist:"0123456789.,R$KMGLASODIESEL"
+})
+
+const {data:{text}}=await worker.recognize(img)
+await worker.terminate()
+
+if(!text||text.length<10){
+iaBox.innerHTML="❌ Não foi possível ler. Recorte melhor."
+return
+}
+
+/* 3️⃣ IA DE EXTRAÇÃO */
+let dados=extrairDadosIA(text)
+
+preencherFormulario(dados)
+
+iaBox.innerHTML="✅ Dados extraídos com sucesso"
+
+}catch(e){
+console.error(e)
+iaBox.innerHTML="❌ Erro ao processar"
+}
+}
+
+function extrairDadosIA(text){
+
+text=text.replace(/\r/g,"\n").toLowerCase()
+
+let dados={}
+
+/* 🔥 CNPJ */
+dados.cnpj=(text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[""])[0]
+
+/* 🔥 VALOR TOTAL */
+dados.total=(text.match(/total\s*[r\$]*\s*([\d\.,]+)/)||[])[1]
+
+/* 🔥 LITROS */
+dados.litros=(text.match(/(\d+[\.,]\d+)\s*l/)||[])[1]
+
+/* 🔥 VALOR/LITRO */
+dados.valor_litro=(text.match(/(\d+[\.,]\d+)\s*(?:\/l|litro)/)||[])[1]
+
+/* 🔥 KM */
+dados.km=(text.match(/km[\s:]*([\d]{3,7})/)||[])[1]
+
+/* 🔥 COMBUSTÍVEL INTELIGENTE */
+if(text.includes("aditivada"))dados.combustivel="Gasolina Aditivada"
+else if(text.includes("gasolina"))dados.combustivel="Gasolina Comum"
+else if(text.includes("etanol")||text.includes("alcool"))dados.combustivel="Álcool"
+else if(text.includes("diesel"))dados.combustivel="Diesel"
+else if(text.includes("gnv"))dados.combustivel="GNV"
+else dados.combustivel="Gasolina Comum"
+
+/* 🔥 AUTO-CÁLCULO */
+if(!dados.valor_litro && dados.total && dados.litros){
+dados.valor_litro=(parseFloat(dados.total.replace(",", "."))/parseFloat(dados.litros.replace(",", "."))).toFixed(3)
+}
+
+return dados
+}
+
+
+async function processarQRCompleto(url){
+
+try{
+
+iaBox.innerHTML="🌐 Consultando SEFAZ..."
+
+let res=await fetch(url)
+let html=await res.text()
+
+/* 🔥 EXTRAÇÃO SIMPLES DO HTML */
+let total=(html.match(/R\$ ?([\d\.,]+)/)||[])[1]
+let litros=(html.match(/([\d\.,]+)\s*l/)||[])[1]
+
+let dados={
+total:total,
+litros:litros,
+valor_litro: total&&litros ? (parseFloat(total.replace(",", "."))/parseFloat(litros.replace(",", "."))).toFixed(3):"",
+combustivel:"Gasolina Comum"
+}
+
+preencherFormulario(dados)
+
+iaBox.innerHTML="✅ Dados via QR carregados"
+
+}catch(e){
+console.error(e)
+iaBox.innerHTML="⚠️ QR falhou, usando OCR..."
+processarCupomCompleto()
+}
+}
+
+function preencherFormulario(d){
+
+if(d.total)valor.value=d.total.replace(",",".")
+if(d.litros)litros.value=d.litros.replace(",",".")
+if(d.valor_litro)valor_litro.value=d.valor_litro
+if(d.km)km.value=d.km
+
+if(d.combustivel){
+v_combustivel.value=d.combustivel
+}
+
+/* 🔥 POSTO POR CNPJ */
+if(d.cnpj){
+buscarPostoPorCNPJ(d.cnpj)
+}
+
+}
+
+  
+
+
+  
   
 </script>
 
@@ -1775,7 +1917,7 @@ console.warn("⚠️ OCR não carregou")
 <div style="position:sticky;bottom:0;background:#1e293b;padding:10px;display:flex;gap:6px">
 <button onclick="ativarCrop()" style="background:#f59e0b;color:#000">✂️ Recortar</button>
 <button class="btnSave" onclick="capturarImagem()">📸</button>
-<button class="btnSave" onclick="processarOCR()" style="background:#22c55e">✔ Ler</button>
+<button onclick="processarCupomCompleto()">✔ Ler</button>
 <button onclick="fecharOCR()" style="background:#64748b;color:#fff;border-radius:8px">✖</button>
 </div>
 </div>
