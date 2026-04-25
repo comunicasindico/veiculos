@@ -54,14 +54,15 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 #modalOCR .modalBox{max-height:90vh;overflow-y:auto}
 #modalOCR video{max-height:35vh;object-fit:cover}
 #modalOCR img{max-height:35vh;object-fit:contain}
-  
-  
+#telaLogin{display:flex;justify-content:center;align-items:center;height:100vh;padding:20px;position:relative;z-index:2;transform:translateY(-60px);}
+@media(max-width:600px){#telaLogin{transform:translateY(-20px);}}
+
   
 </style>
 
 <body>
 <!-- LOGIN -->
-<div id="telaLogin" style="display:flex;justify-content:center;align-items:flex-end;height:100vh;padding:20px;position:relative;z-index:2">
+<div id="telaLogin">
 <div style="width:100%;max-width:420px;background:rgba(15,23,42,0.75);backdrop-filter:blur(12px);padding:20px;border-radius:20px;border:1px solid rgba(255,255,255,0.1)">
 <h2 style="text-align:center;margin-bottom:10px">🚗 Veículos Carro e Moto PRO</h2>
 <input id="user" placeholder="Usuário ou e-mail" style="margin-bottom:8px">
@@ -1225,6 +1226,7 @@ salvar()
 /* 🔥 FEEDBACK REAL */
 alert("✅ Abastecimento salvo com sucesso!")
 },300)
+}
 
 function fecharConfirmacao(){
 modalConfirmacao.style.display="none"
