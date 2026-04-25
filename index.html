@@ -89,7 +89,8 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 <button onclick="document.getElementById('data').focus()" style="flex:1;background:#22c55e">⛽ Novo Abastecimento</button>
 <button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff;border-radius:10px;padding:10px">📷 Ler Cupom</button>
 </div>
-
+<div id="iaBox" class="card" style="display:none"></div>
+  
 <!-- DASHBOARD -->
 <div class="card">
 <div onclick="toggleDash()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
@@ -551,7 +552,10 @@ alert("✅ Abastecimento salvo")
 
 /* 🔥 ATUALIZA TELA */
 render()
-
+setTimeout(async()=>{
+let {data}=await db.from("abastecimentos").select("*").eq("veiculo_id",VID).order("data_abastecimento",{ascending:false}).limit(10)
+renderIA(data)
+},500)
 }
 
 /* 011 RENDER */
@@ -584,12 +588,10 @@ listaEl.innerHTML="<div class='item'>Sem histórico</div>"
 renderDashboard([])
 return
 }
-
 listaEl.innerHTML=data.map(a=>{
 let valor=Number(a.valor_total||0)
 let litros=Number(a.litros||0)
 let km=Number(a.quilometragem||0)
-
 return `
 <div class="item">
 <div class="itemContent">
@@ -605,9 +607,7 @@ R$ ${valor.toFixed(2)} | ${litros}L | KM ${km}
 </div>
 `
 }).join("")
-
 renderDashboard(data)
-
 /* bind change */
 if(vs && !vs._bind){
 vs.addEventListener("change",()=>{
@@ -616,7 +616,7 @@ render()
 })
 vs._bind=true
 }
-
+renderIA(data)
 }
 
 /* 012 DASHBOARD */
@@ -1064,9 +1064,76 @@ modalOCR.style.display="none"
 let stream=videoOCR.srcObject
 if(stream){stream.getTracks().forEach(t=>t.stop())}
 }
+function analisarAbastecimentos(lista){
+if(!lista||lista.length<2)return null
+let dados=[...lista].sort((a,b)=>new Date(b.data_abastecimento)-new Date(a.data_abastecimento))
+let alertas=[]
+let sugestoes=[]
+let consumos=[]
+for(let i=0;i<dados.length-1;i++){
+let atual=dados[i]
+let anterior=dados[i+1]
+let kmAtual=Number(atual.quilometragem||0)
+let kmAnterior=Number(anterior.quilometragem||0)
+let litros=Number(atual.litros||0)
+let valor=Number(atual.valor_total||0)
+let kmRodado=kmAtual-kmAnterior
+if(kmRodado>0&&litros>0){
+let consumo=kmRodado/litros
+consumos.push(consumo)
+if(consumo<5)alertas.push("⚠️ Consumo muito baixo detectado")
+if(consumo>20)alertas.push("⚠️ Consumo muito alto (possível erro)")
+}
+if(valor/litros>10)alertas.push("⚠️ Valor por litro muito alto")
+if(kmRodado<0)alertas.push("🚨 KM inconsistente (possível fraude)")
+}
+let media=consumos.reduce((a,b)=>a+b,0)/consumos.length||0
+let ultimo=consumos[0]||0
+if(ultimo<media*0.8)sugestoes.push("🔻 Consumo piorou, verificar veículo")
+if(ultimo>media*1.2)sugestoes.push("🔺 Consumo melhorou, manter padrão")
+return{alertas,sugestoes,media,ultimo}
+}
+  
+function renderIA(lista){
+let analise=analisarAbastecimentos(lista)
+if(!analise)return
+let el=document.getElementById("iaBox")
+if(!el)return
+el.style.display="block"
+el.innerHTML=`
+<div style="font-weight:bold;margin-bottom:6px">🤖 Análise Inteligente</div>
+<div style="font-size:12px;margin-bottom:6px">Média: ${analise.media.toFixed(2)} km/l | Último: ${analise.ultimo.toFixed(2)}</div>
+${analise.alertas.map(a=>`<div style="color:#f59e0b;font-size:12px">${a}</div>`).join("")}
+${analise.sugestoes.map(s=>`<div style="color:#22c55e;font-size:12px">${s}</div>`).join("")}
+`
+let mp=melhorPosto(lista)
+if(mp&&mp.posto){
+el.innerHTML+=`<div style="margin-top:6px;font-size:12px">🏪 Melhor posto: ${mp.posto} (R$ ${mp.preco.toFixed(2)}/L)</div>`
+}
+}
 
-  
-  
+function melhorPosto(lista){
+let mapa={}
+lista.forEach(x=>{
+let nome=x.postos?.nome_posto||"Desconhecido"
+let litros=Number(x.litros||0)
+let valor=Number(x.valor_total||0)
+if(!mapa[nome])mapa[nome]={litros:0,valor:0}
+mapa[nome].litros+=litros
+mapa[nome].valor+=valor
+})
+let melhor=null
+let menor=999
+Object.keys(mapa).forEach(p=>{
+let media=mapa[p].valor/mapa[p].litros
+if(media<menor){
+menor=media
+melhor=p
+}
+})
+return{posto:melhor,preco:menor}
+}
+          
   
   
   
