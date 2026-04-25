@@ -819,7 +819,7 @@ postoId=existente[0].id
 /* ➕ CRIA NOVO POSTO */
 let {data:novo,error}=await db.from("postos").insert({
 empresa_id:emp,
-nome_posto:nomeDigitado
+nome_posto:nomeDigitado,
 cnpj:p_cnpj.value||null
 }).select().single()
 if(!error && novo){
