@@ -1185,14 +1185,42 @@ previewOCR.src=img
 previewOCR.style.display="block"
 
 setTimeout(async()=>{
+try{
+if(typeof tentarQRImagem==="function"){
 let qr=await tentarQRImagem(previewOCR.src)
 if(qr){
 alert("🔳 QR detectado automaticamente!")
 await processarQR(qr)
 fecharOCR()
 }
+}else{
+console.warn("⚠️ Função tentarQRImagem não definida")
+}
+}catch(e){
+console.error("Erro QR:",e)
+}
 },300)
 }
+
+async function tentarQRImagem(src){
+return new Promise((resolve)=>{
+try{
+const html5QrCode=new Html5Qrcode("qr-temp")
+
+html5QrCode.scanFile(src,true)
+.then(decodedText=>{
+resolve(decodedText)
+})
+.catch(()=>{
+resolve(null)
+})
+}catch(e){
+console.error("QR erro:",e)
+resolve(null)
+}
+})
+}
+
 
 async function processarOCR(){
 previewOCR.style.opacity="0.5"
