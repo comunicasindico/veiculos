@@ -962,55 +962,6 @@ user.value=usuario
 pass.value=senha
 }
   
-
-
-<div id="modalEditar" class="modal">
-<div class="modalBox">
-<h3 style="margin-bottom:10px">✏️ Editar Abastecimento</h3>
-<div class="field">
-<label>📅 Data</label>
-<input id="e_data" type="date">
-</div>
-<div class="field">
-<label>🏪 Posto</label>
-<select id="e_posto"></select>
-</div>
-<div class="field">
-<label>💰 Valor (R$)</label>
-<input id="e_valor" type="number" step="0.01">
-</div>
-<div class="field">
-<label>⛽ Litros</label>
-<input id="e_litros" type="number" step="0.01">
-</div>
-<div class="field">
-<label>📏 KM</label>
-<input id="e_km" type="number">
-</div>
-<div style="display:flex;gap:10px;margin-top:15px">
-<button class="btnSave" style="flex:1" onclick="salvarEdicao()">
-✔ Salvar
-</button>
-<button style="flex:1;background:#64748b;color:#fff;border-radius:8px" onclick="fecharEditar()">
-✖ Cancelar
-</button>
-</div>
-</div>
-</div>
-
-<div id="modalOCR" class="modal">
-<div class="modalBox" style="max-width:520px">
-<h3 style="margin-bottom:8px">📷 Capturar Cupom</h3>
-<video id="videoOCR" autoplay playsinline style="width:100%;border-radius:10px;background:#000"></video>
-<canvas id="canvasOCR" style="display:none"></canvas>
-<img id="previewOCR" style="width:100%;margin-top:8px;border-radius:10px;display:none">
-<div style="display:flex;gap:6px;margin-top:10px">
-<button class="btnSave" onclick="capturarImagem()">📸 Capturar</button>
-<button class="btnSave" onclick="processarOCR()" style="background:#22c55e">✔ Ler</button>
-<button onclick="fecharOCR()" style="background:#64748b;color:#fff;border-radius:8px">✖</button>
-</div>
-</div>
-</div>
 async function abrirCameraOCR(){
 modalOCR.style.display="flex"
 previewOCR.style.display="none"
@@ -1143,6 +1094,57 @@ return{posto:melhor,preco:menor}
   
   
 </script>
-  
+
+
+
+
+<div id="modalEditar" class="modal">
+<div class="modalBox">
+<h3 style="margin-bottom:10px">✏️ Editar Abastecimento</h3>
+<div class="field">
+<label>📅 Data</label>
+<input id="e_data" type="date">
+</div>
+<div class="field">
+<label>🏪 Posto</label>
+<select id="e_posto"></select>
+</div>
+<div class="field">
+<label>💰 Valor (R$)</label>
+<input id="e_valor" type="number" step="0.01">
+</div>
+<div class="field">
+<label>⛽ Litros</label>
+<input id="e_litros" type="number" step="0.01">
+</div>
+<div class="field">
+<label>📏 KM</label>
+<input id="e_km" type="number">
+</div>
+<div style="display:flex;gap:10px;margin-top:15px">
+<button class="btnSave" style="flex:1" onclick="salvarEdicao()">
+✔ Salvar
+</button>
+<button style="flex:1;background:#64748b;color:#fff;border-radius:8px" onclick="fecharEditar()">
+✖ Cancelar
+</button>
+</div>
+</div>
+</div>
+
+<div id="modalOCR" class="modal">
+<div class="modalBox" style="max-width:520px">
+<h3 style="margin-bottom:8px">📷 Capturar Cupom</h3>
+<video id="videoOCR" autoplay playsinline style="width:100%;border-radius:10px;background:#000"></video>
+<canvas id="canvasOCR" style="display:none"></canvas>
+<img id="previewOCR" style="width:100%;margin-top:8px;border-radius:10px;display:none">
+<div style="display:flex;gap:6px;margin-top:10px">
+<button class="btnSave" onclick="capturarImagem()">📸 Capturar</button>
+<button class="btnSave" onclick="processarOCR()" style="background:#22c55e">✔ Ler</button>
+<button onclick="fecharOCR()" style="background:#64748b;color:#fff;border-radius:8px">✖</button>
+</div>
+</div>
+</div>
+
 </body>
 </html>
