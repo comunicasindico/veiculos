@@ -358,7 +358,7 @@ return
 }
 dados=dados.sort((a,b)=>new Date(a.data_abastecimento)-new Date(b.data_abastecimento))
 let labels=dados.map(x=>fData(x.data_abastecimento))
-let consumo=[]
+let consumo=[null]
 for(let i=1;i<dados.length;i++){
 let atual=dados[i]
 let anterior=dados[i-1]
@@ -377,6 +377,28 @@ let labelGrafico=""
 if(tipo==="consumo"){dataset=consumo;labelGrafico="Km/L"}
 if(tipo==="total"){dataset=valoresTotal;labelGrafico="Total R$"}
 if(tipo==="litros"){dataset=valoresLitros;labelGrafico="Litros"}
+let corLinha="#1d4ed8",corFundo="rgba(59,130,246,0.12)"
+if(tipo==="total"){corLinha="#166534";corFundo="rgba(34,197,94,0.12)"}
+if(tipo==="litros"){corLinha="#c2410c";corFundo="rgba(249,115,22,0.12)"}
+const labelPlugin={
+id:'labels',
+afterDatasetsDraw(chart){
+const{ctx}=chart
+ctx.save()
+ctx.font="bold 10px Arial"
+ctx.fillStyle=corLinha
+ctx.textAlign="center"
+chart.data.datasets.forEach((dataset,i)=>{
+const meta=chart.getDatasetMeta(i)
+meta.data.forEach((point,index)=>{
+let val=dataset.data[index]
+if(val===null||val===undefined)return
+ctx.fillText(Number(val).toFixed(1),point.x,point.y-8)
+})
+})
+ctx.restore()
+}
+}
 if(graficoConsumo)graficoConsumo.destroy()
 if(graficoGasto)graficoGasto.destroy()
 graficoConsumo=new Chart(graficoConsumoEl,{
@@ -386,15 +408,34 @@ labels:labels,
 datasets:[{
 label:labelGrafico,
 data:dataset,
-borderWidth:2,
-tension:0.3,
-pointRadius:4
+borderColor:corLinha,
+backgroundColor:corFundo,
+borderWidth:3,
+tension:0.4,
+fill:true,
+pointBackgroundColor:"#fff",
+pointBorderColor:corLinha,
+pointBorderWidth:2,
+pointRadius:4,
+pointHoverRadius:6
 }]
 },
 options:{
-plugins:{legend:{display:true}},
-scales:{y:{beginAtZero:true}}
+plugins:{
+legend:{display:true},
+tooltip:{
+callbacks:{
+label:(ctx)=>{
+let v=ctx.raw||0
+if(tipo==="total")return "R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2})
+return Number(v).toFixed(2)
 }
+}
+}
+},
+scales:{y:{beginAtZero:true},x:{grid:{display:false}}}
+},
+plugins:[labelPlugin]
 })
 const cores=["#22c55e","#3b82f6","#f59e0b","#ef4444","#a855f7","#06b6d4","#84cc16","#f97316","#e11d48","#14b8a6"]
 let ano=""
