@@ -1157,48 +1157,57 @@ videoOCR.onloadedmetadata=()=>res()
 function capturarImagem(){
 let canvas=canvasOCR
 let video=videoOCR
+let ctx=canvas.getContext("2d")
+/* 🔥 GARANTE TAMANHO REAL */
+canvas.width=video.videoWidth||1280
+canvas.height=video.videoHeight||720
 
-let w=video.videoWidth
-let h=video.videoHeight
-
-if(!w || !h){
-alert("Aguarde câmera carregar")
-return
+ctx.drawImage(video,0,0,canvas.width,canvas.height)
+/* 🔥 MELHORA CONTRASTE */
+let imgData=ctx.getImageData(0,0,canvas.width,canvas.height)
+let data=imgData.data
+for(let i=0;i<data.length;i+=4){
+let avg=(data[i]+data[i+1]+data[i+2])/3
+let v=avg>140?255:0
+data[i]=data[i+1]=data[i+2]=v
 }
+ctx.putImageData(imgData,0,0)
 
-canvas.width=w
-canvas.height=h
-
-let ctx=canvas.getContext("2d",{willReadFrequently:true})
-
-ctx.drawImage(video,0,0,w,h)
-
-let img=canvas.toDataURL("image/jpeg",1.0)
-
+let img=canvas.toDataURL("image/jpeg",0.95)
 previewOCR.src=img
 previewOCR.style.display="block"
 }
 
 async function processarOCR(){
 if(!previewOCR.src)return alert("Capture primeiro")
+
+alert("🔍 Processando cupom...")
+
 try{
-alert("🔍 Analisando cupom...")
-const result=await Tesseract.recognize(
-previewOCR.src,
-"por",
-{logger:m=>console.log(m)}
-)
-let text=result?.data?.text||""
+const worker=await Tesseract.createWorker("por")
+await worker.setParameters({
+tessedit_char_whitelist:"0123456789.,R$LKMGASOLINAETANOLDIESEL"
+})
+
+const {data:{text}}=await worker.recognize(previewOCR.src)
+
+await worker.terminate()
+
+console.log("OCR TEXTO:",text)
+
 if(!text||text.length<10){
-alert("❌ Não foi possível ler o cupom. Tente outra foto.")
+alert("❌ OCR não conseguiu ler. Tente recortar melhor.")
 return
 }
-console.log("OCR:",text)
+
 processarCupomInteligente(text)
-fecharOCR()
-}catch(e){
-console.error(e)
+
+}catch(err){
+console.error(err)
 alert("Erro no OCR")
+setTimeout(()=>{
+alert("Se travar, recorte melhor o cupom")
+},4000)
 }
 }
 
@@ -1507,7 +1516,46 @@ if(window.p_numero)p_numero.value=""
 if(window.p_uf)p_uf.value=""
 if(window.p_cep)p_cep.value=""
 }
-  
+
+
+let cropMode=false
+let startX,startY,endX,endY
+
+function ativarCrop(){
+cropMode=true
+alert("Arraste na imagem para recortar")
+previewOCR.addEventListener("mousedown",startCrop)
+previewOCR.addEventListener("mouseup",endCrop)
+}
+
+function startCrop(e){
+if(!cropMode)return
+startX=e.offsetX
+startY=e.offsetY
+}
+
+function endCrop(e){
+if(!cropMode)return
+endX=e.offsetX
+endY=e.offsetY
+
+let canvas=canvasOCR
+let ctx=canvas.getContext("2d")
+
+let img=new Image()
+img.src=previewOCR.src
+
+img.onload=function(){
+let w=Math.abs(endX-startX)
+let h=Math.abs(endY-startY)
+canvas.width=w
+canvas.height=h
+ctx.drawImage(img,startX,startY,w,h,0,0,w,h)
+
+previewOCR.src=canvas.toDataURL("image/jpeg",1)
+cropMode=false
+}
+}
   
 </script>
 
@@ -1556,6 +1604,7 @@ if(window.p_cep)p_cep.value=""
 <canvas id="canvasOCR" style="display:none"></canvas>
 <img id="previewOCR" style="width:100%;margin-top:8px;border-radius:10px;display:none">
 <div style="position:sticky;bottom:0;background:#1e293b;padding:10px;display:flex;gap:6px">
+<button onclick="ativarCrop()" style="background:#f59e0b;color:#000">✂️ Recortar</button>
 <button class="btnSave" onclick="capturarImagem()">📸</button>
 <button class="btnSave" onclick="processarOCR()" style="background:#22c55e">✔ Ler</button>
 <button onclick="fecharOCR()" style="background:#64748b;color:#fff;border-radius:8px">✖</button>
