@@ -2020,146 +2020,107 @@ console.warn("⚠️ OCR não carregou")
 })
   
 async function processarCupomCompleto(){
-
-if(!previewOCR.src)return alert("Capture o cupom primeiro")
-
-iaBox.style.display="block"
-iaBox.innerHTML="✂️ Ajustando imagem automaticamente..."
-
+const previewOCR=document.getElementById("previewOCR")
+const iaBox=document.getElementById("iaBox")
+if(!previewOCR||!previewOCR.src)return alert("Capture o cupom primeiro")
+if(iaBox){iaBox.style.display="block";iaBox.innerHTML="✂️ Ajustando imagem automaticamente..."}
 try{
-
-/* 🔥 1. AUTO RECORTE */
-let recortada=await autoRecorteCupom(previewOCR.src)
-previewOCR.src=recortada
-
-/* 🔥 2. TENTA QR PRIMEIRO (MAIS RÁPIDO) */
-iaBox.innerHTML="🔳 Buscando QR..."
-
+let recortada=previewOCR.src
+if(typeof autoRecorteCupom==="function"){recortada=await autoRecorteCupom(previewOCR.src);previewOCR.src=recortada}
+if(iaBox)iaBox.innerHTML="🔳 Buscando QR..."
 let qr=null
-if(typeof tentarQRImagem==="function"){
-qr=await tentarQRImagem()
-}
-
+if(typeof tentarQRImagem==="function"){try{qr=await tentarQRImagem(recortada)}catch(e){console.log("QR falhou",e)}}
 if(qr){
-iaBox.innerHTML="🔳 QR detectado!"
-await processarQRCompleto(qr)
-return
+if(iaBox)iaBox.innerHTML="🔳 QR detectado!"
+if(typeof processarQRCompleto==="function"){await processarQRCompleto(qr);return}
 }
-
-/* 🔥 3. OCR */
-iaBox.innerHTML="🔍 Aplicando OCR..."
-
-let img=await preprocessarImagem(recortada)
-
+if(iaBox)iaBox.innerHTML="🔍 Aplicando OCR..."
+let img=recortada
+if(typeof preprocessarImagem==="function"){try{img=await preprocessarImagem(recortada)}catch(e){console.log("preprocess falhou",e)}}
+if(typeof Tesseract==="undefined"){alert("OCR não carregado");return}
 const worker=await Tesseract.createWorker("por")
-
-const {data:{text}}=await worker.recognize(img)
-
+const result=await worker.recognize(img)
 await worker.terminate()
-
-if(!text || text.length<10){
-iaBox.innerHTML="❌ Não foi possível ler. Recorte melhor."
-return
-}
-
-/* 🔥 4. IA */
-let dados=extrairDadosIA(text)
-
-preencherFormulario(dados)
-
-iaBox.innerHTML="✅ Dados extraídos com sucesso"
-
+let text=result&&result.data&&result.data.text?result.data.text:""
+if(!text||text.length<10){if(iaBox)iaBox.innerHTML="❌ Não foi possível ler. Recorte melhor.";return}
+let dados=null
+if(typeof extrairDadosIA==="function"){dados=extrairDadosIA(text)}
+if(dados&&typeof preencherFormulario==="function"){preencherFormulario(dados)}
+if(iaBox)iaBox.innerHTML="✅ Dados extraídos com sucesso"
 }catch(e){
 console.error(e)
-iaBox.innerHTML="❌ Erro ao processar"
+if(iaBox)iaBox.innerHTML="❌ Erro ao processar"
 }
 }
 
 function extrairDadosIA(text){
-
+if(!text)return{}
 text=text.replace(/\r/g,"\n").toLowerCase()
-
 let dados={}
-
-/* 🔥 CNPJ */
-dados.cnpj=(text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[""])[0]
-
-/* 🔥 VALOR TOTAL */
-dados.total=(text.match(/total\s*[r\$]*\s*([\d\.,]+)/)||[])[1]
-
-/* 🔥 LITROS */
-dados.litros=(text.match(/(\d+[\.,]\d+)\s*l/)||[])[1]
-
-/* 🔥 VALOR/LITRO */
-dados.valor_litro=(text.match(/(\d+[\.,]\d+)\s*(?:\/l|litro)/)||[])[1]
-
-/* 🔥 KM */
-dados.km=(text.match(/km[\s:]*([\d]{3,7})/)||[])[1]
-
-/* 🔥 COMBUSTÍVEL INTELIGENTE */
+let num=v=>v?v.replace(/\./g,"").replace(",","."):""
+/* CNPJ (com e sem máscara) */
+let cnpjMask=(text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}/)||[])[0]
+let cnpjRaw=(text.match(/\d{14}/)||[])[0]
+dados.cnpj=cnpjMask||cnpjRaw||""
+/* TOTAL */
+let mTotal=text.match(/total\s*(r\$)?\s*([\d\.,]+)/)
+if(!mTotal)mTotal=text.match(/valor\s*total\s*(r\$)?\s*([\d\.,]+)/)
+dados.total=mTotal?num(mTotal[2]):""
+/* LITROS */
+let mLitros=text.match(/([\d\.,]+)\s*(l|litros)/)
+dados.litros=mLitros?num(mLitros[1]):""
+/* VALOR/L */
+let mVL=text.match(/([\d\.,]+)\s*(\/l|litro|l\))/)
+dados.valor_litro=mVL?num(mVL[1]):""
+/* KM */
+let mKm=text.match(/km[\s:]*([\d]{3,7})/)
+dados.km=mKm?mKm[1]:""
+/* COMBUSTÍVEL */
 if(text.includes("aditivada"))dados.combustivel="Gasolina Aditivada"
 else if(text.includes("gasolina"))dados.combustivel="Gasolina Comum"
 else if(text.includes("etanol")||text.includes("alcool"))dados.combustivel="Álcool"
 else if(text.includes("diesel"))dados.combustivel="Diesel"
 else if(text.includes("gnv"))dados.combustivel="GNV"
 else dados.combustivel="Gasolina Comum"
-
-/* 🔥 AUTO-CÁLCULO */
+/* AUTO CÁLCULO */
 if(!dados.valor_litro && dados.total && dados.litros){
-dados.valor_litro=(parseFloat(dados.total.replace(",", "."))/parseFloat(dados.litros.replace(",", "."))).toFixed(3)
+let t=parseFloat(dados.total),l=parseFloat(dados.litros)
+if(t>0&&l>0)dados.valor_litro=(t/l).toFixed(3)
 }
-
 return dados
 }
-
 
 async function processarQRCompleto(url){
 
 try{
 
-iaBox.innerHTML="🌐 Consultando SEFAZ..."
-
-let res=await fetch(url)
-let html=await res.text()
-
-/* 🔥 EXTRAÇÃO SIMPLES DO HTML */
-let total=(html.match(/R\$ ?([\d\.,]+)/)||[])[1]
-let litros=(html.match(/([\d\.,]+)\s*l/)||[])[1]
-
-let dados={
-total:total,
-litros:litros,
-valor_litro: total&&litros ? (parseFloat(total.replace(",", "."))/parseFloat(litros.replace(",", "."))).toFixed(3):"",
-combustivel:"Gasolina Comum"
-}
-
-preencherFormulario(dados)
-
-iaBox.innerHTML="✅ Dados via QR carregados"
-
+async function processarQRCompleto(url){
+try{
+const iaBox=document.getElementById("iaBox")
+if(iaBox)iaBox.innerHTML="🌐 Abrindo SEFAZ..."
+/* 🔥 EVITA CORS → abre direto */
+window.open(url,"_blank")
+if(iaBox)iaBox.innerHTML="ℹ️ Dados abertos na SEFAZ (copiar automático em breve)"
 }catch(e){
 console.error(e)
-iaBox.innerHTML="⚠️ QR falhou, usando OCR..."
+const iaBox=document.getElementById("iaBox")
+if(iaBox)iaBox.innerHTML="⚠️ QR falhou, usando OCR..."
 processarCupomCompleto()
 }
 }
 
 function preencherFormulario(d){
-
-if(d.total)valor.value=d.total.replace(",",".")
-if(d.litros)litros.value=d.litros.replace(",",".")
-if(d.valor_litro)valor_litro.value=d.valor_litro
-if(d.km)km.value=d.km
-
-if(d.combustivel){
-v_combustivel.value=d.combustivel
+if(!d)return
+const set=(id,val)=>{let el=document.getElementById(id);if(el&&val!==undefined&&val!=="")el.value=val}
+set("valor",d.total)
+set("litros",d.litros)
+set("valor_litro",d.valor_litro)
+set("km",d.km)
+set("v_combustivel",d.combustivel)
+/* 🔥 CNPJ → buscar dados completos */
+if(d.cnpj&&typeof buscarCNPJ_PRO==="function"){
+buscarCNPJ_PRO(d.cnpj)
 }
-
-/* 🔥 POSTO POR CNPJ */
-if(d.cnpj){
-buscarPostoPorCNPJ(d.cnpj)
-}
-
 }
 
 async function autoRecorteCupom(src){
@@ -2171,30 +2132,19 @@ let ctx=canvas.getContext("2d")
 canvas.width=img.width
 canvas.height=img.height
 ctx.drawImage(img,0,0)
-
-/* 🔥 PRETO/BRANCO SUAVE */
 let imageData=ctx.getImageData(0,0,canvas.width,canvas.height)
 let data=imageData.data
-
 for(let i=0;i<data.length;i+=4){
 let avg=(data[i]+data[i+1]+data[i+2])/3
 let val=avg>160?255:0
-data[i]=val
-data[i+1]=val
-data[i+2]=val
+data[i]=val;data[i+1]=val;data[i+2]=val
 }
 ctx.putImageData(imageData,0,0)
-
-/* 🔥 DETECTAR ÁREA DO CUPOM */
-let top=canvas.height
-let bottom=0
-let left=canvas.width
-let right=0
-
+let top=canvas.height,bottom=0,left=canvas.width,right=0
 for(let y=0;y<canvas.height;y++){
 for(let x=0;x<canvas.width;x++){
 let i=(y*canvas.width+x)*4
-if(data[i]<200){ // pixel escuro
+if(data[i]<200){
 if(y<top)top=y
 if(y>bottom)bottom=y
 if(x<left)left=x
@@ -2202,33 +2152,16 @@ if(x>right)right=x
 }
 }
 }
-
-/* 🔥 MARGEM */
 let margem=20
 top=Math.max(0,top-margem)
 left=Math.max(0,left-margem)
 bottom=Math.min(canvas.height,bottom+margem)
 right=Math.min(canvas.width,right+margem)
-
-let w=right-left
-let h=bottom-top
-
-if(w<50 || h<50){
-console.warn("⚠️ Recorte inválido, usando imagem original")
-resolve(src)
-return
-}
-/* 🔥 CORTAR */
+let w=right-left,h=bottom-top
+if(w<50||h<50){resolve(src);return}
 let recorte=document.createElement("canvas")
-recorte.width=w
-recorte.height=h
-
-recorte.getContext("2d").drawImage(
-canvas,
-left,top,w,h,
-0,0,w,h
-)
-
+recorte.width=w;recorte.height=h
+recorte.getContext("2d").drawImage(canvas,left,top,w,h,0,0,w,h)
 resolve(recorte.toDataURL())
 }
 img.src=src
@@ -2236,11 +2169,11 @@ img.src=src
 }
 
 async function executarAutoRecorte(){
-if(!previewOCR.src)return
+const previewOCR=document.getElementById("previewOCR")
+if(!previewOCR||!previewOCR.src)return
 let r=await autoRecorteCupom(previewOCR.src)
 previewOCR.src=r
 }
-
 
   
   
