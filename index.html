@@ -1906,8 +1906,18 @@ return match?match[1]:null
 }
 
 function buscarNFeSefaz(chave){
-let url="https://www.sefaz.sc.gov.br/nfce/consulta?p="+chave
+if(!chave||chave.length!==44){
+alert("Chave inválida")
+return
+}
+/* 🔥 SC usa este endpoint correto */
+let url="https://sat.sef.sc.gov.br/nfce/consulta?p="+chave
+/* 🔥 iPhone / PWA precisa _self */
+if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
+window.location.href=url
+}else{
 window.open(url,"_blank")
+}
 }
 
 async function processarQR(url){
