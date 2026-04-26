@@ -73,7 +73,20 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 .swipePage{width:100vw;height:100vh;flex-shrink:0;overflow-y:auto;padding:14px}
 }
 @media(max-width:768px){#menuHome{display:none!important}}
-
+@media(max-width:768px){body{overflow:hidden}
+/* 🔥 CONTAINER SWIPE */
+#swipeContainer{display:flex;width:400vw;height:100vh;transition:transform .35s ease;}
+/* 🔥 PÁGINAS */
+.swipePage{width:100vw;height:100vh;flex-shrink:0;overflow-y:auto;padding:14px;scroll-behavior:smooth;}
+/* 🔥 EFEITO APP */
+.swipePage::after{content:"";position:fixed;bottom:0;left:0;width:100%;height:60px;background:linear-gradient(to top,rgba(2,6,23,0.9),transparent);pointer-events:none;}
+/* 🔥 REMOVE UI DESKTOP */
+.headerApp{display:none!important}#menuHome{display:none!important}
+/* 🔥 CARD MAIS PREMIUM */
+.card{background:rgba(15,23,42,0.75);border:1px solid rgba(255,215,0,0.15);box-shadow:0 10px 40px rgba(0,0,0,0.6);}
+/* 🔥 BOTÕES */
+button{font-size:15px;border-radius:14px;}
+}
 
 
   
@@ -703,19 +716,26 @@ function abrirTela(t){
 
 if(window.innerWidth<=768){
 
-if(t==="combustivel")irParaPagina(0)
-if(t==="motorista")irParaPagina(1)
-if(t==="veiculo")irParaPagina(2)
-if(t==="posto")irParaPagina(3)
-
+let mapa={
+combustivel:0,
+motorista:1,
+veiculo:2,
+posto:3
+}
+let i=mapa[t]
+if(i===undefined)return
+irParaPagina(i)
+/* 🔥 GARANTE CARREGAMENTO */
+if(t==="combustivel")carregarTudo()
 return
 }
-
 /* DESKTOP NORMAL */
 document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
 let el=document.getElementById("tela_"+t)
 if(!el)return
 el.style.display="block"
+
+if(t==="combustivel")carregarTudo()
 }
 
 async function carregarTudo(){
@@ -2565,35 +2585,35 @@ video.srcObject.getTracks().forEach(t=>t.stop())
 }
 }
 
-/* =========================================================
-FIM
-========================================================= */
+/* ==================FIM===================================== */
 let currentPage=0
+let totalPages=4
+
 function irParaPagina(i){
 let container=document.getElementById("swipeContainer")
 if(!container)return
+if(i<0)i=0
+if(i>=totalPages)i=totalPages-1
 currentPage=i
 container.style.transform="translateX(-"+(i*100)+"vw)"
 }
-
-/* SWIPE TOUCH */
+/* 🔥 TOUCH PROFISSIONAL */
 let startX=0
+let endX=0
 document.addEventListener("touchstart",e=>{
 startX=e.touches[0].clientX
 })
-document.addEventListener("touchend",e=>{
-let endX=e.changedTouches[0].clientX
+document.addEventListener("touchmove",e=>{
+endX=e.touches[0].clientX
+})
+document.addEventListener("touchend",()=>{
 let diff=startX-endX
-
-if(Math.abs(diff)<50)return
-
-if(diff>0 && currentPage<3){
-currentPage++
-}else if(diff<0 && currentPage>0){
-currentPage--
+if(Math.abs(diff)<60)return
+if(diff>0){
+irParaPagina(currentPage+1)
+}else{
+irParaPagina(currentPage-1)
 }
-
-irParaPagina(currentPage)
 })
 
   
