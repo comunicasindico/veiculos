@@ -114,28 +114,75 @@ By Neto - bemprotegido.net
 </div>
 </div>
 
-<div id="menuHome" style="position:fixed;bottom:18px;left:0;width:100%;display:flex;justify-content:center;gap:14px;z-index:50;padding:0 10px">
+<div id="menuHome" style="position:fixed;bottom:10px;left:0;width:100%;display:flex;justify-content:center;gap:10px;z-index:50">
+
 <button onclick="abrirTela('combustivel')" class="btnFloat">⛽</button>
 <button onclick="abrirTela('motorista')" class="btnFloat">👨</button>
 <button onclick="abrirTela('veiculo')" class="btnFloat">🚗</button>
 <button onclick="abrirTela('posto')" class="btnFloat">🏪</button>
 <button onclick="logout()" class="btnFloat btnSair">🚪</button>
+
 </div>
   
 <!-- APP -->
 <div id="app" class="container" style="display:none">
 <div id="swipeContainer" class="swipeContainer">
-<div class="swipePage" id="page_combustivel">
-<div id="tela_combustivel" class="tela"></div>
+<!-- ================= COMBUSTÍVEL ================= -->
+<div class="swipePage">
+<div id="tela_combustivel" class="tela" style="display:block">
+<div id="iaBox" class="card" style="display:none"></div>
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<button onclick="executarAutoRecorte()">🤖</button>
+<button onclick="capturaInteligente()" style="flex:1;background:#22c55e;color:#000;border-radius:10px;padding:10px">📲</button>
+<button onclick="abrirQR()" style="flex:1;background:#16a34a;color:#fff;border-radius:10px;padding:10px">🔳</button>
+<button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff;border-radius:10px;padding:10px">📷</button>
 </div>
-<div class="swipePage" id="page_motorista">
-<div id="tela_motorista" class="tela"></div>
+<div class="card">
+<select id="veiculoSel"></select>
+<input id="data" type="date">
+<input id="valor" placeholder="Valor">
+<input id="litros" placeholder="Litros">
+<input id="km" placeholder="KM">
+<button class="btnSave" onclick="salvar()">Salvar</button>
 </div>
-<div class="swipePage" id="page_veiculo">
-<div id="tela_veiculo" class="tela"></div>
+<div id="lista"></div>
 </div>
-<div class="swipePage" id="page_posto">
-<div id="tela_posto" class="tela"></div>
+</div>
+<!-- ================= MOTORISTA ================= -->
+<div class="swipePage">
+<div id="tela_motorista" class="tela" style="display:block">
+<button onclick="toggleForm('formMotorista')" style="width:100%;background:#3b82f6">Novo</button>
+<div id="listaMotoristas"></div>
+<div id="formMotorista" class="card" style="display:none">
+<input id="m_nome" placeholder="Nome">
+<input id="m_tel" placeholder="Telefone">
+<button onclick="salvarMotorista()">Salvar</button>
+</div>
+</div>
+</div>
+<!-- ================= VEÍCULO ================= -->
+<div class="swipePage">
+<div id="tela_veiculo" class="tela" style="display:block">
+<button onclick="toggleForm('formVeiculo')" style="width:100%;background:#3b82f6">Novo</button>
+<div id="listaVeiculos"></div>
+<div id="formVeiculo" class="card" style="display:none">
+<input id="v_placa" placeholder="Placa">
+<input id="v_modelo" placeholder="Modelo">
+<button onclick="salvarVeiculo()">Salvar</button>
+</div>
+</div>
+</div>
+<!-- ================= POSTO ================= -->
+<div class="swipePage">
+<div id="tela_posto" class="tela" style="display:block">
+<button onclick="toggleForm('formPosto')" style="width:100%;background:#3b82f6">Novo</button>
+<div id="listaPostos"></div>
+<div id="formPosto" class="card" style="display:none">
+<input id="p_nome" placeholder="Nome">
+<input id="p_cnpj" placeholder="CNPJ">
+<button onclick="salvarPosto()">Salvar</button>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -150,7 +197,6 @@ By Neto - bemprotegido.net
 <button onclick="logout()" title="Sair" style="background:#dc2626">🚪</button>
 </div>
 </div>
-
 <!-- ========================= -->
 <!-- 🔥 TELA COMBUSTÍVEL -->
 <!-- ========================= -->
@@ -1272,11 +1318,14 @@ let offset=hoje.getTimezoneOffset()
 hoje=new Date(hoje.getTime()-offset*60000)
 inputData.value=hoje.toISOString().slice(0,10)
 }
-/* 🔥 GARANTE QUE FUNÇÃO EXISTE */
-if(typeof initCNPJAuto==="function"){initCNPJAuto()}else{console.warn("initCNPJAuto não definida")}
+if(typeof initCNPJAuto==="function")initCNPJAuto()
+/* 🔥 LOGIN AUTO */
 if(localStorage.getItem("empresa")){
-document.body.classList.remove("login")
 init()
+}
+/* 🔥 MOBILE START */
+if(window.innerWidth<=768){
+setTimeout(()=>irParaPagina(0),300)
 }
 })
 
