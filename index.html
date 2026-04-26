@@ -2050,10 +2050,23 @@ let dados=null
 if(typeof extrairDadosIA==="function"){
 dados=extrairDadosIA(text)
 }
-if(dados&&typeof preencherFormulario==="function"){
+if(!dados || Object.keys(dados).length===0){
+if(iaBox)iaBox.innerHTML="⚠️ OCR leu, mas não encontrou dados válidos"
+window.ocrRunning=false
+return
+}
+/* 🔥 GARANTE PREENCHIMENTO */
+if(typeof preencherFormulario==="function"){
 preencherFormulario(dados)
 }
+/* 🔥 FEEDBACK VISUAL */
 if(iaBox)iaBox.innerHTML="✅ Dados extraídos com sucesso"
+/* 🔥 ABRE CONFIRMAÇÃO AUTOMÁTICA */
+if(typeof modalConfirmacao!=="undefined"){
+modalConfirmacao.style.display="flex"
+}
+/* 🔥 LOG DEBUG */
+console.log("📊 DADOS EXTRAÍDOS:",dados)
 }catch(e){
 console.error(e)
 if(iaBox)iaBox.innerHTML="❌ Erro ao processar"
@@ -2091,9 +2104,8 @@ else if(text.includes("diesel"))dados.combustivel="Diesel"
 else if(text.includes("gnv"))dados.combustivel="GNV"
 else dados.combustivel="Gasolina Comum"
 /* AUTO CÁLCULO */
-if(!dados.valor_litro && dados.total && dados.litros){
-let t=parseFloat(dados.total),l=parseFloat(dados.litros)
-if(t>0&&l>0)dados.valor_litro=(t/l).toFixed(3)
+if(!dados.total && !dados.litros){
+return null
 }
 return dados
 }
@@ -2320,9 +2332,6 @@ fecharOCR()
 },400)
 }
 
-/* =========================================================
-006 - OCR PROCESSAMENTO REAL
-========================================================= */
 async function processarCupomCompleto(){
 
 if(!imagemAtualOCR)return alert("Capture o cupom")
@@ -2332,13 +2341,10 @@ iaBox.style.display="block"
 iaBox.innerHTML="🔍 Processando..."
 
 try{
-
 /* 🔥 AUTO RECORTE */
 let img=await autoRecorteCupom(imagemAtualOCR)
-
 /* 🔥 OCR */
 const worker=await Tesseract.createWorker("por")
-
 let result=await worker.recognize(img)
 await worker.terminate()
 
@@ -2348,21 +2354,39 @@ if(!text||text.length<10){
 iaBox.innerHTML="❌ OCR falhou"
 return
 }
-
 /* 🔥 EXTRAÇÃO */
 let dados=extrairDadosIA(text)
-
+/* 🔥 VALIDAÇÃO */
+if(!dados || Object.keys(dados).length===0){
+iaBox.innerHTML="⚠️ OCR leu, mas não encontrou dados válidos"
+return
+}
 /* 🔥 PREENCHIMENTO */
+if(typeof preencherFormulario==="function"){
 preencherFormulario(dados)
-
-iaBox.innerHTML="✅ Dados capturados"
-
+}
+/* 🔥 GARANTE CAMPOS IMPORTANTES */
+if(dados.total)valor.value=dados.total
+if(dados.litros)litros.value=dados.litros
+if(dados.valor_litro)valor_litro.value=dados.valor_litro
+if(dados.km)km.value=dados.km
+/* 🔥 CNPJ AUTOMÁTICO */
+if(dados.cnpj && typeof buscarCNPJ_PRO==="function"){
+buscarCNPJ_PRO(dados.cnpj)
+}
+/* 🔥 ABRIR CONFIRMAÇÃO */
+if(typeof modalConfirmacao!=="undefined"){
+modalConfirmacao.style.display="flex"
+}
+/* 🔥 FEEDBACK */
+iaBox.innerHTML="✅ Dados capturados e preenchidos"
+/* 🔥 DEBUG */
+console.log("📊 OCR EXTRAÍDO:",dados)
 }catch(e){
 console.error(e)
 iaBox.innerHTML="❌ Erro OCR"
 }
 }
-
 /* =========================================================
 007 - QR IMAGEM (FUNCIONAL)
 ========================================================= */
