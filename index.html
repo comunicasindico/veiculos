@@ -1218,6 +1218,7 @@ init()
 
 let editId=null
 
+
 function abrirEditar(id,valor,litros,km,data,posto){
 editId=id
 modalEditar.style.display="flex"
@@ -1413,6 +1414,7 @@ console.warn("⚠️ Função tentarQRImagem não definida")
 console.error("Erro QR:",e)
 }
 },300)
+}
 
 function preprocessarImagem(src){
 return new Promise(resolve=>{
@@ -1804,43 +1806,16 @@ p_uf.value=""
 p_cep.value=""
 }
 
-let cropMode=false
-let startX,startY,endX,endY
-
 function ativarCrop(){
+let previewOCR=document.getElementById("previewOCR")
+if(!previewOCR){
+alert("Imagem não encontrada")
+return
+}
 cropMode=true
 alert("Arraste na imagem para recortar")
 previewOCR.addEventListener("mousedown",startCrop)
 previewOCR.addEventListener("mouseup",endCrop)
-}
-
-function startCrop(e){
-if(!cropMode)return
-startX=e.offsetX
-startY=e.offsetY
-}
-
-function endCrop(e){
-if(!cropMode)return
-endX=e.offsetX
-endY=e.offsetY
-
-let canvas=canvasOCR
-let ctx=canvas.getContext("2d")
-
-let img=new Image()
-img.src=previewOCR.src
-
-img.onload=function(){
-let w=Math.abs(endX-startX)
-let h=Math.abs(endY-startY)
-canvas.width=w
-canvas.height=h
-ctx.drawImage(img,startX,startY,w,h,0,0,w,h)
-
-previewOCR.src=canvas.toDataURL("image/jpeg",1)
-cropMode=false
-}
 }
 
 let qrScanner=null
