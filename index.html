@@ -1870,19 +1870,16 @@ fps:10,
 qrbox:{width:250,height:250}
 },
 (qrCodeMessage)=>{
-console.log("QR LIDO:",qrCodeMessage)
-
-/* 🔥 EXTRAI CHAVE NFC-e */
 let chave=extrairChaveNFe(qrCodeMessage)
-
-if(chave){
-alert("Chave detectada!")
-buscarNFeSefaz(chave)
-}else{
-alert("QR lido mas não é NFC-e")
+if(!chave){
+alert("QR inválido")
+return
 }
-
+console.log("CHAVE:",chave)
+/* 🔥 FECHA CAMERA */
 fecharQR()
+/* 🔥 TENTA EXTRAÇÃO AUTOMÁTICA */
+processarNFeCompleta(chave)
 },
 (errorMessage)=>{
 // NÃO ALERTAR AQUI (evita spam)
@@ -1894,6 +1891,70 @@ console.error(err)
 alert("Erro ao acessar câmera")
 })
 }
+async function processarNFeCompleta(chave){
+/* 🔥 LOADING */
+alert("🔎 Buscando dados da nota...")
+let dados=null
+/* 🔥 TENTATIVA API (quando disponível) */
+try{
+let r=await fetch("https://api.allorigins.win/raw?url="+encodeURIComponent("https://sat.sef.sc.gov.br/nfce/consulta?p="+chave))
+let html=await r.text()
+/* 🔥 EXTRAI DADOS DO HTML */
+dados=extrairDadosHTML(html)
+}catch(e){
+console.log("Falha API:",e)
+}
+/* 🔥 SE CONSEGUIU */
+if(dados){
+preencherNota(dados)
+return
+}
+/* 🔥 FALLBACK */
+alert("Não foi possível ler automaticamente.\nAbrindo SEFAZ...")
+buscarNFeSefaz(chave)
+}
+function extrairDadosHTML(html){
+if(!html)return null
+
+let dados={}
+
+/* 🔥 VALOR TOTAL */
+let v=html.match(/Valor Total.*?([0-9]+,[0-9]+)/i)
+if(v)dados.valor=parseFloat(v[1].replace(",","."))
+
+/* 🔥 CNPJ */
+let cnpj=html.match(/CNPJ.*?([0-9\.\/\-]{14,18})/i)
+if(cnpj)dados.cnpj=cnpj[1]
+
+/* 🔥 NOME */
+let nome=html.match(/Raz[aã]o Social.*?>(.*?)</i)
+if(nome)dados.nome=nome[1]
+
+return dados
+}
+function preencherNota(d){
+
+if(d.valor){
+let campo=document.getElementById("valor")
+if(campo)campo.value=d.valor.toFixed(2)
+}
+
+if(d.nome){
+let campo=document.getElementById("postoInput")
+if(campo)campo.value=d.nome
+}
+
+if(d.cnpj){
+let campo=document.getElementById("cnpjBusca")
+if(campo){
+campo.value=d.cnpj
+buscarCNPJ_PRO(d.cnpj)
+}
+}
+
+alert("✅ Dados carregados automaticamente")
+}
+  
 function fecharQR(){
 document.getElementById("modalQR").style.display="none"
 if(qrScanner){
