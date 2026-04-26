@@ -1848,33 +1848,66 @@ cropMode=false
 }
 
 let qrScanner=null
-async function abrirQR(){
-modalQR.style.display="flex"
-if(qrScanner){
-try{await qrScanner.stop();await qrScanner.clear()}catch(e){}
-qrScanner=null
-}
+
+function abrirQR(){
+const el=document.getElementById("readerQR")
+if(!el)return alert("Reader não encontrado")
+
+document.getElementById("modalQR").style.display="flex"
+
 qrScanner=new Html5Qrcode("readerQR")
+
+Html5Qrcode.getCameras().then(devices=>{
+if(!devices||!devices.length){
+alert("Câmera não encontrada")
+return
+}
+
 qrScanner.start(
-{facingMode:"environment"},
-{fps:10,qrbox:250},
-async (decodedText)=>{
-console.log("QR:",decodedText)
-await processarQR(decodedText)
+{ facingMode: "environment" },
+{
+fps:10,
+qrbox:{width:250,height:250}
+},
+(qrCodeMessage)=>{
+console.log("QR LIDO:",qrCodeMessage)
+
+/* 🔥 EXTRAI CHAVE NFC-e */
+let chave=extrairChaveNFe(qrCodeMessage)
+
+if(chave){
+alert("Chave detectada!")
+buscarNFeSefaz(chave)
+}else{
+alert("QR lido mas não é NFC-e")
+}
+
 fecharQR()
 },
-(err)=>{}
+(errorMessage)=>{
+// NÃO ALERTAR AQUI (evita spam)
+}
 )
+
+}).catch(err=>{
+console.error(err)
+alert("Erro ao acessar câmera")
+})
 }
-async function fecharQR(){
-modalQR.style.display="none"
+function fecharQR(){
+document.getElementById("modalQR").style.display="none"
 if(qrScanner){
-try{
-await qrScanner.stop()
-await qrScanner.clear()
-}catch(e){}
-qrScanner=null
+qrScanner.stop().then(()=>{qrScanner=null})
 }
+}
+function extrairChaveNFe(url){
+let match=url.match(/chNFe=([0-9]{44})/)
+return match?match[1]:null
+}
+
+function buscarNFeSefaz(chave){
+let url="https://www.sefaz.sc.gov.br/nfce/consulta?p="+chave
+window.open(url,"_blank")
 }
 
 async function processarQR(url){
