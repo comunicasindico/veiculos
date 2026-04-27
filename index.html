@@ -137,14 +137,13 @@ By Neto - bemprotegido.net
 </div>
 </div>
 
-<div id="menuHome" style="position:fixed;bottom:10px;left:0;width:100%;display:flex;justify-content:center;gap:10px;z-index:50">
-
-<button onclick="abrirTela('combustivel')" class="btnFloat">⛽</button>
-<button onclick="abrirTela('motorista')" class="btnFloat">👨</button>
-<button onclick="abrirTela('veiculo')" class="btnFloat">🚗</button>
-<button onclick="abrirTela('posto')" class="btnFloat">🏪</button>
-<button onclick="logout()" class="btnFloat btnSair">🚪</button>
-
+<div id="menuHome">
+<button class="btnFloat" onclick="irParaPagina(0)">🏠</button>
+<button class="btnFloat" onclick="irParaPagina(1)">⛽</button>
+<button class="btnFloat" onclick="irParaPagina(2)">👨</button>
+<button class="btnFloat" onclick="irParaPagina(3)">🚗</button>
+<button class="btnFloat" onclick="irParaPagina(4)">🏪</button>
+<button class="btnFloat btnSair" onclick="logout()">🚪</button>
 </div>
   
 <div id="app" class="container" style="display:none">
@@ -2481,7 +2480,7 @@ video.srcObject.getTracks().forEach(t=>t.stop())
 
 /* ==================FIM===================================== */
 let currentPage=0
-let totalPages=4
+let totalPages=5
 
 function irParaPagina(i){
 let container=document.getElementById("swipeContainer")
