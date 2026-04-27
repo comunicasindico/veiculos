@@ -1,108 +1,389 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Banco Comunica - Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box;font-family:'Montserrat',sans-serif}
-    body,html{height:100%;background-color:#000;display:flex;justify-content:center;align-items:center}
-    .background-overlay{position:fixed;top:0;left:0;width:100%;height:100%;
-      background:linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.8)), url('img/bcveiculos.png');
-      background-size:cover;background-position:center;z-index:-1}
-    .container{width:100%;max-width:400px;padding:20px;text-align:center}
-    .header{margin-bottom:40px;color:#fff}
-    .logo-box{display:inline-block;border:2px solid #C19A5B;padding:10px 15px;border-radius:8px;
-      font-size:32px;font-weight:bold;color:#C19A5B;margin-bottom:10px}
-    .brand-name{font-size:24px;letter-spacing:3px;line-height:1}
-    .brand-sub{font-size:26px;font-weight:700;color:#C19A5B;display:block}
-    .divider{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:5px}
-    .line{height:1px;width:40px;background-color:#C19A5B}
-    .divider span{font-size:10px;letter-spacing:5px}
-    .slogan{font-size:10px;margin-top:15px;letter-spacing:1px;text-transform:uppercase}
-    .slogan span{color:#C19A5B}
-    .login-card{background:rgba(18,18,18,0.85);backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,0.1);border-radius:25px;padding:30px;text-align:left}
-    .login-card h2{color:#fff;font-size:22px;margin-bottom:5px}
-    .login-card p{color:#aaa;font-size:13px;margin-bottom:25px}
-    .input-group{position:relative;margin-bottom:15px}
-    .input-group i{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#666}
-    .input-group input{width:100%;background:#121212;border:1px solid #333;border-radius:10px;
-      padding:15px 15px 15px 45px;color:#fff;outline:none}
-    .input-group .eye-icon{left:auto;right:15px;cursor:pointer}
-    .options{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:25px}
-    .remember{color:#aaa;display:flex;align-items:center;gap:5px}
-    .remember input{accent-color:#C19A5B}
-    .forgot{color:#C19A5B;text-decoration:none}
-    .btn-entrar{width:100%;background:#C19A5B;color:#000;border:none;padding:15px;border-radius:10px;
-      font-weight:bold;font-size:14px;cursor:pointer;transition:.3s}
-    .btn-entrar:hover{background:#d4ae6d}
-    .no-account{color:#fff;font-size:12px;text-align:center;margin:20px 0;display:block}
-    .btn-outline{width:100%;background:transparent;color:#C19A5B;border:1px solid #C19A5B;
-      padding:15px;border-radius:10px;font-weight:bold;font-size:14px;cursor:pointer;text-decoration:none;display:block;text-align:center}
-    .footer-security{margin-top:20px;color:#aaa;font-size:11px;display:flex;align-items:center;justify-content:center;gap:8px}
-    .footer-security i{color:#C19A5B}
-  </style>
+<!-- 001 HEAD -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Veículos SaaS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<link rel="icon" href="./favicon.ico">
 </head>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;color:#fff;background:#020617;overflow-x:hidden}
+body.login{background:url("img/bcveiculos.png") center center no-repeat;background-size:cover;background-attachment:fixed}
+@media(max-width:768px){body.login{background-position:center top;background-size:cover}}
+@media(min-width:769px){body.login{background-position:center;background-size:cover}}
+body.login::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(2,6,23,0.35),rgba(2,6,23,0.85));z-index:0;pointer-events:none; /* 🔥 LIBERA CLIQUE */}
+body:not(.login)::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.85);z-index:-1;pointer-events:none; /* 🔥 LIBERA CLIQUE */}
+.tela{display:none}
+.container{max-width:720px;width:100%;margin:auto;padding:10px}
+.card{width:100%;background:rgba(30,41,59,0.65);backdrop-filter:blur(10px);padding:12px;border-radius:18px;margin-top:10px;border:1px solid rgba(255,255,255,0.05);box-shadow:0 6px 20px rgba(0,0,0,0.4)}
+input,select{width:100%;padding:12px;margin-top:6px;border-radius:12px;border:none;background:rgba(51,65,85,0.6);color:#fff;font-size:14px}
+button{padding:10px;border:none;border-radius:8px;font-weight:bold}
+.btnSave{background:linear-gradient(135deg,#22c55e,#16a34a);color:#000;width:100%;border-radius:14px;font-weight:600;box-shadow:0 6px 20px rgba(34,197,94,.4)}
+.row{display:flex;justify-content:space-between;gap:6px;font-size:12px;flex-wrap:wrap}
+.headerApp{position:sticky;top:0;background:rgba(2,6,23,0.7);backdrop-filter:blur(10px);padding:10px;border-bottom:1px solid rgba(255,255,255,0.05);z-index:10}
+.menuTabs{display:flex;gap:6px}
+.menuTabs button{flex:1;background:#1e293b;color:#fff}
+.footerBar{position:fixed;bottom:0;left:0;width:100%;background:#020617;border-top:1px solid #1e293b;padding:8px;z-index:10;}
+.btnLogout{background:#dc2626;color:#fff;width:180px}
+canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;background:#fff}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;z-index:999}
+.modalBox{width:95%;max-width:420px;background:#1e293b;padding:15px;border-radius:12px}
+.btnEdit,.btnDel{padding:6px 10px;font-size:12px;width:auto;min-width:40px}
+.actions{display:flex;gap:6px;margin-left:auto}
+.actions button{width:34px;height:34px;padding:0;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.item{display:flex;align-items:center;gap:10px}
+.itemContent{flex:1;min-width:0}
+#tela_veiculo input,#tela_veiculo select{font-size:13px}
+.btnEye{background:#64748b;color:#fff;width:34px;height:34px;display:flex;align-items:center;justify-content:center}
+.field{margin-top:8px;display:flex;flex-direction:column}
+.field label{font-size:11px;color:#94a3b8;margin-bottom:2px}
+.btnCancel{background:#64748b;color:#fff}
+.btnHome{width:60px;height:60px;border-radius:16px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,215,0,0.4);color:#facc15;font-size:22px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.btnFloat{width:58px;height:58px;border-radius:18px;border:none;background:rgba(30,41,59,0.55);backdrop-filter:blur(12px);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(0,0,0,0.6);transition:all .25s ease}
+.btnFloat:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,0.7)}
+.btnFloat:active{transform:scale(.92)}
+.btnSair{background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 8px 30px rgba(220,38,38,.5)}
+.tela{display:none;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+#modalOCR .modalBox{max-height:90vh;overflow-y:auto}
+#modalOCR video{max-height:35vh;object-fit:cover}
+#modalOCR img{max-height:35vh;object-fit:contain}
+#telaLogin{display:flex;justify-content:center;align-items:flex-start; /* 🔥 sobe o box */height:100vh;padding:20px;padding-top:40px; /* 🔥 distância do topo */position:relative;z-index:2;}
+@media(max-width:600px){#telaLogin{transform:translateY(-20px);}}
+@media(max-width:768px){#telaLogin{padding-top:20px; /* mais alto ainda no mobile */}#telaLogin > div{margin-top:0;}}
+.actions{position:relative;z-index:9999;display:flex;gap:6px;}
+.actions button{pointer-events:auto;z-index:10000;position:relative;}
+.itemContent{pointer-events:none}
+.card,.item{position:relative}
+@media(max-width:768px){
+#app{padding:0;margin:0;width:100vw;height:100vh;overflow:hidden}
+.tela{display:flex;flex-direction:column;width:100vw;height:100vh;overflow-y:auto;padding:14px}
+.headerApp{display:none}
+#menuHome{display:none}
+.swipeContainer{display:flex;width:400vw;height:100vh;transition:transform .35s ease}
+.swipePage{width:100vw;height:100vh;flex-shrink:0;overflow-y:auto;padding:14px}
+}
+@media(max-width:768px){#menuHome{display:none!important}}
+@media(max-width:768px){body{overflow:hidden}
+/* 🔥 CONTAINER SWIPE */
+#swipeContainer{display:flex;width:400vw;height:100vh;transition:transform .35s ease;}
+/* 🔥 PÁGINAS */
+.swipePage{width:100vw;height:100vh;flex-shrink:0;overflow-y:auto;padding:14px;scroll-behavior:smooth;}
+/* 🔥 EFEITO APP */
+.swipePage::after{content:"";position:fixed;bottom:0;left:0;width:100%;height:60px;background:linear-gradient(to top,rgba(2,6,23,0.9),transparent);pointer-events:none;}
+/* 🔥 REMOVE UI DESKTOP */
+.headerApp{display:none!important}#menuHome{display:none!important}
+/* 🔥 CARD MAIS PREMIUM */
+.card{background:rgba(15,23,42,0.75);border:1px solid rgba(255,215,0,0.15);box-shadow:0 10px 40px rgba(0,0,0,0.6);}
+/* 🔥 BOTÕES */
+button{font-size:15px;border-radius:14px;}
+}
+
+
+  
+</style>
+
 <body>
-  <div class="background-overlay"></div>
-  <div class="container">
-    <div class="header">
-      <div class="logo-box">B</div>
-      <div class="brand-name">BANCO</div>
-      <div class="brand-sub">COMUNICA</div>
-      <div class="divider"><div class="line"></div><span>VEÍCULOS</span><div class="line"></div></div>
-      <p class="slogan">O BANCO QUE <span>MOVE</span> VOCÊ</p>
-    </div>
-    <div class="login-card">
-      <h2>Bem-vindo!</h2>
-      <p>Acesse sua conta para continuar</p>
-      <div class="input-group">
-        <i class="fa-regular fa-envelope"></i>
-        <input id="user" type="text" placeholder="E-mail ou CPF">
-      </div>
-      <div class="input-group">
-        <i class="fa-solid fa-lock"></i>
-        <input id="pass" type="password" placeholder="Senha">
-        <i class="fa-regular fa-eye eye-icon" onclick="toggleSenha()"></i>
-      </div>
-      <div class="options">
-        <label class="remember"><input type="checkbox" checked> Lembrar meu acesso</label>
-        <a href="#" class="forgot">Esqueci minha senha</a>
-      </div>
-      <button class="btn-entrar" onclick="login()">ENTRAR</button>
-      <span class="no-account">Ainda não tem uma conta?</span>
-      <a href="#" class="btn-outline">CRIAR CONTA</a>
-    </div>
-    <div class="footer-security">
-      <i class="fa-solid fa-shield-halved"></i> Seus dados protegidos com segurança
-    </div>
-  </div>
+<!-- LOGIN -->
+<div id="telaLogin">
+<div style="width:100%;max-width:420px;background:rgba(0,0,0,0.65);backdrop-filter:blur(20px);padding:20px;border-radius:20px;border:1px solid rgba(255,215,0,0.2)">
+<div style="text-align:center;margin-bottom:20px">
+<div style="font-size:26px;font-weight:bold;color:#facc15">BANCO COMUNICA</div>
+<div style="font-size:13px;color:#94a3b8">VEÍCULOS</div>
+</div>
+<input id="user" placeholder="Usuário, E-mail ou CPF">
+<input id="pass" type="password" placeholder="Senha">
+<div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px">
+<label><input type="checkbox"> Lembrar Senha</label>
+<span style="color:#facc15">Esqueci Senha</span>
+</div>
+<button class="btnSave" onclick="login()" style="margin-top:12px">ENTRAR</button>
+<button onclick="abrirCadastro()" style="width:100%;margin-top:8px;background:transparent;border:1px solid #facc15;color:#facc15">CRIAR CONTA</button>
+<div style="text-align:right;font-size:10px;margin-top:10px;color:#94a3b8">
+By Neto - bemprotegido.net
+</div>
+</div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = "https://gspdlrenyrzbkxlvyugc.supabase.co";
-    const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<div id="menuHome" style="position:fixed;bottom:10px;left:0;width:100%;display:flex;justify-content:center;gap:10px;z-index:50">
 
-    async function login(){
-      const usuario = document.getElementById("user").value;
-      const senha = document.getElementById("pass").value;
-      let { data, error } = await db.from("usuarios").select("*").eq("usuario_apelido", usuario);
-      if(error){ alert("Erro de conexão: "+error.message); return; }
-      if(!data.length){ alert("Usuário não encontrado"); return; }
-      if(data[0].senha_hash !== senha){ alert("Senha incorreta"); return; }
-      localStorage.setItem("empresa", data[0].empresa_id);
-      window.location.href = "app.html";
-    }
-    function toggleSenha(){
-      const campo = document.getElementById("pass");
-      campo.type = campo.type === "password" ? "text" : "password";
-    }
-  </script>
-  <script>
+<button onclick="abrirTela('combustivel')" class="btnFloat">⛽</button>
+<button onclick="abrirTela('motorista')" class="btnFloat">👨</button>
+<button onclick="abrirTela('veiculo')" class="btnFloat">🚗</button>
+<button onclick="abrirTela('posto')" class="btnFloat">🏪</button>
+<button onclick="logout()" class="btnFloat btnSair">🚪</button>
+
+</div>
+  
+<!-- APP -->
+<div id="app" class="container" style="display:none">
+<div id="swipeContainer" class="swipeContainer">
+<!-- ================= COMBUSTÍVEL ================= -->
+<div class="swipePage">
+<div id="tela_combustivel" class="tela" style="display:block">
+<div id="iaBox" class="card" style="display:none"></div>
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<button onclick="executarAutoRecorte()">🤖</button>
+<button onclick="capturaInteligente()" style="flex:1;background:#22c55e;color:#000;border-radius:10px;padding:10px">📲</button>
+<button onclick="abrirQR()" style="flex:1;background:#16a34a;color:#fff;border-radius:10px;padding:10px">🔳</button>
+<button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff;border-radius:10px;padding:10px">📷</button>
+</div>
+<div class="card">
+<select id="veiculoSel"></select>
+<input id="data" type="date">
+<input id="valor" placeholder="Valor">
+<input id="litros" placeholder="Litros">
+<input id="km" placeholder="KM">
+<button class="btnSave" onclick="salvar()">Salvar</button>
+</div>
+<div id="lista"></div>
+</div>
+</div>
+<!-- ================= MOTORISTA ================= -->
+<div class="swipePage">
+<div id="tela_motorista" class="tela" style="display:block">
+<button onclick="toggleForm('formMotorista')" style="width:100%;background:#3b82f6">Novo</button>
+<div id="listaMotoristas"></div>
+<div id="formMotorista" class="card" style="display:none">
+<input id="m_nome" placeholder="Nome">
+<input id="m_tel" placeholder="Telefone">
+<button onclick="salvarMotorista()">Salvar</button>
+</div>
+</div>
+</div>
+<!-- ================= VEÍCULO ================= -->
+<div class="swipePage">
+<div id="tela_veiculo" class="tela" style="display:block">
+<button onclick="toggleForm('formVeiculo')" style="width:100%;background:#3b82f6">Novo</button>
+<div id="listaVeiculos"></div>
+<div id="formVeiculo" class="card" style="display:none">
+<input id="v_placa" placeholder="Placa">
+<input id="v_modelo" placeholder="Modelo">
+<button onclick="salvarVeiculo()">Salvar</button>
+</div>
+</div>
+</div>
+<!-- ================= POSTO ================= -->
+<div class="swipePage">
+<div id="tela_posto" class="tela" style="display:block">
+<button onclick="toggleForm('formPosto')" style="width:100%;background:#3b82f6">Novo</button>
+<div id="listaPostos"></div>
+<div id="formPosto" class="card" style="display:none">
+<input id="p_nome" placeholder="Nome">
+<input id="p_cnpj" placeholder="CNPJ">
+<button onclick="salvarPosto()">Salvar</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- MENU -->
+<div class="headerApp">
+<div class="menuTabs">
+<button onclick="abrirTela('combustivel')" title="Abastecimento">⛽</button>
+<button onclick="abrirTela('motorista')" title="Motoristas">👨‍🔧</button>
+<button onclick="abrirTela('veiculo')" title="Veículos">🚗</button>
+<button onclick="abrirTela('posto')" title="Postos">🏪</button>
+<button onclick="logout()" title="Sair" style="background:#dc2626">🚪</button>
+</div>
+</div>
+<!-- ========================= -->
+<!-- 🔥 TELA COMBUSTÍVEL -->
+<!-- ========================= -->
+<div id="tela_combustivel" class="tela">
+<div id="iaBox" class="card" style="display:none"></div>
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<button onclick="executarAutoRecorte()">🤖 Autorrecorte</button>
+<button onclick="capturaInteligente()" style="flex:1;background:#22c55e;color:#000;border-radius:10px;padding:10px">📲 Inteligente</button>
+<button onclick="abrirQR()" style="flex:1;background:#16a34a;color:#fff;border-radius:10px;padding:10px">🔳 QR</button>
+<button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff;border-radius:10px;padding:10px">📷 OCR</button>
+</div>
+  
+<!-- DASHBOARD -->
+<div class="card">
+<div onclick="toggleDash()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+<h3>📊 Dashboard do Veículo</h3>
+<span id="dashIcon">⬇️</span>
+</div>
+<div id="dashContent">
+<div id="kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div>
+<!-- 🔥 PESQUISAR PERÍODO -->
+<div style="display:flex;gap:6px;margin-top:6px">
+<input type="date" id="filtroInicio" style="flex:1">
+<input type="date" id="filtroFim" style="flex:1">
+<button onclick="aplicarFiltro()" style="background:#22c55e;color:#000;font-weight:600">Filtrar</button>
+</div>
+<!-- 🔥 GRÁFICOS PERÍODO -->
+<div style="display:flex;gap:6px;margin-top:6px">
+<button onclick="trocarGrafico('consumo')" style="flex:1;border-radius:10px;font-weight:600;background:#3b82f6">📈 Km/L</button>
+<button onclick="trocarGrafico('total')" style="flex:1;border-radius:10px;font-weight:600;background:#22c55e;color:#000">💰 Total</button>
+<button onclick="trocarGrafico('litros')" style="flex:1;border-radius:10px;font-weight:600;background:#f59e0b;color:#000">⛽ Litros</button>
+</div>
+<canvas id="graficoConsumo"></canvas>
+<canvas id="graficoGasto"></canvas>
+</div>
+</div>
+
+<!-- FORM -->
+<div class="card">
+<div class="field">
+<label>🚗 Veículo</label>
+<select id="veiculoSel"></select>
+</div>
+<div class="field">
+<label>📅 Data</label>
+<input id="data" type="date">
+<div class="field">
+<label>🧾 CNPJ</label>
+<input id="cnpjBusca" placeholder="00.000.000/0000-00" maxlength="18">
+</div>
+</div>
+<div class="field">
+<label>🏪 Posto</label>
+<input id="postoInput" placeholder="Digite ou selecione o posto">
+<input id="p_endereco_auto" placeholder="Endereço">
+<input id="p_numero_auto" placeholder="Número">
+<input id="p_uf_auto" placeholder="UF">
+<input id="p_cep_auto" placeholder="CEP">
+<select id="postoSel"></select>
+</div>
+<div class="field">
+<label>💰 Valor Total (R$)</label>
+<input id="valor" placeholder="Ex: 250,00">
+</div>
+<div class="field">
+<label>⛽ Litros</label>
+<input id="litros" placeholder="Ex: 40,50">
+</div>
+<div class="field">
+<label>💲 Valor por Litro</label>
+<input id="valor_litro" placeholder="Automático ou manual">
+</div>
+<div class="field">
+<label>📏 KM Atual</label>
+<input id="km" placeholder="Ex: 52340">
+</div>
+<div class="field">
+<label>⛽ Tipo de abastecimento</label>
+<select id="tanque">
+<option value="cheio">Tanque cheio</option>
+<option value="parcial">Parcial</option>
+</select>
+</div>
+<div class="field">
+<label>⛽ Combustível</label>
+<select id="combustivel_abastecimento">
+<option>Gasolina Comum</option>
+<option>Gasolina Aditivada</option>
+<option>Álcool</option>
+<option>Diesel</option>
+<option>GNV</option>
+</select>
+</div>
+<button class="btnSave" onclick="salvar()">Salvar Abastecimento</button>
+</div>
+
+<div id="lista"></div>
+
+</div>
+
+<!-- ========================= -->
+<!-- 👨 MOTORISTA -->
+<!-- ========================= -->
+<div id="tela_motorista" class="tela">
+
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<button onclick="toggleForm('formMotorista')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Motorista</button>
+</div>
+
+<!-- 🔥 LISTA (SEMPRE VISÍVEL) -->
+<div id="listaMotoristas"></div>
+
+<!-- 🔥 FORM (OCULTO) -->
+<div id="formMotorista" class="card" style="display:none;margin-top:10px">
+<input id="m_nome" placeholder="Nome do motorista">
+<input id="m_cpf" placeholder="CPF">
+<input id="m_tel" placeholder="Telefone">
+<button class="btnSave" onclick="salvarMotorista()">Salvar Motorista</button>
+<button onclick="cancelarMotorista()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
+</div>
+
+</div>
+<!-- ========================= -->
+<!-- 🚗 VEÍCULO -->
+<!-- ========================= -->
+<div id="tela_veiculo" class="tela">
+
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<button onclick="toggleForm('formVeiculo')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Veículo</button>
+</div>
+
+<!-- 🔥 LISTA -->
+<div id="listaVeiculos"></div>
+
+<!-- 🔥 FORM -->
+<div id="formVeiculo" class="card" style="display:none;margin-top:10px">
+<input id="v_placa" placeholder="Placa">
+<input id="v_marca" placeholder="Marca">
+<input id="v_modelo" placeholder="Modelo">
+<input id="v_ano" placeholder="Ano">
+<input id="v_cor" placeholder="Cor">
+<input id="v_renavam" placeholder="Renavam">
+<input id="v_combustivel" placeholder="Combustível principal">
+<input id="v_km" placeholder="KM atual">
+<label style="font-size:11px;color:#94a3b8">📅 Vencimento IPVA</label>
+<input id="v_ipva" type="date">
+<label style="font-size:11px;color:#94a3b8">📅 Licenciamento</label>
+<input id="v_licenciamento" type="date">
+<label style="font-size:11px;color:#94a3b8">👨‍🔧 Motorista</label>
+<select id="v_motorista"></select>
+<button class="btnSave" onclick="salvarVeiculo()">Salvar Veículo</button>
+<button onclick="cancelarVeiculo()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
+</div>
+
+</div>
+
+<!-- ========================= -->
+<!-- 🏪 POSTO -->
+<!-- ========================= -->
+<div id="tela_posto" class="tela">
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<button onclick="toggleForm('formPosto')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Posto</button>
+</div>
+<!-- 🔥 LISTA -->
+<div id="listaPostos"></div>
+<!-- 🔥 FORM -->
+<div id="formPosto" class="card" style="display:none;margin-top:10px">
+<input id="p_nome" placeholder="Nome do posto">
+<input id="p_cnpj" placeholder="CNPJ">
+<input id="p_cidade" placeholder="Cidade">
+<input id="p_endereco" placeholder="Endereço">
+<input id="p_numero" placeholder="Número">
+<input id="p_uf" placeholder="UF">
+<input id="p_cep" placeholder="CEP">
+<button class="btnSave" onclick="salvarPosto()">Salvar Posto</button>
+<button onclick="cancelarPosto()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
+</div>
+</div>
+
+
+</div>
+
+
+<script>
+const SUPABASE_URL="https://gspdlrenyrzbkxlvyugc.supabase.co"
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"
+window.db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
 /* ESTADO GLOBAL */
 let iaBox
