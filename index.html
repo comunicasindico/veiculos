@@ -48,9 +48,19 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 .field label{font-size:11px;color:#94a3b8;margin-bottom:2px}
 .btnCancel{background:#64748b;color:#fff}
 .btnHome{width:60px;height:60px;border-radius:16px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,215,0,0.4);color:#facc15;font-size:22px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
-.btnFloat{width:58px;height:58px;border-radius:18px;border:none;background:rgba(30,41,59,0.55);backdrop-filter:blur(12px);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(0,0,0,0.6);transition:all .25s ease}
-.btnFloat:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,0.7)}
-.btnFloat:active{transform:scale(.92)}
+.btnFloat{
+width:58px;
+height:58px;
+border-radius:16px;
+background:#1e293b;
+color:#fff;
+font-size:20px;
+display:flex;
+align-items:center;
+justify-content:center;
+transition:.2s;
+}
+.btnFloat:active{transform:scale(.9)}
 .btnSair{background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 8px 30px rgba(220,38,38,.5)}
 .tela{display:none;animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -68,7 +78,20 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 #app{padding:0;margin:0;width:100vw;height:100vh;overflow:hidden}
 .tela{display:flex;flex-direction:column;width:100vw;height:100vh;overflow-y:auto;padding:14px}
 .headerApp{display:none}
-#menuHome{display:none}
+#menuHome{
+position:fixed;
+bottom:10px;
+left:50%;
+transform:translateX(-50%);
+background:rgba(15,23,42,0.9);
+padding:8px 10px;
+border-radius:20px;
+display:flex;
+gap:8px;
+z-index:999;
+backdrop-filter:blur(10px);
+box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
 .swipeContainer{display:flex;width:400vw;height:100vh;transition:transform .35s ease}
 .swipePage{width:100vw;height:100vh;flex-shrink:0;overflow-y:auto;padding:14px}
 }
@@ -87,7 +110,7 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 /* 🔥 BOTÕES */
 button{font-size:15px;border-radius:14px;}
 }
-
+.swipePage{padding:16px;padding-bottom:110px}
 
   
 </style>
@@ -124,33 +147,56 @@ By Neto - bemprotegido.net
 
 </div>
   
-<!-- APP -->
 <div id="app" class="container" style="display:none">
 <div id="swipeContainer" class="swipeContainer">
+
+<!-- ================= DASHBOARD ================= -->
+<div class="swipePage">
+<div class="card">
+<h3>📊 Dashboard do Veículo</h3>
+<div id="kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div>
+<div style="display:flex;gap:6px;margin-top:6px">
+<input type="date" id="filtroInicio" style="flex:1">
+<input type="date" id="filtroFim" style="flex:1">
+<button onclick="aplicarFiltro()" style="background:#22c55e;color:#000">Filtrar</button>
+</div>
+<div style="display:flex;gap:6px;margin-top:6px">
+<button onclick="trocarGrafico('consumo')" style="flex:1;background:#3b82f6">📈 Km/L</button>
+<button onclick="trocarGrafico('total')" style="flex:1;background:#22c55e;color:#000">💰</button>
+<button onclick="trocarGrafico('litros')" style="flex:1;background:#f59e0b;color:#000">⛽</button>
+</div>
+<canvas id="graficoConsumo"></canvas>
+<canvas id="graficoGasto"></canvas>
+</div>
+</div>
+
 <!-- ================= COMBUSTÍVEL ================= -->
 <div class="swipePage">
-<div id="tela_combustivel" class="tela" style="display:block">
 <div id="iaBox" class="card" style="display:none"></div>
+
 <div style="display:flex;gap:6px;margin-bottom:8px">
 <button onclick="executarAutoRecorte()">🤖</button>
-<button onclick="capturaInteligente()" style="flex:1;background:#22c55e;color:#000;border-radius:10px;padding:10px">📲</button>
-<button onclick="abrirQR()" style="flex:1;background:#16a34a;color:#fff;border-radius:10px;padding:10px">🔳</button>
-<button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff;border-radius:10px;padding:10px">📷</button>
+<button onclick="capturaInteligente()" style="flex:1;background:#22c55e;color:#000">📲</button>
+<button onclick="abrirQR()" style="flex:1;background:#16a34a;color:#fff">🔳</button>
+<button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff">📷</button>
 </div>
+
 <div class="card">
 <select id="veiculoSel"></select>
 <input id="data" type="date">
+<input id="cnpjBusca" placeholder="CNPJ">
+<input id="postoInput" placeholder="Posto">
 <input id="valor" placeholder="Valor">
 <input id="litros" placeholder="Litros">
 <input id="km" placeholder="KM">
 <button class="btnSave" onclick="salvar()">Salvar</button>
 </div>
+
 <div id="lista"></div>
 </div>
-</div>
+
 <!-- ================= MOTORISTA ================= -->
 <div class="swipePage">
-<div id="tela_motorista" class="tela" style="display:block">
 <button onclick="toggleForm('formMotorista')" style="width:100%;background:#3b82f6">Novo</button>
 <div id="listaMotoristas"></div>
 <div id="formMotorista" class="card" style="display:none">
@@ -159,10 +205,9 @@ By Neto - bemprotegido.net
 <button onclick="salvarMotorista()">Salvar</button>
 </div>
 </div>
-</div>
+
 <!-- ================= VEÍCULO ================= -->
 <div class="swipePage">
-<div id="tela_veiculo" class="tela" style="display:block">
 <button onclick="toggleForm('formVeiculo')" style="width:100%;background:#3b82f6">Novo</button>
 <div id="listaVeiculos"></div>
 <div id="formVeiculo" class="card" style="display:none">
@@ -171,10 +216,9 @@ By Neto - bemprotegido.net
 <button onclick="salvarVeiculo()">Salvar</button>
 </div>
 </div>
-</div>
+
 <!-- ================= POSTO ================= -->
 <div class="swipePage">
-<div id="tela_posto" class="tela" style="display:block">
 <button onclick="toggleForm('formPosto')" style="width:100%;background:#3b82f6">Novo</button>
 <div id="listaPostos"></div>
 <div id="formPosto" class="card" style="display:none">
@@ -183,200 +227,8 @@ By Neto - bemprotegido.net
 <button onclick="salvarPosto()">Salvar</button>
 </div>
 </div>
-</div>
-</div>
-</div>
-
-<!-- MENU -->
-<div class="headerApp">
-<div class="menuTabs">
-<button onclick="abrirTela('combustivel')" title="Abastecimento">⛽</button>
-<button onclick="abrirTela('motorista')" title="Motoristas">👨‍🔧</button>
-<button onclick="abrirTela('veiculo')" title="Veículos">🚗</button>
-<button onclick="abrirTela('posto')" title="Postos">🏪</button>
-<button onclick="logout()" title="Sair" style="background:#dc2626">🚪</button>
-</div>
-</div>
-<!-- ========================= -->
-<!-- 🔥 TELA COMBUSTÍVEL -->
-<!-- ========================= -->
-<div id="tela_combustivel" class="tela">
-<div id="iaBox" class="card" style="display:none"></div>
-<div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="executarAutoRecorte()">🤖 Autorrecorte</button>
-<button onclick="capturaInteligente()" style="flex:1;background:#22c55e;color:#000;border-radius:10px;padding:10px">📲 Inteligente</button>
-<button onclick="abrirQR()" style="flex:1;background:#16a34a;color:#fff;border-radius:10px;padding:10px">🔳 QR</button>
-<button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff;border-radius:10px;padding:10px">📷 OCR</button>
-</div>
-  
-<!-- DASHBOARD -->
-<div class="card">
-<div onclick="toggleDash()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-<h3>📊 Dashboard do Veículo</h3>
-<span id="dashIcon">⬇️</span>
-</div>
-<div id="dashContent">
-<div id="kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div>
-<!-- 🔥 PESQUISAR PERÍODO -->
-<div style="display:flex;gap:6px;margin-top:6px">
-<input type="date" id="filtroInicio" style="flex:1">
-<input type="date" id="filtroFim" style="flex:1">
-<button onclick="aplicarFiltro()" style="background:#22c55e;color:#000;font-weight:600">Filtrar</button>
-</div>
-<!-- 🔥 GRÁFICOS PERÍODO -->
-<div style="display:flex;gap:6px;margin-top:6px">
-<button onclick="trocarGrafico('consumo')" style="flex:1;border-radius:10px;font-weight:600;background:#3b82f6">📈 Km/L</button>
-<button onclick="trocarGrafico('total')" style="flex:1;border-radius:10px;font-weight:600;background:#22c55e;color:#000">💰 Total</button>
-<button onclick="trocarGrafico('litros')" style="flex:1;border-radius:10px;font-weight:600;background:#f59e0b;color:#000">⛽ Litros</button>
-</div>
-<canvas id="graficoConsumo"></canvas>
-<canvas id="graficoGasto"></canvas>
-</div>
-</div>
-
-<!-- FORM -->
-<div class="card">
-<div class="field">
-<label>🚗 Veículo</label>
-<select id="veiculoSel"></select>
-</div>
-<div class="field">
-<label>📅 Data</label>
-<input id="data" type="date">
-<div class="field">
-<label>🧾 CNPJ</label>
-<input id="cnpjBusca" placeholder="00.000.000/0000-00" maxlength="18">
-</div>
-</div>
-<div class="field">
-<label>🏪 Posto</label>
-<input id="postoInput" placeholder="Digite ou selecione o posto">
-<input id="p_endereco_auto" placeholder="Endereço">
-<input id="p_numero_auto" placeholder="Número">
-<input id="p_uf_auto" placeholder="UF">
-<input id="p_cep_auto" placeholder="CEP">
-<select id="postoSel"></select>
-</div>
-<div class="field">
-<label>💰 Valor Total (R$)</label>
-<input id="valor" placeholder="Ex: 250,00">
-</div>
-<div class="field">
-<label>⛽ Litros</label>
-<input id="litros" placeholder="Ex: 40,50">
-</div>
-<div class="field">
-<label>💲 Valor por Litro</label>
-<input id="valor_litro" placeholder="Automático ou manual">
-</div>
-<div class="field">
-<label>📏 KM Atual</label>
-<input id="km" placeholder="Ex: 52340">
-</div>
-<div class="field">
-<label>⛽ Tipo de abastecimento</label>
-<select id="tanque">
-<option value="cheio">Tanque cheio</option>
-<option value="parcial">Parcial</option>
-</select>
-</div>
-<div class="field">
-<label>⛽ Combustível</label>
-<select id="combustivel_abastecimento">
-<option>Gasolina Comum</option>
-<option>Gasolina Aditivada</option>
-<option>Álcool</option>
-<option>Diesel</option>
-<option>GNV</option>
-</select>
-</div>
-<button class="btnSave" onclick="salvar()">Salvar Abastecimento</button>
-</div>
-
-<div id="lista"></div>
 
 </div>
-
-<!-- ========================= -->
-<!-- 👨 MOTORISTA -->
-<!-- ========================= -->
-<div id="tela_motorista" class="tela">
-
-<div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="toggleForm('formMotorista')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Motorista</button>
-</div>
-
-<!-- 🔥 LISTA (SEMPRE VISÍVEL) -->
-<div id="listaMotoristas"></div>
-
-<!-- 🔥 FORM (OCULTO) -->
-<div id="formMotorista" class="card" style="display:none;margin-top:10px">
-<input id="m_nome" placeholder="Nome do motorista">
-<input id="m_cpf" placeholder="CPF">
-<input id="m_tel" placeholder="Telefone">
-<button class="btnSave" onclick="salvarMotorista()">Salvar Motorista</button>
-<button onclick="cancelarMotorista()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
-</div>
-
-</div>
-<!-- ========================= -->
-<!-- 🚗 VEÍCULO -->
-<!-- ========================= -->
-<div id="tela_veiculo" class="tela">
-
-<div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="toggleForm('formVeiculo')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Veículo</button>
-</div>
-
-<!-- 🔥 LISTA -->
-<div id="listaVeiculos"></div>
-
-<!-- 🔥 FORM -->
-<div id="formVeiculo" class="card" style="display:none;margin-top:10px">
-<input id="v_placa" placeholder="Placa">
-<input id="v_marca" placeholder="Marca">
-<input id="v_modelo" placeholder="Modelo">
-<input id="v_ano" placeholder="Ano">
-<input id="v_cor" placeholder="Cor">
-<input id="v_renavam" placeholder="Renavam">
-<input id="v_combustivel" placeholder="Combustível principal">
-<input id="v_km" placeholder="KM atual">
-<label style="font-size:11px;color:#94a3b8">📅 Vencimento IPVA</label>
-<input id="v_ipva" type="date">
-<label style="font-size:11px;color:#94a3b8">📅 Licenciamento</label>
-<input id="v_licenciamento" type="date">
-<label style="font-size:11px;color:#94a3b8">👨‍🔧 Motorista</label>
-<select id="v_motorista"></select>
-<button class="btnSave" onclick="salvarVeiculo()">Salvar Veículo</button>
-<button onclick="cancelarVeiculo()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
-</div>
-
-</div>
-
-<!-- ========================= -->
-<!-- 🏪 POSTO -->
-<!-- ========================= -->
-<div id="tela_posto" class="tela">
-<div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="toggleForm('formPosto')" style="flex:1;background:#3b82f6;color:#fff">➕ Novo Posto</button>
-</div>
-<!-- 🔥 LISTA -->
-<div id="listaPostos"></div>
-<!-- 🔥 FORM -->
-<div id="formPosto" class="card" style="display:none;margin-top:10px">
-<input id="p_nome" placeholder="Nome do posto">
-<input id="p_cnpj" placeholder="CNPJ">
-<input id="p_cidade" placeholder="Cidade">
-<input id="p_endereco" placeholder="Endereço">
-<input id="p_numero" placeholder="Número">
-<input id="p_uf" placeholder="UF">
-<input id="p_cep" placeholder="CEP">
-<button class="btnSave" onclick="salvarPosto()">Salvar Posto</button>
-<button onclick="cancelarPosto()" style="background:#64748b;color:#fff;width:100%;margin-top:6px">Cancelar edição</button>
-</div>
-</div>
-
-
 </div>
 
 
