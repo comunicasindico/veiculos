@@ -6,6 +6,7 @@
 <title>Banco Comunica - Veículos PRO</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
 body{background:#020617;color:#fff}
@@ -43,6 +44,10 @@ button{padding:10px;border-radius:12px;border:none;cursor:pointer}
 <div id="kpis"></div>
 <canvas id="graficoConsumo"></canvas>
 <canvas id="graficoGasto"></canvas>
+<div class="card">
+<h3>Previsão IA</h3>
+<div id="previsao"></div>
+</div>
 </div>
 
 <!-- COMBUSTIVEL -->
@@ -54,6 +59,11 @@ button{padding:10px;border-radius:12px;border:none;cursor:pointer}
 <input id="litros" placeholder="Litros">
 <input id="km" placeholder="KM">
 <button class="btnSave" onclick="salvar()">Salvar</button>
+</div>
+<div class="card">
+<h3>OCR Recibo</h3>
+<input type="file" id="ocrFile" onchange="lerRecibo()">
+<div id="ocrResultado"></div>
 </div>
 <div id="lista"></div>
 </div>
@@ -76,6 +86,11 @@ button{padding:10px;border-radius:12px;border:none;cursor:pointer}
 <input id="p_cnpj" placeholder="CNPJ">
 <button class="btnSave" onclick="salvarPosto()">Salvar</button>
 </div>
+<div class="card">
+<h3>GPS Localização</h3>
+<button onclick="capturarGPS()">Capturar Localização</button>
+<div id="gpsInfo"></div>
+</div>
 </div>
 
 </div>
@@ -91,10 +106,10 @@ button{padding:10px;border-radius:12px;border:none;cursor:pointer}
 
 <script>
 const SUPABASE_URL="https://gspdlrenyrzbkxlvyugc.supabase.co"
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 let dados=[]
 let graficoConsumo,graficoGasto
+
 async function login(){
 let {data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value)
 if(!data.length)return alert("Usuário não encontrado")
@@ -110,6 +125,7 @@ await carregarTudo()
 render()
 }
 function logout(){localStorage.clear();location.reload()}
+
 async function carregarTudo(){
 let emp=localStorage.getItem("empresa")
 let a=await db.from("abastecimentos").select("*").eq("empresa_id",emp)
@@ -120,6 +136,7 @@ listaVeiculos.innerHTML=v.data.map(x=>`<div class="item">${x.modelo}</div>`).joi
 let p=await db.from("postos").select("*").eq("empresa_id",emp)
 listaPostos.innerHTML=p.data.map(x=>`<div class="item">${x.nome}</div>`).join("")
 }
+
 async function salvar(){
 await db.from("abastecimentos").insert({
 empresa_id:localStorage.getItem("empresa"),
@@ -132,6 +149,7 @@ km:parseFloat(km.value)||0
 await carregarTudo()
 render()
 }
+
 function render(){
 let html=""
 dados.forEach(d=>{html+=`<div class="item">${d.data} | R$ ${d.valor}</div>`})
@@ -146,40 +164,80 @@ kpisHTML+=`<div class="kpi"><span>R$/L</span><b>${media.toFixed(2)}</b></div>`
 kpis.innerHTML=kpisHTML
 if(graficoConsumo)graficoConsumo.destroy()
 if(graficoGasto)graficoGasto.destroy()
-graficoConsumo=new Chart(graficoConsumoEl,{type:"doughnut",data:{labels:["Litros"],datasets:[{data:[litros]}]}})
-graficoGasto=new Chart(graficoGastoEl,{type:"doughnut",data:{labels:["Valor"],datasets:[{data:[total]}]}})
+graficoConsumo=new Chart(graficoConsumo,{type:"doughnut",data:{labels:["Litros"],datasets:[{data:[litros]}]}})
+graficoGasto=new Chart(graficoGasto,{type:"doughnut",data:{labels:["Valor"],datasets:[{data:[total]}]}})
+// IA simples: previsão de gasto futuro
+let previsao=media*50 // exemplo: previsão para 50 litros
+previsaoEl=document.getElementById("previsao")
+previsaoEl.innerHTML=`Previsão próxima abastecida: R$ ${previsao.toFixed(2)}`
 }
+
 async function salvarVeiculo(){
-await db.from("veiculos").insert({
-empresa_id:localStorage.getItem("empresa"),
-placa:v_placa.value,
-modelo:v_modelo.value
-})
-v_placa.value="";v_modelo.value=""
-await carregarTudo()
+  await db.from("veiculos").insert({
+    empresa_id: localStorage.getItem("empresa"),
+    placa: v_placa.value,
+    modelo: v_modelo.value
+  })
+  v_placa.value=""; v_modelo.value=""
+  await carregarTudo()
 }
+
 async function salvarPosto(){
-await db.from("postos").insert({
-empresa_id:localStorage.getItem("empresa"),
-nome:p_nome.value,
-cnpj:p_cnpj.value
-})
-p_nome.value="";p_cnpj.value=""
-await carregarTudo()
+  await db.from("postos").insert({
+    empresa_id: localStorage.getItem("empresa"),
+    nome: p_nome.value,
+    cnpj: p_cnpj.value
+  })
+  p_nome.value=""; p_cnpj.value=""
+  await carregarTudo()
 }
+
+// OCR usando Tesseract.js
+async function lerRecibo(){
+  const file = ocrFile.files[0]
+  if(!file) return
+  const { data: { text } } = await Tesseract.recognize(file, 'por')
+  ocrResultado.innerHTML = "Texto reconhecido: " + text
+}
+
+// GPS
+function capturarGPS(){
+  if(!navigator.geolocation){
+    gpsInfo.innerHTML = "GPS não suportado neste dispositivo."
+    return
+  }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat = pos.coords.latitude
+    const lon = pos.coords.longitude
+    gpsInfo.innerHTML = `Latitude: ${lat}, Longitude: ${lon}`
+    // opcional: salvar no banco
+    db.from("postos").insert({
+      empresa_id: localStorage.getItem("empresa"),
+      nome: "Localização Capturada",
+      cnpj: "GPS",
+      latitude: lat,
+      longitude: lon
+    })
+  }, err=>{
+    gpsInfo.innerHTML = "Erro ao capturar localização: " + err.message
+  })
+}
+
 let currentPage=0
 function irParaPagina(i){
-if(i<0)i=0
-if(i>3)i=3
-currentPage=i
-swipeContainer.style.transform="translateX(-"+(i*100)+"vw)"
+  if(i<0) i=0
+  if(i>3) i=3
+  currentPage=i
+  swipeContainer.style.transform="translateX(-"+(i*100)+"vw)"
 }
+
 document.addEventListener("DOMContentLoaded",()=>{
-let d=new Date()
-d.setMinutes(d.getMinutes()-d.getTimezoneOffset())
-data.value=d.toISOString().slice(0,10)
-if(localStorage.getItem("empresa"))start()
+  let d=new Date()
+  d.setMinutes(d.getMinutes()-d.getTimezoneOffset())
+  data.value=d.toISOString().slice(0,10)
+  if(localStorage.getItem("empresa")) start()
 })
+
 </script>
 </body>
 </html>
