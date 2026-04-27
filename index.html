@@ -1,243 +1,106 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Banco Comunica - Veículos PRO</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
-body{background:#020617;color:#fff}
-body.login{background:url("img/bcveiculos.png") center/cover no-repeat fixed;display:flex;justify-content:center;align-items:center;height:100vh}
-#telaLogin{width:100%;max-width:420px;background:rgba(0,0,0,0.75);padding:24px;border-radius:22px;backdrop-filter:blur(20px)}
-#telaLogin input{width:100%;padding:14px;margin-top:10px;border-radius:12px;border:none;background:#111;color:#fff}
-#telaLogin button{width:100%;margin-top:12px;padding:14px;border-radius:12px;border:none;font-weight:bold}
-.btnEntrar{background:#C19A5B;color:#000}
-#app{display:none;width:100vw;height:100vh;overflow:hidden}
-#swipeContainer{display:flex;width:400vw;height:100vh;transition:.35s}
-.swipePage{width:100vw;height:100vh;overflow-y:auto;padding:14px}
-.card{background:rgba(15,23,42,0.85);padding:14px;border-radius:18px;margin-bottom:12px}
-input,select{width:100%;padding:12px;margin-top:6px;border-radius:12px;border:none;background:#1e293b;color:#fff}
-button{padding:10px;border-radius:12px;border:none;cursor:pointer}
-.btnSave{background:#22c55e;color:#000;width:100%}
-#menuHome{position:fixed;bottom:10px;width:100%;display:flex;justify-content:center;gap:8px}
-.btnFloat{width:60px;height:60px;border-radius:18px;background:#1e293b;color:#fff;font-size:22px}
-.btnSair{background:#dc2626}
-.item{background:#0f172a;padding:10px;border-radius:12px;margin-bottom:8px}
-.kpi{display:flex;justify-content:space-between;background:#020617;padding:10px;border-radius:12px;margin-bottom:8px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banco Comunica - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Montserrat',sans-serif}
+    body,html{height:100%;background-color:#000;display:flex;justify-content:center;align-items:center}
+    .background-overlay{position:fixed;top:0;left:0;width:100%;height:100%;
+      background:linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.8)), url('img/bcveiculos.png');
+      background-size:cover;background-position:center;z-index:-1}
+    .container{width:100%;max-width:400px;padding:20px;text-align:center}
+    .header{margin-bottom:40px;color:#fff}
+    .logo-box{display:inline-block;border:2px solid #C19A5B;padding:10px 15px;border-radius:8px;
+      font-size:32px;font-weight:bold;color:#C19A5B;margin-bottom:10px}
+    .brand-name{font-size:24px;letter-spacing:3px;line-height:1}
+    .brand-sub{font-size:26px;font-weight:700;color:#C19A5B;display:block}
+    .divider{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:5px}
+    .line{height:1px;width:40px;background-color:#C19A5B}
+    .divider span{font-size:10px;letter-spacing:5px}
+    .slogan{font-size:10px;margin-top:15px;letter-spacing:1px;text-transform:uppercase}
+    .slogan span{color:#C19A5B}
+    .login-card{background:rgba(18,18,18,0.85);backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,0.1);border-radius:25px;padding:30px;text-align:left}
+    .login-card h2{color:#fff;font-size:22px;margin-bottom:5px}
+    .login-card p{color:#aaa;font-size:13px;margin-bottom:25px}
+    .input-group{position:relative;margin-bottom:15px}
+    .input-group i{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#666}
+    .input-group input{width:100%;background:#121212;border:1px solid #333;border-radius:10px;
+      padding:15px 15px 15px 45px;color:#fff;outline:none}
+    .input-group .eye-icon{left:auto;right:15px;cursor:pointer}
+    .options{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:25px}
+    .remember{color:#aaa;display:flex;align-items:center;gap:5px}
+    .remember input{accent-color:#C19A5B}
+    .forgot{color:#C19A5B;text-decoration:none}
+    .btn-entrar{width:100%;background:#C19A5B;color:#000;border:none;padding:15px;border-radius:10px;
+      font-weight:bold;font-size:14px;cursor:pointer;transition:.3s}
+    .btn-entrar:hover{background:#d4ae6d}
+    .no-account{color:#fff;font-size:12px;text-align:center;margin:20px 0;display:block}
+    .btn-outline{width:100%;background:transparent;color:#C19A5B;border:1px solid #C19A5B;
+      padding:15px;border-radius:10px;font-weight:bold;font-size:14px;cursor:pointer;text-decoration:none;display:block;text-align:center}
+    .footer-security{margin-top:20px;color:#aaa;font-size:11px;display:flex;align-items:center;justify-content:center;gap:8px}
+    .footer-security i{color:#C19A5B}
+  </style>
 </head>
-<body class="login">
-<div id="telaLogin">
-<h2 style="text-align:center;color:#C19A5B">BANCO COMUNICA</h2>
-<input id="user" placeholder="Usuário">
-<input id="pass" type="password" placeholder="Senha">
-<button class="btnEntrar" onclick="login()">ENTRAR</button>
-</div>
-<div id="app">
-<div id="swipeContainer">
+<body>
+  <div class="background-overlay"></div>
+  <div class="container">
+    <div class="header">
+      <div class="logo-box">B</div>
+      <div class="brand-name">BANCO</div>
+      <div class="brand-sub">COMUNICA</div>
+      <div class="divider"><div class="line"></div><span>VEÍCULOS</span><div class="line"></div></div>
+      <p class="slogan">O BANCO QUE <span>MOVE</span> VOCÊ</p>
+    </div>
+    <div class="login-card">
+      <h2>Bem-vindo!</h2>
+      <p>Acesse sua conta para continuar</p>
+      <div class="input-group">
+        <i class="fa-regular fa-envelope"></i>
+        <input id="user" type="text" placeholder="E-mail ou CPF">
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-lock"></i>
+        <input id="pass" type="password" placeholder="Senha">
+        <i class="fa-regular fa-eye eye-icon" onclick="toggleSenha()"></i>
+      </div>
+      <div class="options">
+        <label class="remember"><input type="checkbox" checked> Lembrar meu acesso</label>
+        <a href="#" class="forgot">Esqueci minha senha</a>
+      </div>
+      <button class="btn-entrar" onclick="login()">ENTRAR</button>
+      <span class="no-account">Ainda não tem uma conta?</span>
+      <a href="#" class="btn-outline">CRIAR CONTA</a>
+    </div>
+    <div class="footer-security">
+      <i class="fa-solid fa-shield-halved"></i> Seus dados protegidos com segurança
+    </div>
+  </div>
 
-<!-- DASHBOARD -->
-<div class="swipePage">
-<div id="kpis"></div>
-<canvas id="graficoConsumo"></canvas>
-<canvas id="graficoGasto"></canvas>
-<div class="card">
-<h3>Previsão IA</h3>
-<div id="previsao"></div>
-</div>
-</div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://gspdlrenyrzbkxlvyugc.supabase.co";
+    const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-<!-- COMBUSTIVEL -->
-<div class="swipePage">
-<div class="card">
-<select id="veiculoSel"></select>
-<input id="data" type="date">
-<input id="valor" placeholder="Valor">
-<input id="litros" placeholder="Litros">
-<input id="km" placeholder="KM">
-<button class="btnSave" onclick="salvar()">Salvar</button>
-</div>
-<div class="card">
-<h3>OCR Recibo</h3>
-<input type="file" id="ocrFile" onchange="lerRecibo()">
-<div id="ocrResultado"></div>
-</div>
-<div id="lista"></div>
-</div>
-
-<!-- VEICULOS -->
-<div class="swipePage">
-<div id="listaVeiculos"></div>
-<div class="card">
-<input id="v_placa" placeholder="Placa">
-<input id="v_modelo" placeholder="Modelo">
-<button class="btnSave" onclick="salvarVeiculo()">Salvar</button>
-</div>
-</div>
-
-<!-- POSTOS -->
-<div class="swipePage">
-<div id="listaPostos"></div>
-<div class="card">
-<input id="p_nome" placeholder="Nome">
-<input id="p_cnpj" placeholder="CNPJ">
-<button class="btnSave" onclick="salvarPosto()">Salvar</button>
-</div>
-<div class="card">
-<h3>GPS Localização</h3>
-<button onclick="capturarGPS()">Capturar Localização</button>
-<div id="gpsInfo"></div>
-</div>
-</div>
-
-</div>
-
-<div id="menuHome">
-<button class="btnFloat" onclick="irParaPagina(0)">📊</button>
-<button class="btnFloat" onclick="irParaPagina(1)">⛽</button>
-<button class="btnFloat" onclick="irParaPagina(2)">🚗</button>
-<button class="btnFloat" onclick="irParaPagina(3)">🏪</button>
-<button class="btnFloat btnSair" onclick="logout()">🚪</button>
-</div>
-</div>
-
-<script>
-const SUPABASE_URL="https://gspdlrenyrzbkxlvyugc.supabase.co"
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
-let dados=[]
-let graficoConsumo,graficoGasto
-
-async function login(){
-let {data}=await db.from("usuarios").select("*").eq("usuario_apelido",user.value)
-if(!data.length)return alert("Usuário não encontrado")
-if(data[0].senha_hash!==pass.value)return alert("Senha incorreta")
-localStorage.setItem("empresa",data[0].empresa_id)
-start()
-}
-async function start(){
-document.body.classList.remove("login")
-telaLogin.style.display="none"
-app.style.display="block"
-await carregarTudo()
-render()
-}
-function logout(){localStorage.clear();location.reload()}
-
-async function carregarTudo(){
-let emp=localStorage.getItem("empresa")
-let a=await db.from("abastecimentos").select("*").eq("empresa_id",emp)
-dados=a.data||[]
-let v=await db.from("veiculos").select("*").eq("empresa_id",emp)
-veiculoSel.innerHTML=v.data.map(x=>`<option value="${x.id}">${x.modelo}</option>`).join("")
-listaVeiculos.innerHTML=v.data.map(x=>`<div class="item">${x.modelo}</div>`).join("")
-let p=await db.from("postos").select("*").eq("empresa_id",emp)
-listaPostos.innerHTML=p.data.map(x=>`<div class="item">${x.nome}</div>`).join("")
-}
-
-async function salvar(){
-await db.from("abastecimentos").insert({
-empresa_id:localStorage.getItem("empresa"),
-veiculo_id:veiculoSel.value,
-data:data.value,
-valor:parseFloat(valor.value)||0,
-litros:parseFloat(litros.value)||0,
-km:parseFloat(km.value)||0
-})
-await carregarTudo()
-render()
-}
-
-function render(){
-let html=""
-dados.forEach(d=>{html+=`<div class="item">${d.data} | R$ ${d.valor}</div>`})
-lista.innerHTML=html
-let total=0,litros=0
-dados.forEach(d=>{total+=d.valor;litros+=d.litros})
-let media=litros?total/litros:0
-let kpisHTML=""
-kpisHTML+=`<div class="kpi"><span>Total Gasto</span><b>R$ ${total.toFixed(2)}</b></div>`
-kpisHTML+=`<div class="kpi"><span>Total Litros</span><b>${litros.toFixed(2)}</b></div>`
-kpisHTML+=`<div class="kpi"><span>R$/L</span><b>${media.toFixed(2)}</b></div>`
-kpis.innerHTML=kpisHTML
-if(graficoConsumo)graficoConsumo.destroy()
-if(graficoGasto)graficoGasto.destroy()
-graficoConsumo=new Chart(graficoConsumo,{type:"doughnut",data:{labels:["Litros"],datasets:[{data:[litros]}]}})
-graficoGasto=new Chart(graficoGasto,{type:"doughnut",data:{labels:["Valor"],datasets:[{data:[total]}]}})
-// IA simples: previsão de gasto futuro
-let previsao=media*50 // exemplo: previsão para 50 litros
-previsaoEl=document.getElementById("previsao")
-previsaoEl.innerHTML=`Previsão próxima abastecida: R$ ${previsao.toFixed(2)}`
-}
-
-async function salvarVeiculo(){
-  await db.from("veiculos").insert({
-    empresa_id: localStorage.getItem("empresa"),
-    placa: v_placa.value,
-    modelo: v_modelo.value
-  })
-  v_placa.value=""; v_modelo.value=""
-  await carregarTudo()
-}
-
-async function salvarPosto(){
-  await db.from("postos").insert({
-    empresa_id: localStorage.getItem("empresa"),
-    nome: p_nome.value,
-    cnpj: p_cnpj.value
-  })
-  p_nome.value=""; p_cnpj.value=""
-  await carregarTudo()
-}
-
-// OCR usando Tesseract.js
-async function lerRecibo(){
-  const file = ocrFile.files[0]
-  if(!file) return
-  const { data: { text } } = await Tesseract.recognize(file, 'por')
-  ocrResultado.innerHTML = "Texto reconhecido: " + text
-}
-
-// GPS
-function capturarGPS(){
-  if(!navigator.geolocation){
-    gpsInfo.innerHTML = "GPS não suportado neste dispositivo."
-    return
-  }
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const lat = pos.coords.latitude
-    const lon = pos.coords.longitude
-    gpsInfo.innerHTML = `Latitude: ${lat}, Longitude: ${lon}`
-    // opcional: salvar no banco
-    db.from("postos").insert({
-      empresa_id: localStorage.getItem("empresa"),
-      nome: "Localização Capturada",
-      cnpj: "GPS",
-      latitude: lat,
-      longitude: lon
-    })
-  }, err=>{
-    gpsInfo.innerHTML = "Erro ao capturar localização: " + err.message
-  })
-}
-
-let currentPage=0
-function irParaPagina(i){
-  if(i<0) i=0
-  if(i>3) i=3
-  currentPage=i
-  swipeContainer.style.transform="translateX(-"+(i*100)+"vw)"
-}
-
-document.addEventListener("DOMContentLoaded",()=>{
-  let d=new Date()
-  d.setMinutes(d.getMinutes()-d.getTimezoneOffset())
-  data.value=d.toISOString().slice(0,10)
-  if(localStorage.getItem("empresa")) start()
-})
-
-</script>
+    async function login(){
+      const usuario = document.getElementById("user").value;
+      const senha = document.getElementById("pass").value;
+      let { data, error } = await db.from("usuarios").select("*").eq("usuario_apelido", usuario);
+      if(error){ alert("Erro de conexão: "+error.message); return; }
+      if(!data.length){ alert("Usuário não encontrado"); return; }
+      if(data[0].senha_hash !== senha){ alert("Senha incorreta"); return; }
+      localStorage.setItem("empresa", data[0].empresa_id);
+      window.location.href = "app.html";
+    }
+    function toggleSenha(){
+      const campo = document.getElementById("pass");
+      campo.type = campo.type === "password" ? "text" : "password";
+    }
+  </script>
 </body>
 </html>
