@@ -849,6 +849,7 @@ return x[2]+"/"+x[1]
 
 /* 006 LOGIN */
 async function login(){
+
 let usuario=(user.value||"").trim()
 let senha=(pass.value||"").trim()
 
@@ -857,12 +858,10 @@ alert("Informe usuário e senha")
 return
 }
 
-/* 🔥 BUSCA ÚNICA E SEGURA */
 let {data,error}=await db
 .from("usuarios")
 .select("*")
 .eq("usuario_apelido",usuario)
-.limit(1)
 .single()
 
 if(error || !data){
@@ -875,13 +874,13 @@ alert("Senha incorreta")
 return
 }
 
-/* 🔥 SESSÃO SEGURA */
+/* 🔐 SESSÃO CORRETA */
 localStorage.setItem("empresa",data.empresa_id)
 localStorage.setItem("usuario_id",data.id)
 localStorage.setItem("user",data.usuario_apelido)
 
-/* 🔥 ENTRA NO APP */
 init()
+
 }
 
 /* 007 INIT */
@@ -924,8 +923,8 @@ async function carregarTudo(){
 let emp=localStorage.getItem("empresa")
 let uid=localStorage.getItem("usuario_id")
 
-if(!emp||!uid){
-console.error("❌ sessão inválida")
+if(!emp){
+console.error("❌ sem empresa")
 return
 }
 
