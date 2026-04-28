@@ -1028,11 +1028,29 @@ let v=Array.isArray(veiculos)?veiculos:[]
 
 /* SELECT VEÍCULO */
 if(selVeiculo){
-selVeiculo.innerHTML=v.length
-?v.map(x=>`<option value="${x.id}">${x.modelo||x.placa||"Veículo"}</option>`).join("")
-:`<option value="">Nenhum veículo</option>`
-}
+if(v.length){
 
+selVeiculo.innerHTML=v.map(x=>
+`<option value="${x.id}">${x.modelo||x.placa||"Veículo"}</option>`
+).join("")
+
+/* 🔥 FORÇA SELEÇÃO REAL */
+selVeiculo.value=v[0].id
+VID=v[0].id
+
+}else{
+selVeiculo.innerHTML=`<option value="">⚠️ Sem veículo</option>`
+VID=null
+}
+}
+/* 🔥 EXTRA 1 - COLE AQUI */
+if(selVeiculo && !selVeiculo._bind){
+selVeiculo.addEventListener("change",()=>{
+VID=selVeiculo.value
+render()
+})
+selVeiculo._bind=true
+}
 /* DEFINE VID CORRETO */
 if(v.length){
 VID=v[0].id
@@ -1066,7 +1084,21 @@ render()
 console.warn("⚠️ sem veículo")
 }
 },100)
+if(!v.length){
+console.warn("🚗 criando veículo padrão...")
 
+let {data:novo}=await db.from("veiculos").insert({
+empresa_id:emp,
+placa:"AAA0000",
+modelo:"Veículo Inicial"
+}).select().single()
+
+if(novo){
+VID=novo.id
+await carregarTudo()
+return
+}
+}
 }
 
 async function garantirPosto(){
@@ -1188,11 +1220,20 @@ renderIA(data)
 
 /* 011 RENDER */
 async function render(){
-if(!VID)return
+
 if(!db)return
+
 let vs=document.getElementById("veiculoSel")
+
+/* 🔥 ATUALIZA VID PRIMEIRO */
 if(vs && vs.value){
 VID=vs.value
+}
+
+/* 🔥 AGORA SIM VALIDA */
+if(!VID || VID===""){
+console.warn("⚠️ VID inválido",VID)
+return
 }
 
 let listaEl=document.getElementById("lista")
