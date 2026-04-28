@@ -947,7 +947,7 @@ let {data:motoristas,error:e1}=await db
 .from("motoristas")
 .select("*")
 .eq("empresa_id",emp)
-.eq("usuario_id",uid)
+if(uid){ query=query.eq("usuario_id",uid) }
 
 if(e1){
 console.error("motoristas erro:",e1)
@@ -988,7 +988,7 @@ let {data:postos,error:e2}=await db
 .from("postos")
 .select("*")
 .eq("empresa_id",emp)
-.eq("usuario_id",uid)
+if(uid){ query=query.eq("usuario_id",uid) }
 
 if(e2){
 console.error("postos erro:",e2)
@@ -1021,7 +1021,9 @@ let {data:veiculos,error:e3}=await db
 .from("veiculos")
 .select("*")
 .eq("empresa_id",emp)
-.eq("usuario_id",uid)
+if(uid){
+query=query.eq("usuario_id",uid)
+}
 
 if(e3){
 console.error("veiculos erro:",e3)
