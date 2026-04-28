@@ -687,51 +687,55 @@ setTimeout(()=>render(),50)
 }
 
 async function salvar(){
-let hoje=new Date()
-let offset=hoje.getTimezoneOffset()
-hoje=new Date(hoje.getTime()-offset*60000)
-if(!data.value)data.value=hoje.toISOString().slice(0,10)
-if(!VID)return alert("Selecione um veículo")
 let emp=EMP()
 let uid=UID()
-if(!uid)return alert("Sessão inválida")
-let nomeDigitado=(postoInput?.value||"").trim()
-let postoId=null
-if(nomeDigitado){
-let {data:existente}=await db.from("postos").select("*").ilike("nome_posto","%"+nomeDigitado+"%").eq("empresa_id",emp).limit(1)
-if(existente&&existente.length){
-postoId=existente[0].id
-}else{
-let {data:novo}=await db.from("postos").insert({empresa_id:emp,nome_posto:nomeDigitado,cnpj:p_cnpj.value||null}).select().single()
-if(novo){postoId=novo.id;await carregarTudo()}
-}
-}
+if(!emp||!uid)return alert("Sessão inválida")
+if(!VID)return alert("Selecione veículo")
+
 let v_total=parseFloat(valor.value)||0
 let v_litros=parseFloat(litros.value)||0
 let v_km=parseFloat(km.value)||0
 let v_data=data.value
-let tipo=tanque?.value||"cheio"
+
 if(!v_data)return alert("Informe data")
 if(v_total<=0)return alert("Valor inválido")
 if(v_litros<=0)return alert("Litros inválido")
-let v_valorLitro=parseFloat(valor_litro.value)|| (v_total/v_litros)
-let {error}=await db.from("abastecimentos").insert({
+
+let v_valorLitro=v_litros>0?(v_total/v_litros):0
+
+/* 🔥 MONTA OBJETO LIMPO */
+let payload={
 empresa_id:emp,
-usuario_id:uid,
 veiculo_id:VID,
-posto_id:postoId,
-valor_total:parseFloat(v_total.toFixed(2)),
-litros:parseFloat(v_litros.toFixed(3)),
+valor_total:v_total,
+litros:v_litros,
 quilometragem:v_km,
-data_abastecimento:v_data,
-valor_litro:parseFloat(v_valorLitro.toFixed(3)),
-tanque:tipo
-})
-if(error)return alert("Erro ao salvar")
+data_abastecimento:v_data
+}
+
+/* 🔥 CAMPOS OPCIONAIS (SÓ ENVIA SE EXISTIR) */
+if(uid)payload.usuario_id=uid
+if(postoSel && postoSel.value)payload.posto_id=postoSel.value
+if(v_valorLitro)payload.valor_litro=v_valorLitro
+if(tanque && tanque.value)payload.tanque=tanque.value
+
+console.log("📦 INSERT:",payload)
+
+/* 🔥 EXECUTA */
+let {error}=await db.from("abastecimentos").insert(payload)
+
+if(error){
+console.error("❌ ERRO SUPABASE:",error)
+alert("Erro ao salvar: "+error.message)
+return
+}
+
+alert("✅ Salvo com sucesso")
+
 valor.value=""
 litros.value=""
 km.value=""
-alert("✅ Salvo")
+
 render()
 }
 
