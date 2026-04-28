@@ -453,6 +453,14 @@ color:#fff;
 <input id="m_nome">
 <input id="m_cpf">
 <input id="m_tel">
+<div class="field">
+<label>CNH</label>
+<input id="m_cnh">
+</div>
+<div class="field">
+<label>E-mail</label>
+<input id="m_email" type="email">
+</div>
 <button class="btnSave" onclick="salvarMotorista()">Salvar</button>
 <button onclick="cancelarMotorista()">Cancelar</button>
 </div>
@@ -598,7 +606,17 @@ motoristas.forEach(x=>mapMotoristas[x.id]=x.nome)
 
 if(elMotoristas){
 elMotoristas.innerHTML=motoristas.length
-?motoristas.map(x=>`<div class="item"><div class="itemContent"><b>${x.nome||"-"}</b></div></div>`).join("")
+?motoristas.map(x=>`<div class="item">
+<div class="itemContent">
+<div><b>${x.nome||"-"}</b></div>
+<div style="font-size:11px;color:#94a3b8">
+CNH: ${x.cnh||"-"} | Tel: ${x.telefone||"-"}
+</div>
+<div style="font-size:11px;color:#94a3b8">
+Email: ${x.email||"-"}
+</div>
+</div>
+</div>`).join("")
 :`<div class="item">Nenhum motorista</div>`
 }
 
@@ -844,26 +862,57 @@ window.editAbastecimentoId=null
 /* 🔥 MOTORISTA */
 async function salvarMotorista(){
 let emp=EMP()
+
 let nome=(m_nome.value||"").trim()
-if(!nome)return alert("Informe nome")
-let payload={empresa_id:emp,nome:nome,telefone:(m_tel.value||""),cpf:(m_cpf?.value||"")}
+let tel=(m_tel.value||"").trim()
+let cpf=(m_cpf?.value||"").trim()
+let cnh=(m_cnh?.value||"").trim()
+let email=(m_email?.value||"").trim()
+
+if(!nome)return alert("Informe o nome")
+
+let payload={
+empresa_id:emp,
+nome:nome,
+telefone:tel,
+cpf:cpf,
+cnh:cnh,
+email:email
+}
+
 let error=null
+
 if(window.editMotoristaId){
-({error}=await db.from("motoristas").update(payload).eq("id",window.editMotoristaId).eq("empresa_id",emp))
+({error}=await db
+.from("motoristas")
+.update(payload)
+.eq("id",window.editMotoristaId)
+.eq("empresa_id",emp))
 window.editMotoristaId=null
 }else{
 ({error}=await db.from("motoristas").insert(payload))
 }
-if(error)return alert("Erro")
+
+if(error){
+console.error(error)
+return alert("Erro ao salvar motorista")
+}
+
+alert("✅ Motorista salvo")
+
 cancelarMotorista()
 await carregarTudo()
 }
 
-function editarMotorista(id,nome,tel,cpf){
+function editarMotorista(id,nome,tel,cpf,cnh,email){
 window.editMotoristaId=id
+
 m_nome.value=nome||""
 m_tel.value=tel||""
 if(m_cpf)m_cpf.value=cpf||""
+if(m_cnh)m_cnh.value=cnh||""
+if(m_email)m_email.value=email||""
+
 document.getElementById("formMotorista").style.display="block"
 document.getElementById("listaMotoristas").style.display="none"
 }
@@ -875,6 +924,8 @@ window.editMotoristaId=null
 m_nome.value=""
 m_tel.value=""
 if(m_cpf)m_cpf.value=""
+if(m_cnh)m_cnh.value=""
+if(m_email)m_email.value=""
 }
 
 /* 🔥 VEÍCULO */
