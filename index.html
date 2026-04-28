@@ -722,7 +722,10 @@ let selVeiculo=document.getElementById("veiculoSel")
 
 /* 🔥 MOTORISTAS */
 let m=[]
-let {data:motoristas,error:e1}=await db.from("motoristas").select("*")
+let {data:motoristas,error:e1}=await db
+.from("motoristas")
+.select("*")
+.eq("empresa_id",emp)
 if(e1){console.error("motoristas erro:",e1);motoristas=[]}
 motoristas=(motoristas||[]).filter(x=>x.empresa_id===emp)
 m=Array.isArray(motoristas)?motoristas:[]
