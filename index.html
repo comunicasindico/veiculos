@@ -66,42 +66,86 @@ const SUPABASE_URL = "https://gspdlrenyrzbkxlvyugc.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI";
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* LOGIN */
+/* LOGIN CORRIGIDO E ESTÁVEL */
 async function login(){
-let u=user.value.trim()
-let s=pass.value.trim()
 
-let {data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",u)
+let usuario=(document.getElementById("user").value||"").trim()
+let senha=(document.getElementById("pass").value||"").trim()
 
-if(error){alert("Erro conexão");return}
-if(!data||!data.length){alert("Usuário não encontrado");return}
+if(!usuario||!senha){
+alert("Informe usuário e senha")
+return
+}
 
+let {data,error}=await db
+.from("usuarios")
+.select("*")
+.eq("usuario_apelido",usuario)
+
+if(error){
+console.error(error)
+alert("Erro conexão")
+return
+}
+
+if(!data||!data.length){
+alert("Usuário não encontrado")
+return
+}
+
+/* 🔥 evita erro com múltiplos registros */
 let userDB=data[0]
 
-if(userDB.senha_hash!==s){alert("Senha incorreta");return}
+if(userDB.senha_hash!==senha){
+alert("Senha incorreta")
+return
+}
 
-localStorage.setItem("empresa",userDB.empresa_id)
+/* 🔥 SALVA SESSÃO COMPLETA */
+localStorage.setItem("empresa",userDB.empresa_id||"")
+localStorage.setItem("usuario",userDB.usuario_apelido||"")
+localStorage.setItem("login_time",Date.now())
 
+/* 🔥 LIBERA APP */
 document.body.classList.remove("login")
-telaLogin.style.display="none"
-app.style.display="block"
+document.getElementById("telaLogin").style.display="none"
+document.getElementById("app").style.display="block"
 
-init()
+/* 🔥 GARANTE QUE NÃO QUEBRE */
+if(typeof init==="function"){
+await init()
+}else{
+console.warn("init() não encontrada")
+}
+
 }
 
 /* INIT */
 async function init(){
 await carregarVeiculos()
-render()
+await render()
 }
 
 /* VEÍCULOS */
 async function carregarVeiculos(){
 let emp=localStorage.getItem("empresa")
 
-let {data}=await db.from("veiculos").select("*").eq("empresa_id",emp)
+let {data,error}=await db
+.from("veiculos")
+.select("*")
+.eq("empresa_id",emp)
 
-veiculoSel.innerHTML=data.map(v=>`<option value="${v.id}">${v.modelo}</option>`).join("")
+if(error){
+console.error("Erro veículos:",error)
+veiculoSel.innerHTML="<option>Erro</option>"
+return
+}
+
+if(!data)data=[]
+
+veiculoSel.innerHTML=data.length
+?data.map(v=>`<option value="${v.id}">${v.modelo||"-"}</option>`).join("")
+:"<option>Nenhum veículo</option>"
 }
 
 /* SALVAR */
@@ -109,24 +153,28 @@ async function salvar(){
 
 let emp=localStorage.getItem("empresa")
 
-let v={
+let payload={
 empresa_id:emp,
 veiculo_id:veiculoSel.value,
-data_abastecimento:data.value,
+data_abastecimento:document.getElementById("data").value,
 valor_total:parseFloat(valor.value)||0,
 litros:parseFloat(litros.value)||0,
 quilometragem:parseFloat(km.value)||0
 }
 
-let {error}=await db.from("abastecimentos").insert(v)
+let {error}=await db.from("abastecimentos").insert(payload)
 
-if(error){alert("Erro");console.log(error);return}
+if(error){
+console.error("Erro salvar:",error)
+alert("Erro ao salvar")
+return
+}
 
 valor.value=""
 litros.value=""
 km.value=""
 
-render()
+await render()
 }
 
 /* RENDER */
@@ -140,15 +188,20 @@ let {data,error}=await db
 .eq("empresa_id",emp)
 .order("data_abastecimento",{ascending:false})
 
-if(error){console.log(error);return}
+if(error){
+console.error("Erro render:",error)
+return
+}
+
+if(!data)data=[]
 
 lista.innerHTML=data.map(a=>`
 <div class="card">
-<b>${a.data_abastecimento}</b><br>
-R$ ${a.valor_total} | ${a.litros}L | KM ${a.quilometragem}
+<b>${a.data_abastecimento||"-"}</b><br>
+R$ ${(a.valor_total||0).toFixed(2)} | ${(a.litros||0)}L | KM ${(a.quilometragem||0)}
 </div>`).join("")
 
-renderDashboard(data)
+renderDashboard([...data]) /* clone pra não inverter lista */
 }
 
 /* DASHBOARD */
@@ -162,10 +215,10 @@ let labels=[]
 let valores=[]
 
 data.reverse().forEach(d=>{
-total+=d.valor_total||0
-litros+=d.litros||0
-labels.push(d.data_abastecimento)
-valores.push(d.valor_total)
+total+=parseFloat(d.valor_total||0)
+litros+=parseFloat(d.litros||0)
+labels.push(d.data_abastecimento||"")
+valores.push(d.valor_total||0)
 })
 
 kpis.innerHTML=`
@@ -177,8 +230,23 @@ if(chart)chart.destroy()
 
 chart=new Chart(grafico,{
 type:"line",
-data:{labels:labels,datasets:[{data:valores,borderColor:"#facc15"}]},
-options:{plugins:{legend:{display:false}}}
+data:{
+labels:labels,
+datasets:[{
+data:valores,
+borderColor:"#facc15",
+backgroundColor:"rgba(250,204,21,0.2)",
+fill:true,
+tension:.3
+}]
+},
+options:{
+plugins:{legend:{display:false}},
+scales:{
+y:{ticks:{color:"#94a3b8"}},
+x:{ticks:{color:"#94a3b8"}}
+}
+}
 })
 }
 
@@ -190,8 +258,15 @@ location.reload()
 
 /* START */
 document.addEventListener("DOMContentLoaded",()=>{
-let hoje=new Date().toISOString().slice(0,10)
-data.value=hoje
+
+let inputData=document.getElementById("data")
+
+if(inputData){
+let hoje=new Date()
+let offset=hoje.getTimezoneOffset()
+hoje=new Date(hoje.getTime()-offset*60000)
+inputData.value=hoje.toISOString().slice(0,10)
+}
 
 if(localStorage.getItem("empresa")){
 document.body.classList.remove("login")
@@ -199,6 +274,7 @@ telaLogin.style.display="none"
 app.style.display="block"
 init()
 }
+
 })
 
 </script>
