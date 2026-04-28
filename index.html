@@ -988,12 +988,6 @@ let {data:postos,error:e2}=await db
 .from("postos")
 .select("*")
 .eq("empresa_id",emp)
-if(uid){ query=query.eq("usuario_id",uid) }
-
-if(e2){
-console.error("postos erro:",e2)
-postos=[]
-}
 
 let p=Array.isArray(postos)?postos:[]
 
