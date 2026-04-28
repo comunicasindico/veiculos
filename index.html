@@ -1,207 +1,280 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Banco Comunica Veículos PRO</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0">
+    <title>Banco Comunica - Gestão PRO</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <style>
+        :root { --gold: #facc15; --bg: #020617; --card: rgba(30, 41, 59, 0.7); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: #fff; overflow: hidden; height: 100vh; }
+        
+        /* LOGIN */
+        #login-screen { position: fixed; inset: 0; background: url("img/bcveiculos.png") center/cover; display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .login-box { background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(10px); padding: 30px; border-radius: 20px; border: 2px solid var(--gold); width: 90%; max-width: 350px; text-align: center; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 16px; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--gold); color: #000; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.95); }
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        /* APP STRUCTURE */
+        #app { display: none; height: 100vh; }
+        #header { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #1e293b; background: var(--bg); }
+        #pages { display: flex; width: 500%; height: calc(100vh - 130px); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .page { width: 20%; padding: 15px; overflow-y: auto; }
+        
+        /* UI ELEMENTS */
+        .card { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid #1e293b; margin-bottom: 15px; }
+        .kpi-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .kpi { text-align: center; background: #1e293b; padding: 10px; border-radius: 10px; border-bottom: 3px solid var(--gold); }
+        .kpi small { font-size: 10px; color: var(--gold); text-transform: uppercase; }
+        .kpi b { display: block; font-size: 18px; }
+        
+        /* NAV */
+        #nav { position: fixed; bottom: 0; width: 100%; height: 70px; display: flex; background: #0f172a; border-top: 1px solid #1e293b; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: #64748b; background: none; border: none; }
+        .nav-item.active { color: var(--gold); }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-body{background:#020617;color:#fff}
-#login{position:fixed;width:100%;height:100%;background:url("img/bcveiculos.png") center/cover;display:flex;justify-content:center;align-items:center}
-.loginBox{background:rgba(0,0,0,.7);padding:30px;border-radius:16px;width:320px}
-.loginBox input{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none;background:#111;color:#fff}
-.loginBox button{width:100%;margin-top:10px;padding:12px;border:none;border-radius:10px;background:#facc15;color:#000;font-weight:bold}
-
-#app{display:none;height:100vh}
-#header{height:50px;background:#020617;border-bottom:2px solid #facc15;display:flex;align-items:center;justify-content:space-between;padding:0 15px}
-#pages{display:flex;height:calc(100vh - 110px);transition:.3s}
-.page{width:100vw;padding:10px;overflow-y:auto}
-#nav{position:fixed;bottom:0;width:100%;display:flex;background:#020617;border-top:2px solid #facc15}
-#nav button{flex:1;padding:10px;background:none;border:none;color:#fff}
-
-.card{background:#111;padding:15px;border-radius:12px;margin-bottom:10px}
-.kpi{display:flex;justify-content:space-between;margin-bottom:10px}
-input,select{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:none;background:#1e293b;color:#fff}
-.btn{background:#22c55e;color:#000;padding:10px;border-radius:8px;border:none;margin-top:10px;width:100%}
-</style>
+        /* LOADING OCR */
+        #ocr-status { font-size: 12px; color: var(--gold); margin-top: 5px; display: none; }
+    </style>
 </head>
-
 <body>
 
-<div id="login">
-<div class="loginBox">
-<h3>Login</h3>
-<input id="email" placeholder="Email">
-<input id="senha" type="password" placeholder="Senha">
-<button onclick="login()">Entrar</button>
-</div>
+<div id="login-screen">
+    <div class="login-box">
+        <h2 style="color:var(--gold); margin-bottom: 20px;">BANCO COMUNICA</h2>
+        <input id="email" type="email" placeholder="Usuário/Email">
+        <input id="senha" type="password" placeholder="Senha">
+        <button onclick="handleLogin()">ENTRAR NO SISTEMA</button>
+    </div>
 </div>
 
 <div id="app">
-<div id="header">
-<span>Banco Comunica</span>
-<button onclick="logout()">Sair</button>
-</div>
+    <div id="header">
+        <b style="color:var(--gold)">AUDITORIA DE FROTA</b>
+        <span id="user-name" style="font-size: 12px;">Auditando...</span>
+    </div>
 
-<div id="pages">
+    <div id="pages">
+        <!-- TELA 1: DASHBOARD -->
+        <div class="page">
+            <div class="kpi-row">
+                <div class="kpi"><small>Total KM</small><b id="kpi-km">0</b></div>
+                <div class="kpi"><small>Média Efic.</small><b id="kpi-kml">0.0</b></div>
+                <div class="kpi"><small>Gasto Total</small><b id="kpi-custo">0</b></div>
+            </div>
+            <div class="card">
+                <canvas id="mainChart" style="height: 250px;"></canvas>
+            </div>
+        </div>
 
-<!-- DASHBOARD -->
-<div class="page">
-<div class="card">
-<div class="kpi"><span>Total KM</span><b id="kpiKm">0</b></div>
-<div class="kpi"><span>KM/L</span><b id="kpiKml">0</b></div>
-<div class="kpi"><span>Litros</span><b id="kpiLitros">0</b></div>
-</div>
-<canvas id="chart"></canvas>
-</div>
+        <!-- TELA 2: ABASTECIMENTO + OCR -->
+        <div class="page">
+            <div class="card">
+                <h3 style="color:var(--gold); margin-bottom:10px;">Novo Abastecimento</h3>
+                <button onclick="triggerOCR()" style="background:#1e293b; color:var(--gold); border: 1px solid var(--gold); margin-bottom: 10px;">
+                    📷 LER CUPOM FISCAL (OCR)
+                </button>
+                <div id="ocr-status">Processando cupom... aguarde.</div>
+                <select id="f-veiculo"></select>
+                <input id="f-data" type="date">
+                <input id="f-valor" type="number" step="0.01" placeholder="Valor Total R$">
+                <input id="f-litros" type="number" step="0.01" placeholder="Quantidade Litros">
+                <input id="f-km" type="number" placeholder="KM Atual do Painel">
+                <button onclick="salvarAbastecimento()" style="background:#22c55e; color:#000;">SALVAR REGISTRO</button>
+            </div>
+            <div id="lista-abastecimentos"></div>
+        </div>
 
-<!-- ABAST -->
-<div class="page">
-<div class="card">
-<select id="veiculoSel"></select>
-<input id="data" type="date">
-<input id="valor" placeholder="Valor">
-<input id="litros" placeholder="Litros">
-<input id="km" placeholder="KM">
-<button class="btn" onclick="salvar()">Salvar</button>
-</div>
-<div id="lista"></div>
-</div>
+        <!-- TELA 3: MOTORISTAS -->
+        <div class="page">
+            <div class="card">
+                <input id="m-nome" placeholder="Nome do Motorista">
+                <input id="m-cpf" placeholder="CPF">
+                <input id="m-cnh" placeholder="Número CNH">
+                <button onclick="salvarMotorista()">ADICIONAR MOTORISTA</button>
+            </div>
+            <div id="lista-motoristas"></div>
+        </div>
 
-<!-- VEICULOS -->
-<div class="page">
-<div class="card">
-<input id="placa" placeholder="Placa">
-<input id="modelo" placeholder="Modelo">
-<button class="btn" onclick="salvarVeiculo()">Salvar</button>
-</div>
-<div id="listaVeiculos"></div>
-</div>
+        <!-- TELA 4: VEÍCULOS -->
+        <div class="page">
+            <div class="card">
+                <input id="v-placa" placeholder="Placa">
+                <input id="v-modelo" placeholder="Modelo">
+                <input id="v-renavam" placeholder="Renavam">
+                <button onclick="salvarVeiculo()">ADICIONAR VEÍCULO</button>
+            </div>
+            <div id="lista-veiculos"></div>
+        </div>
 
-<!-- POSTOS -->
-<div class="page">
-<div class="card">
-<input id="nomePosto" placeholder="Nome">
-<button class="btn" onclick="salvarPosto()">Salvar</button>
-</div>
-<div id="listaPostos"></div>
-</div>
+        <!-- TELA 5: POSTOS -->
+        <div class="page">
+            <div class="card">
+                <input id="p-nome" placeholder="Nome do Posto">
+                <input id="p-cnpj" placeholder="CNPJ">
+                <button onclick="salvarPosto()">ADICIONAR POSTO</button>
+            </div>
+            <div id="lista-postos"></div>
+        </div>
+    </div>
 
-</div>
-
-<div id="nav">
-<button onclick="go(0)">🏠</button>
-<button onclick="go(1)">⛽</button>
-<button onclick="go(2)">🚗</button>
-<button onclick="go(3)">🏪</button>
-</div>
+    <div id="nav">
+        <button class="nav-item active" onclick="go(0)">🏠<br>Dash</button>
+        <button class="nav-item" onclick="go(1)">⛽<br>Abast.</button>
+        <button class="nav-item" onclick="go(2)">👤<br>Motor.</button>
+        <button class="nav-item" onclick="go(3)">🚗<br>Veíc.</button>
+        <button class="nav-item" onclick="go(4)">🏪<br>Posto</button>
+    </div>
 </div>
 
 <script>
+/* CONFIGURAÇÃO SUPABASE */
+const SUPABASE_URL = "https://gspdlrenyrzbkxlvyugc.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI";
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* SUPABASE */
-const db=supabase.createClient(
-"https://gspdlrenyrzbkxlvyugc.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"
-)
+let chart;
+let currentIdx = 0;
 
-let dados=[]
-
-async function login(){
-let {data,error}=await db.auth.signInWithPassword({
-email:email.value,
-password:senha.value
-})
-if(error){alert(error.message);return}
-start()
+/* LOGIN REAL */
+async function handleLogin() {
+    const { data, error } = await db.from('usuarios').select('*').eq('email', email.value).eq('senha_hash', senha.value).single();
+    if (error || !data) { alert("Acesso Negado!"); return; }
+    document.getElementById('user-name').innerText = data.usuario_apelido;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
 }
 
-function logout(){location.reload()}
-
-async function start(){
-login.style.display="none"
-app.style.display="block"
-await carregar()
-render()
+/* NAVEGAÇÃO */
+function go(idx) {
+    currentIdx = idx;
+    document.getElementById("pages").style.transform = `translateX(-${idx * 20}%)`;
+    document.querySelectorAll('.nav-item').forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+    });
 }
 
-/* LOAD */
-async function carregar(){
-let {data}=await db.from("abastecimentos").select("*")
-dados=data||[]
+/* OCR REAL COM TESSERACT */
+async function triggerOCR() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        document.getElementById('ocr-status').style.display = 'block';
+        
+        const worker = await Tesseract.createWorker('por');
+        const { data: { text } } = await worker.recognize(file);
+        await worker.terminate();
 
-let v=await db.from("veiculos").select("*")
-veiculoSel.innerHTML=v.data.map(x=>`<option value="${x.id}">${x.placa}</option>`).join("")
+        // Lógica de extração baseada em padrões comuns de cupons
+        const valorMatch = text.match(/TOTAL.*?(\d+[.,]\d{2})/i);
+        const litrosMatch = text.match(/(\d+[.,]\d{3})\s*L/i);
+        
+        if(valorMatch) document.getElementById('f-valor').value = valorMatch[1].replace(',', '.');
+        if(litrosMatch) document.getElementById('f-litros').value = litrosMatch[1].replace(',', '.');
+        
+        document.getElementById('ocr-status').style.display = 'none';
+        alert("OCR Concluído. Revise os campos preenchidos.");
+    };
+    input.click();
 }
 
-/* SALVAR */
-async function salvar(){
-await db.from("abastecimentos").insert({
-veiculo_id:veiculoSel.value,
-data:data.value,
-valor:parseFloat(valor.value)||0,
-litros:parseFloat(litros.value)||0,
-km:parseFloat(km.value)||0
-})
-await carregar()
-render()
+/* CÁLCULO DE KM/L DINÂMICO */
+async function salvarAbastecimento() {
+    // Busca último abastecimento para calcular KM/L
+    const { data: lastAbast } = await db.from('abastecimentos')
+        .select('quilometragem')
+        .eq('veiculo_id', document.getElementById('f-veiculo').value)
+        .order('quilometragem', { ascending: false }).limit(1);
+
+    const kmAnterior = lastAbast.length > 0 ? lastAbast[0].quilometragem : 0;
+    const kmAtual = parseFloat(document.getElementById('f-km').value);
+    const litros = parseFloat(document.getElementById('f-litros').value);
+    
+    const kml = kmAnterior > 0 ? (kmAtual - kmAnterior) / litros : 0;
+
+    const { error } = await db.from('abastecimentos').insert({
+        veiculo_id: document.getElementById('f-veiculo').value,
+        data_abastecimento: document.getElementById('f-data').value,
+        valor_total: parseFloat(document.getElementById('f-valor').value),
+        litros: litros,
+        quilometragem: kmAtual,
+        km_l: kml
+    });
+
+    if(!error) { alert("Salvo! KM/L calculado: " + kml.toFixed(2)); initApp(); }
 }
 
-/* RENDER */
-function render(){
-let html=""
-let totalKm=0,litros=0
+/* DASHBOARD PROFISSIONAL */
+async function renderDashboard() {
+    const { data } = await db.from('abastecimentos').select('*').order('data_abastecimento', { ascending: true });
+    
+    let totalKm = 0, totalL = 0, totalV = 0;
+    const labels = [], valoresKml = [];
 
-dados.forEach(d=>{
-totalKm+=d.km||0
-litros+=d.litros||0
-html+=`<div class="card">${d.data} R$ ${d.valor}</div>`
-})
+    data.forEach(d => {
+        totalL += d.litros;
+        totalV += d.valor_total;
+        if(d.km_l > 0) {
+            labels.push(new Date(d.data_abastecimento).toLocaleDateString('pt-BR', {month: 'short'}));
+            valoresKml.push(d.km_l);
+        }
+    });
 
-lista.innerHTML=html
+    document.getElementById('kpi-km').innerText = data.length > 0 ? (data[data.length-1].quilometragem).toLocaleString() : 0;
+    document.getElementById('kpi-kml').innerText = (valoresKml.reduce((a,b) => a+b, 0) / valoresKml.length || 0).toFixed(2);
+    document.getElementById('kpi-custo').innerText = "R$ " + totalV.toLocaleString();
 
-let kml=litros?totalKm/litros:0
+    if(chart) chart.destroy();
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(250, 204, 21, 0.4)');
+    gradient.addColorStop(1, 'rgba(250, 204, 21, 0)');
 
-kpiKm.innerText=totalKm.toFixed(0)
-kpiKml.innerText=kml.toFixed(2)
-kpiLitros.innerText=litros.toFixed(0)
-
-if(window.chart)chart.destroy()
-chart=new Chart(document.getElementById("chart"),{
-type:"bar",
-data:{labels:["KM","Litros"],datasets:[{data:[totalKm,litros]}]}
-})
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'KM/L Mensal',
+                data: valoresKml,
+                borderColor: '#facc15',
+                borderWidth: 3,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b' } },
+                x: { grid: { display: false }, ticks: { color: '#64748b' } }
+            }
+        }
+    });
 }
 
-/* CRUD */
-async function salvarVeiculo(){
-await db.from("veiculos").insert({placa:placa.value,modelo:modelo.value})
-placa.value="";modelo.value=""
-await carregar()
+/* INICIALIZAÇÃO */
+async function initApp() {
+    const { data: v } = await db.from('veiculos').select('*');
+    document.getElementById('f-veiculo').innerHTML = v.map(x => `<option value="${x.id}">${x.placa} - ${x.modelo}</option>`).join('');
+    renderDashboard();
+    // Preencher outras listas aqui (Motoristas, Veículos etc)
 }
 
-async function salvarPosto(){
-await db.from("postos").insert({nome:nomePosto.value})
-nomePosto.value=""
-await carregar()
-}
-
-/* NAV */
-function go(i){
-document.getElementById("pages").style.transform="translateX(-"+(i*100)+"vw)"
-}
-
-/* INIT */
-document.addEventListener("DOMContentLoaded",()=>{
-let d=new Date()
-d.setMinutes(d.getMinutes()-d.getTimezoneOffset())
-data.value=d.toISOString().slice(0,10)
-})
-
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('f-data').value = new Date().toISOString().slice(0, 10);
+});
 </script>
 </body>
 </html>
