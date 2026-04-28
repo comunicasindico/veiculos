@@ -64,30 +64,7 @@ canvas{width:100%!important;max-width:100%;border-radius:10px;margin-top:10px;ba
 .actions button{pointer-events:auto;z-index:10000;position:relative;}
 .itemContent{pointer-events:none}
 .card,.item{position:relative}
-@media(max-width:768px){
-#app{padding:0;margin:0;width:100vw;height:100vh;overflow:hidden}
-.tela{display:flex;flex-direction:column;width:100vw;height:100vh;overflow-y:auto;padding:14px}
-.headerApp{display:none}
-#menuHome{display:none}
-.swipeContainer{display:flex;width:400vw;height:100vh;transition:transform .35s ease}
-.swipePage{width:100vw;height:100vh;flex-shrink:0;overflow-y:auto;padding:14px}
-}
-@media(max-width:768px){#menuHome{display:none!important}}
-@media(max-width:768px){body{overflow:hidden}
-/* 🔥 CONTAINER SWIPE */
-#swipeContainer{display:flex;width:400vw;height:100vh;transition:transform .35s ease;}
-/* 🔥 PÁGINAS */
-.swipePage{width:100vw;height:100vh;flex-shrink:0;overflow-y:auto;padding:14px;scroll-behavior:smooth;}
-/* 🔥 EFEITO APP */
-.swipePage::after{content:"";position:fixed;bottom:0;left:0;width:100%;height:60px;background:linear-gradient(to top,rgba(2,6,23,0.9),transparent);pointer-events:none;}
-/* 🔥 REMOVE UI DESKTOP */
-.headerApp{display:none!important}#menuHome{display:none!important}
-/* 🔥 CARD MAIS PREMIUM */
-.card{background:rgba(15,23,42,0.75);border:1px solid rgba(255,215,0,0.15);box-shadow:0 10px 40px rgba(0,0,0,0.6);}
-/* 🔥 BOTÕES */
-button{font-size:15px;border-radius:14px;}
-}
-
+  
 
   
 </style>
@@ -95,97 +72,25 @@ button{font-size:15px;border-radius:14px;}
 <body>
 <!-- LOGIN -->
 <div id="telaLogin">
-<div style="width:100%;max-width:420px;background:rgba(0,0,0,0.65);backdrop-filter:blur(20px);padding:20px;border-radius:20px;border:1px solid rgba(255,215,0,0.2)">
-<div style="text-align:center;margin-bottom:20px">
-<div style="font-size:26px;font-weight:bold;color:#facc15">BANCO COMUNICA</div>
-<div style="font-size:13px;color:#94a3b8">VEÍCULOS</div>
-</div>
-<input id="user" placeholder="Usuário, E-mail ou CPF">
-<input id="pass" type="password" placeholder="Senha">
-<div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px">
-<label><input type="checkbox"> Lembrar Senha</label>
-<span style="color:#facc15">Esqueci Senha</span>
-</div>
-<button class="btnSave" onclick="login()" style="margin-top:12px">ENTRAR</button>
-<button onclick="abrirCadastro()" style="width:100%;margin-top:8px;background:transparent;border:1px solid #facc15;color:#facc15">CRIAR CONTA</button>
-<div style="text-align:right;font-size:10px;margin-top:10px;color:#94a3b8">
-By Neto - bemprotegido.net
-</div>
+<div style="width:100%;max-width:420px;background:rgba(15,23,42,0.75);backdrop-filter:blur(12px);padding:20px;border-radius:20px;border:1px solid rgba(255,255,255,0.1)">
+<h2 style="text-align:center;margin-bottom:10px">🚗 Veículos - Carro e Moto</h2>
+<input id="user" placeholder="Usuário ou e-mail" style="margin-bottom:8px">
+<input id="pass" type="password" placeholder="Senha" style="margin-bottom:12px">
+<button class="btnSave" onclick="login()" style="margin-bottom:10px">Entrar</button>
+<button onclick="abrirCadastro()" style="width:100%;background:transparent;border:1px solid #22c55e;color:#22c55e;padding:10px;border-radius:10px">Criar Conta</button>
 </div>
 </div>
 
-<div id="menuHome" style="position:fixed;bottom:10px;left:0;width:100%;display:flex;justify-content:center;gap:10px;z-index:50">
-
+<div id="menuHome" style="position:fixed;bottom:18px;left:0;width:100%;display:flex;justify-content:center;gap:14px;z-index:50;padding:0 10px">
 <button onclick="abrirTela('combustivel')" class="btnFloat">⛽</button>
 <button onclick="abrirTela('motorista')" class="btnFloat">👨</button>
 <button onclick="abrirTela('veiculo')" class="btnFloat">🚗</button>
 <button onclick="abrirTela('posto')" class="btnFloat">🏪</button>
 <button onclick="logout()" class="btnFloat btnSair">🚪</button>
-
 </div>
   
 <!-- APP -->
 <div id="app" class="container" style="display:none">
-<div id="swipeContainer" class="swipeContainer">
-<!-- ================= COMBUSTÍVEL ================= -->
-<div class="swipePage">
-<div id="tela_combustivel" class="tela" style="display:block">
-<div id="iaBox" class="card" style="display:none"></div>
-<div style="display:flex;gap:6px;margin-bottom:8px">
-<button onclick="executarAutoRecorte()">🤖</button>
-<button onclick="capturaInteligente()" style="flex:1;background:#22c55e;color:#000;border-radius:10px;padding:10px">📲</button>
-<button onclick="abrirQR()" style="flex:1;background:#16a34a;color:#fff;border-radius:10px;padding:10px">🔳</button>
-<button onclick="abrirCameraOCR()" style="flex:1;background:#3b82f6;color:#fff;border-radius:10px;padding:10px">📷</button>
-</div>
-<div class="card">
-<select id="veiculoSel"></select>
-<input id="data" type="date">
-<input id="valor" placeholder="Valor">
-<input id="litros" placeholder="Litros">
-<input id="km" placeholder="KM">
-<button class="btnSave" onclick="salvar()">Salvar</button>
-</div>
-<div id="lista"></div>
-</div>
-</div>
-<!-- ================= MOTORISTA ================= -->
-<div class="swipePage">
-<div id="tela_motorista" class="tela" style="display:block">
-<button onclick="toggleForm('formMotorista')" style="width:100%;background:#3b82f6">Novo</button>
-<div id="listaMotoristas"></div>
-<div id="formMotorista" class="card" style="display:none">
-<input id="m_nome" placeholder="Nome">
-<input id="m_tel" placeholder="Telefone">
-<button onclick="salvarMotorista()">Salvar</button>
-</div>
-</div>
-</div>
-<!-- ================= VEÍCULO ================= -->
-<div class="swipePage">
-<div id="tela_veiculo" class="tela" style="display:block">
-<button onclick="toggleForm('formVeiculo')" style="width:100%;background:#3b82f6">Novo</button>
-<div id="listaVeiculos"></div>
-<div id="formVeiculo" class="card" style="display:none">
-<input id="v_placa" placeholder="Placa">
-<input id="v_modelo" placeholder="Modelo">
-<button onclick="salvarVeiculo()">Salvar</button>
-</div>
-</div>
-</div>
-<!-- ================= POSTO ================= -->
-<div class="swipePage">
-<div id="tela_posto" class="tela" style="display:block">
-<button onclick="toggleForm('formPosto')" style="width:100%;background:#3b82f6">Novo</button>
-<div id="listaPostos"></div>
-<div id="formPosto" class="card" style="display:none">
-<input id="p_nome" placeholder="Nome">
-<input id="p_cnpj" placeholder="CNPJ">
-<button onclick="salvarPosto()">Salvar</button>
-</div>
-</div>
-</div>
-</div>
-</div>
 
 <!-- MENU -->
 <div class="headerApp">
@@ -197,6 +102,7 @@ By Neto - bemprotegido.net
 <button onclick="logout()" title="Sair" style="background:#dc2626">🚪</button>
 </div>
 </div>
+
 <!-- ========================= -->
 <!-- 🔥 TELA COMBUSTÍVEL -->
 <!-- ========================= -->
@@ -746,42 +652,26 @@ init()
 /* 007 INIT */
 async function init(){
 document.body.classList.remove("login")
+document.getElementById("menuHome").style.display="none"
 telaLogin.style.display="none"
 app.style.display="block"
-
-if(window.innerWidth<=768){
-irParaPagina(0)
-}
 await carregarTudo()
+bindPostoInput()
+bindPostoEdicao()
+setTimeout(()=>carregarSelectsPadrao(),50)
 abrirTela("combustivel")
 render()
-}
 
+}
 /* 008 UI */
 function abrirTela(t){
-
-if(window.innerWidth<=768){
-
-let mapa={
-combustivel:0,
-motorista:1,
-veiculo:2,
-posto:3
-}
-let i=mapa[t]
-if(i===undefined)return
-irParaPagina(i)
-/* 🔥 GARANTE CARREGAMENTO */
-if(t==="combustivel")carregarTudo()
-return
-}
-/* DESKTOP NORMAL */
 document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
 let el=document.getElementById("tela_"+t)
 if(!el)return
 el.style.display="block"
-
-if(t==="combustivel")carregarTudo()
+if(t==="combustivel"){
+carregarTudo()
+}
 }
 
 async function carregarTudo(){
@@ -1318,14 +1208,11 @@ let offset=hoje.getTimezoneOffset()
 hoje=new Date(hoje.getTime()-offset*60000)
 inputData.value=hoje.toISOString().slice(0,10)
 }
-if(typeof initCNPJAuto==="function")initCNPJAuto()
-/* 🔥 LOGIN AUTO */
+/* 🔥 GARANTE QUE FUNÇÃO EXISTE */
+if(typeof initCNPJAuto==="function"){initCNPJAuto()}else{console.warn("initCNPJAuto não definida")}
 if(localStorage.getItem("empresa")){
+document.body.classList.remove("login")
 init()
-}
-/* 🔥 MOBILE START */
-if(window.innerWidth<=768){
-setTimeout(()=>irParaPagina(0),300)
 }
 })
 
@@ -2634,38 +2521,10 @@ video.srcObject.getTracks().forEach(t=>t.stop())
 }
 }
 
-/* ==================FIM===================================== */
-let currentPage=0
-let totalPages=4
+/* =========================================================
+FIM
+========================================================= */
 
-function irParaPagina(i){
-let container=document.getElementById("swipeContainer")
-if(!container)return
-if(i<0)i=0
-if(i>=totalPages)i=totalPages-1
-currentPage=i
-container.style.transform="translateX(-"+(i*100)+"vw)"
-}
-/* 🔥 TOUCH PROFISSIONAL */
-let startX=0
-let endX=0
-document.addEventListener("touchstart",e=>{
-startX=e.touches[0].clientX
-})
-document.addEventListener("touchmove",e=>{
-endX=e.touches[0].clientX
-})
-document.addEventListener("touchend",()=>{
-let diff=startX-endX
-if(Math.abs(diff)<60)return
-if(diff>0){
-irParaPagina(currentPage+1)
-}else{
-irParaPagina(currentPage-1)
-}
-})
-
-  
 
   
   
