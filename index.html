@@ -886,19 +886,28 @@ init()
 
 /* 007 INIT */
 async function init(){
+
 document.body.classList.remove("login")
 
-telaLogin.style.display="none"
-app.style.display="block"
+let telaLogin=document.getElementById("telaLogin")
+let app=document.getElementById("app")
+
+if(telaLogin) telaLogin.style.display="none"
+if(app) app.style.display="block"
+
 await carregarTudo()
+
 bindPostoInput()
 bindPostoEdicao()
-goTo(1)
+
 setTimeout(()=>carregarSelectsPadrao(),50)
-abrirTela("combustivel")
+
+goTo(1)
+
 render()
 
 }
+
 /* 008 UI */
 function abrirTela(t){
 document.querySelectorAll(".tela").forEach(e=>e.style.display="none")
