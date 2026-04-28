@@ -1,8 +1,11 @@
 {
 "name":"IA VEÍCULOS",
 "short_name":"Veículos",
-"start_url":"./index.html",
+"start_url":"./",
+"scope":"./",
 "display":"standalone",
+"display_override":["standalone","window-controls-overlay"],
+"orientation":"portrait",
 "background_color":"#020617",
 "theme_color":"#020617",
 "icons":[
