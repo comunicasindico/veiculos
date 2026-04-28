@@ -15,18 +15,15 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial;color:#fff;background:#020617;overflow-x:hidden}
-
 /* 🔥 LOGIN BACKGROUND CORRIGIDO */
 body.login{
 background:
 linear-gradient(to bottom,rgba(0,0,0,.15),rgba(0,0,0,.75)),
 url("img/bcveiculos.png") center/cover no-repeat fixed;
 }
-
 /* 🔥 REMOVIDO BLOCO QUEBRADO */
 @media(max-width:768px){body.login{background-position:center top;background-size:cover}}
 @media(min-width:769px){body.login{background-position:center;background-size:cover}}
-
 /* 🔥 OVERLAY */
 body.login::before{
 content:"";
@@ -51,11 +48,9 @@ background:rgba(2,6,23,0.92);
 z-index:-1;
 pointer-events:none;
 }
-
 /* 🔥 BASE */
 .tela{display:none;animation:fadeIn .25s ease;padding-bottom:90px}
 .container{max-width:720px;width:100%;margin:auto;padding:10px}
-
 .card{
 width:100%;
 background:rgba(30,41,59,0.65);
@@ -66,7 +61,6 @@ margin-top:10px;
 border:1px solid rgba(255,255,255,0.05);
 box-shadow:0 6px 20px rgba(0,0,0,0.4)
 }
-
 input,select{
 width:100%;
 padding:12px;
@@ -77,7 +71,6 @@ background:rgba(51,65,85,0.6);
 color:#fff;
 font-size:14px
 }
-
 button{
 padding:10px;
 border:none;
@@ -85,7 +78,6 @@ border-radius:10px;
 font-weight:bold;
 cursor:pointer
 }
-
 /* 🔥 BOTÕES */
 .btnSave{
 background:linear-gradient(135deg,#22c55e,#16a34a);
@@ -100,7 +92,6 @@ box-shadow:0 6px 20px rgba(34,197,94,.4)
 .btnLogout{background:#dc2626;color:#fff;width:180px}
 
 .row{display:flex;justify-content:space-between;gap:6px;font-size:12px;flex-wrap:wrap}
-
 /* 🔥 HEADER */
 .headerApp{
 position:sticky;
@@ -111,11 +102,9 @@ padding:10px;
 border-bottom:1px solid rgba(255,255,255,0.05);
 z-index:10
 }
-
 /* 🔥 ITENS */
 .item{display:flex;align-items:center;gap:10px}
 .itemContent{flex:1;min-width:0;pointer-events:none}
-
 .actions{
 display:flex;
 gap:6px;
@@ -135,13 +124,10 @@ justify-content:center;
 pointer-events:auto;
 z-index:10000
 }
-
 .btnEdit,.btnDel{font-size:12px}
-
 /* 🔥 FORM */
 .field{margin-top:8px;display:flex;flex-direction:column}
 .field label{font-size:11px;color:#94a3b8;margin-bottom:2px}
-
 /* 🔥 LOGIN BOX */
 #telaLogin{
 display:flex;
@@ -153,13 +139,11 @@ padding-top:40px;
 position:relative;
 z-index:2
 }
-
 @media(max-width:600px){#telaLogin{transform:translateY(-20px)}}
 @media(max-width:768px){
 #telaLogin{padding-top:20px}
 #telaLogin>div{margin-top:0}
 }
-
 .login-box{
 background:rgba(2,6,23,0.55);
 backdrop-filter:blur(6px);
@@ -193,7 +177,6 @@ transition:.25s
 background:linear-gradient(135deg,#dc2626,#b91c1c);
 box-shadow:0 8px 30px rgba(220,38,38,.5)
 }
-
 /* 🔥 CANVAS */
 canvas{
 width:100%!important;
@@ -202,7 +185,6 @@ border-radius:10px;
 margin-top:10px;
 background:#fff
 }
-
 /* 🔥 MODAIS */
 .modal{
 display:none;
@@ -224,11 +206,9 @@ background:#1e293b;
 padding:15px;
 border-radius:12px
 }
-
 #modalOCR .modalBox{max-height:90vh;overflow-y:auto}
 #modalOCR video{max-height:35vh;object-fit:cover}
 #modalOCR img{max-height:35vh;object-fit:contain}
-
 /* 🔥 NAVBAR */
 #navBar{
 position:fixed;
@@ -257,7 +237,6 @@ gap:2px
 
 #navBar button span{font-size:10px}
 #navBar button.active{color:#facc15}
-
 /* 🔥 PAGES */
 #pages{
 display:flex;
@@ -278,6 +257,77 @@ padding:14px
 from{opacity:0;transform:translateY(10px)}
 to{opacity:1;transform:translateY(0)}
 }
+#navBar{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+height:70px;
+background:rgba(15,23,42,0.95);
+backdrop-filter:blur(10px);
+display:flex;
+gap:6px;
+padding:6px;
+border-top:1px solid rgba(255,255,255,0.05);
+z-index:999;
+}
+
+#navBar button{
+flex:1;
+border:none;
+border-radius:12px;
+background:rgba(30,41,59,0.7);
+color:#cbd5e1;
+font-size:12px;
+font-weight:600;
+transition:all .25s ease;
+}
+
+#navBar button:hover{
+background:#334155;
+color:#fff;
+}
+
+#navBar button.active{
+background:linear-gradient(135deg,#3b82f6,#1d4ed8);
+color:#fff;
+box-shadow:0 6px 20px rgba(59,130,246,.4);
+}
+
+.btnExit{
+background:linear-gradient(135deg,#dc2626,#991b1b)!important;
+color:#fff!important;
+}
+#topBar{
+position:sticky;
+top:0;
+display:flex;
+justify-content:space-between;
+gap:8px;
+padding:10px;
+background:rgba(2,6,23,0.8);
+backdrop-filter:blur(10px);
+z-index:20;
+}
+
+#topBar button{
+flex:1;
+padding:10px;
+border:none;
+border-radius:12px;
+font-weight:600;
+background:#1e293b;
+color:#e5e7eb;
+}
+
+#topBar button:last-child{
+background:#dc2626;
+color:#fff;
+}
+
+
+
+  
 </style>
   
 <body>
@@ -300,6 +350,10 @@ to{opacity:1;transform:translateY(0)}
 </div>
 
 <div id="app" class="container" style="display:none">
+<div id="topBar">
+<button onclick="goTo(0)">Voltar</button>
+<button onclick="logout()">Sair</button>
+</div>
 <div id="pages">
 
 <!-- 🔥 COMBUSTÍVEL / DASHBOARD -->
@@ -481,10 +535,12 @@ window.db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
 function goTo(i){
 currentPage=i
-let p=document.getElementById("pages")
-if(p)p.style.transform="translateX(-"+(i*100)+"%)"
-document.querySelectorAll("#navBar button").forEach((b,idx)=>b.classList.toggle("active",idx===i))
-if(i===0)render()
+document.getElementById("pages").style.transform="translateX(-"+(i*100)+"%)"
+document.querySelectorAll("#navBar button").forEach((b,idx)=>{
+b.classList.toggle("active",idx===i)
+})
+window.scrollTo({top:0,behavior:"smooth"})
+if(i===1)render()
 }
 
 function fData(d){
@@ -1429,12 +1485,12 @@ render()
 </div>
 
 <div id="navBar">
-<button onclick="goTo(0)">🏠<span>Dashboard</span></button>
-<button onclick="goTo(1)">⛽<span>Abastec.</span></button>
-<button onclick="goTo(2)">🚗<span>Veículos</span></button>
-<button onclick="goTo(3)">👨<span>Motoristas</span></button>
-<button onclick="goTo(4)">🏪<span>Postos</span></button>
-<button onclick="logout()">🚪<span>Sair</span></button>
+<button onclick="goTo(0)">Dashboard</button>
+<button onclick="goTo(1)">Abastecimentos</button>
+<button onclick="goTo(2)">Veículos</button>
+<button onclick="goTo(3)">Motoristas</button>
+<button onclick="goTo(4)">Postos</button>
+<button class="btnExit" onclick="logout()">Sair</button>
 </div>
 
 </body>
