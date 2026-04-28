@@ -241,8 +241,9 @@ gap:2px
 #pages{
 display:flex;
 width:500%;
-height:calc(100vh - 70px);
-transition:transform .35s ease
+height:100%;
+min-height:100vh;
+transition:transform .35s ease;
 }
 
 .page{
@@ -262,14 +263,8 @@ position:fixed;
 bottom:0;
 left:0;
 width:100%;
-height:70px;
-background:rgba(15,23,42,0.95);
-backdrop-filter:blur(10px);
-display:flex;
-gap:6px;
-padding:6px;
-border-top:1px solid rgba(255,255,255,0.05);
-z-index:999;
+z-index:99999;
+background:#0f172a;
 }
 
 #navBar button{
@@ -341,13 +336,6 @@ color:#fff;
 </div>
 </div>
 
-<div id="menuHome" style="position:fixed;bottom:18px;left:0;width:100%;display:flex;justify-content:center;gap:14px;z-index:50;padding:0 10px">
-<button onclick="abrirTela('combustivel')" class="btnFloat">⛽</button>
-<button onclick="abrirTela('motorista')" class="btnFloat">👨</button>
-<button onclick="abrirTela('veiculo')" class="btnFloat">🚗</button>
-<button onclick="abrirTela('posto')" class="btnFloat">🏪</button>
-<button onclick="logout()" class="btnFloat btnSair">🚪</button>
-</div>
 
 <div id="app" class="container" style="display:none">
 <div id="topBar">
@@ -535,11 +523,12 @@ window.db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
 function goTo(i){
 currentPage=i
-document.getElementById("pages").style.transform="translateX(-"+(i*100)+"%)"
+let pages=document.getElementById("pages")
+if(pages)pages.style.transform="translateX(-"+(i*100)+"%)"
 document.querySelectorAll("#navBar button").forEach((b,idx)=>{
 b.classList.toggle("active",idx===i)
 })
-window.scrollTo({top:0,behavior:"smooth"})
+window.scrollTo(0,0)
 if(i===1)render()
 }
 
@@ -565,6 +554,7 @@ init()
 
 /* INIT */
 async function init(){
+document.getElementById("menuHome")?.remove()
 document.body.classList.remove("login")
 telaLogin.style.display="none"
 app.style.display="block"
@@ -582,7 +572,6 @@ localStorage.clear()
 location.reload()
 }
 
-/* 🔥 CARREGAMENTO COMPLETO (FIX CRÍTICO) */
 async function carregarTudo(){
 let emp=EMP()
 let uid=UID()
@@ -595,38 +584,79 @@ let selMotorista=document.getElementById("v_motorista")
 let selPosto=document.getElementById("postoSel")
 let selVeiculo=document.getElementById("veiculoSel")
 
-/* MOTORISTAS */
-let {data:motoristas}=await db.from("motoristas").select("*").eq("empresa_id",emp)
+/* ========================= */
+/* 🔥 MOTORISTAS */
+/* ========================= */
+let qMotoristas=db.from("motoristas").select("*").eq("empresa_id",emp)
+if(uid)qMotoristas=qMotoristas.eq("usuario_id",uid)
+let {data:motoristas,error:e1}=await qMotoristas
+if(e1){console.error("motoristas erro:",e1);motoristas=[]}
 motoristas=motoristas||[]
+
 let mapMotoristas={}
 motoristas.forEach(x=>mapMotoristas[x.id]=x.nome)
 
-if(elMotoristas)elMotoristas.innerHTML=motoristas.length?motoristas.map(x=>`<div class="item"><div class="itemContent"><b>${x.nome||"-"}</b></div></div>`).join(""):`<div class="item">Nenhum</div>`
-if(selMotorista)selMotorista.innerHTML=motoristas.length?motoristas.map(x=>`<option value="${x.id}">${x.nome}</option>`).join(""):`<option>Sem</option>`
+if(elMotoristas){
+elMotoristas.innerHTML=motoristas.length
+?motoristas.map(x=>`<div class="item"><div class="itemContent"><b>${x.nome||"-"}</b></div></div>`).join("")
+:`<div class="item">Nenhum motorista</div>`
+}
 
-/* POSTOS */
-let {data:postos}=await db.from("postos").select("*").eq("empresa_id",emp)
+if(selMotorista){
+selMotorista.innerHTML=motoristas.length
+?motoristas.map(x=>`<option value="${x.id}">${x.nome}</option>`).join("")
+:`<option value="">Sem motoristas</option>`
+}
+
+/* ========================= */
+/* 🔥 POSTOS */
+/* ========================= */
+let qPostos=db.from("postos").select("*").eq("empresa_id",emp)
+let {data:postos,error:e2}=await qPostos
+if(e2){console.error("postos erro:",e2);postos=[]}
 postos=postos||[]
-if(elPostos)elPostos.innerHTML=postos.length?postos.map(x=>`<div class="item"><b>${x.nome_posto||"-"}</b></div>`).join(""):`<div class="item">Nenhum</div>`
-if(selPosto)selPosto.innerHTML=postos.length?postos.map(x=>`<option value="${x.id}">${x.nome_posto}</option>`).join(""):`<option>Sem</option>`
 
-/* VEÍCULOS */
-let {data:veiculos}=await db.from("veiculos").select("*").eq("empresa_id",emp)
+if(elPostos){
+elPostos.innerHTML=postos.length
+?postos.map(x=>`<div class="item"><b>${x.nome_posto||"-"}</b></div>`).join("")
+:`<div class="item">Nenhum posto</div>`
+}
+
+if(selPosto){
+selPosto.innerHTML=postos.length
+?postos.map(x=>`<option value="${x.id}">${x.nome_posto}</option>`).join("")
+:`<option value="">Sem postos</option>`
+}
+
+/* ========================= */
+/* 🔥 VEÍCULOS */
+/* ========================= */
+let qVeiculos=db.from("veiculos").select("*").eq("empresa_id",emp)
+if(uid)qVeiculos=qVeiculos.eq("usuario_id",uid)
+let {data:veiculos,error:e3}=await qVeiculos
+if(e3){console.error("veiculos erro:",e3);veiculos=[]}
 veiculos=veiculos||[]
 
 if(selVeiculo){
 if(veiculos.length){
-selVeiculo.innerHTML=veiculos.map(x=>`<option value="${x.id}">${x.modelo||x.placa}</option>`).join("")
+selVeiculo.innerHTML=veiculos.map(x=>`<option value="${x.id}">${x.modelo||x.placa||"Veículo"}</option>`).join("")
+if(!VID||!veiculos.find(v=>v.id===VID)){
 VID=veiculos[0].id
+}
 selVeiculo.value=VID
 }else{
-selVeiculo.innerHTML="<option>Sem veículo</option>"
+selVeiculo.innerHTML=`<option value="">Sem veículo</option>`
 VID=null
 }
 }
 
-if(elVeiculos)elVeiculos.innerHTML=veiculos.length?veiculos.map(x=>`<div class="item"><div class="itemContent"><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div></div>`).join(""):`<div class="item">Nenhum</div>`
+if(elVeiculos){
+elVeiculos.innerHTML=veiculos.length
+?veiculos.map(x=>`<div class="item"><div class="itemContent"><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div></div>`).join("")
+:`<div class="item">Nenhum veículo</div>`
+}
 
+/* 🔥 BIND SELECT VEÍCULO */
 if(selVeiculo&&!selVeiculo._bind){
 selVeiculo.addEventListener("change",()=>{
 VID=selVeiculo.value
@@ -635,12 +665,25 @@ render()
 selVeiculo._bind=true
 }
 
+/* 🔥 CRIA VEÍCULO PADRÃO (SEM LOOP) */
 if(!veiculos.length){
-let {data:novo}=await db.from("veiculos").insert({empresa_id:emp,placa:"AAA0000",modelo:"Veículo Inicial"}).select().single()
-if(novo){VID=novo.id;await carregarTudo();return}
+let {data:novo,error}=await db.from("veiculos").insert({
+empresa_id:emp,
+placa:"AAA0000",
+modelo:"Veículo Inicial"
+}).select().single()
+
+if(!error&&novo){
+VID=novo.id
+await carregarTudo()
+return
+}
 }
 
-setTimeout(()=>{if(VID)render()},100)
+/* 🔥 RENDER FINAL */
+if(VID){
+setTimeout(()=>render(),50)
+}
 }
 
 async function salvar(){
@@ -1415,6 +1458,20 @@ filtroInicio=document.getElementById("filtroInicio").value||null
 filtroFim=document.getElementById("filtroFim").value||null
 render()
 }
+function carregarSelectsPadrao(){
+let vs=document.getElementById("veiculoSel")
+if(vs&&vs.options.length){
+VID=vs.value
+}
+let ps=document.getElementById("postoSel")
+if(ps&&ps.options.length){
+ps.value=ps.options[0].value
+}
+}
+
+
+
+  
 </script>
 
 
