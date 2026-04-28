@@ -1053,11 +1053,6 @@ selVeiculo._bind=true
 }
 /* DEFINE VID CORRETO */
 if(v.length){
-VID=v[0].id
-if(selVeiculo)selVeiculo.value=VID
-}else{
-VID=null
-}
 
 /* LISTA VEÍCULOS */
 if(elVeiculos){
@@ -1078,10 +1073,16 @@ Motorista: ${mapMotoristas[x.motorista_id]||"-"}
 /* ========================= */
 
 setTimeout(()=>{
+let vs=document.getElementById("veiculoSel")
+
+if(vs && vs.value){
+VID=vs.value
+}
+
 if(VID){
 render()
 }else{
-console.warn("⚠️ sem veículo")
+console.warn("⚠️ sem veículo (após sync)")
 }
 },100)
 if(!v.length){
