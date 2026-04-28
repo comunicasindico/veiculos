@@ -1,517 +1,242 @@
-
-  <!DOCTYPE html>
-<html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Frota - Gerenciamento</title>
+    <title>Páginas de Perfil - Supabase</title>
     <style>
-        :root {
-            --bg: #0a0a0a;
-            --surface: #1a1a1a;
-            --surface-alt: #2a2a2a;
-            --text: #e0e0e0;
-            --text-secondary: #a0a0a0;
-            --accent: #facc15;
-            --border: #333;
-            --shadow: 0 8px 32px rgba(0,0,0,0.6);
-        }
         * {
             box-sizing: border-box;
         }
         body {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: var(--bg);
-            color: var(--text);
+            padding: 0;
+            background: #121212;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             overflow: hidden;
         }
-        .app {
-            height: 100vh;
-            position: relative;
-        }
-        .pages {
+        #screens {
             display: flex;
             height: 100vh;
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
-        .page {
-            min-width: 100vw;
-            padding: 1rem;
-            overflow-y: auto;
-            position: relative;
-            background: var(--surface);
-        }
-        .login-page {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-        .login-container {
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid var(--accent);
-            border-radius: 24px;
-            padding: 3rem 2.5rem;
-            max-width: 420px;
-            width: 100%;
-            box-shadow: var(--shadow);
-            text-align: center;
-        }
-        .login-container h2 {
-            color: var(--accent);
-            margin-bottom: 2rem;
-            font-size: 1.8rem;
-        }
-        .login-container input {
-            width: 100%;
-            padding: 1rem 1.2rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text);
-            font-size: 1rem;
-        }
-        .login-container input::placeholder {
-            color: var(--text-secondary);
-        }
-        .login-container input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.3);
-        }
-        .login-container button {
-            width: 100%;
-            padding: 1.1rem;
-            background: linear-gradient(135deg, var(--accent), #eab308);
-            color: #000;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .login-container button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(250, 204, 21, 0.4);
-        }
-        .header {
-            text-align: center;
-            padding: 1.5rem 0;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 2rem;
-        }
-        .header h1 {
-            color: var(--accent);
-            margin: 0;
-            font-size: 2rem;
-        }
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1.2rem;
-            margin-bottom: 2rem;
-        }
-        .kpi {
-            background: var(--surface-alt);
-            padding: 1.5rem 1rem;
-            border-radius: 16px;
-            text-align: center;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-        }
-        .kpi strong {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            display: block;
-            margin-bottom: 0.5rem;
-        }
-        .kpi span {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--accent);
-            display: block;
-        }
-        .filter {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .filter label {
+        .screen {
+            flex: 0 0 100vw;
+            padding: 80px 20px 100px 20px;
+            scroll-snap-align: start;
             display: flex;
             flex-direction: column;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
+            gap: 24px;
         }
-        .filter input {
-            padding: 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--surface);
-            color: var(--text);
-            margin-top: 0.25rem;
-            width: 160px;
+        h2 {
+            color: #facc15;
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0;
+            text-align: center;
         }
-        .filter button {
-            padding: 0.75rem 1.5rem;
-            border: 1px solid var(--accent);
-            background: var(--surface);
-            color: var(--accent);
+        .card {
+            background: #1e1e1e;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(250, 204, 21, 0.2);
+        }
+        .card h3 {
+            color: #facc15;
+            margin: 0;
+            font-size: 20px;
+            font-weight: 500;
+        }
+        .card p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid #333;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
             border-radius: 8px;
             cursor: pointer;
+            font-size: 14px;
             font-weight: 500;
             transition: all 0.2s;
         }
-        .filter button:hover {
-            background: var(--accent);
+        .btn-edit {
+            background: #facc15;
             color: #000;
         }
-        .scan-btn {
-            background: linear-gradient(135deg, #059669, #10b981) !important;
-            color: white !important;
-            border-color: #059669 !important;
+        .btn-delete {
+            background: #ff4444;
+            color: #fff;
         }
-        .scan-btn:hover {
-            background: #047857 !important;
+        .btn:hover {
+            transform: scale(1.05);
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--surface);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            font-size: 0.95rem;
-        }
-        th, td {
-            padding: 1rem 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-        th {
-            background: var(--surface-alt);
-            color: var(--accent);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-        }
-        tr:hover {
-            background: #2a2a2a;
-        }
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--surface);
+        .cards-list {
             display: flex;
-            border-top: 1px solid var(--border);
-            z-index: 100;
-        }
-        .bottom-nav button {
+            flex-direction: column;
+            gap: 16px;
             flex: 1;
-            padding: 1rem;
-            border: none;
-            background: none;
-            color: var(--text-secondary);
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .cards-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .cards-list::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        .cards-list::-webkit-scrollbar-thumb {
+            background: #facc15;
+            border-radius: 2px;
+        }
+        #indicators {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #333;
+            transition: background 0.2s;
+            pointer-events: all;
             cursor: pointer;
-            transition: color 0.2s;
-            font-size: 0.85rem;
-            font-weight: 500;
         }
-        .bottom-nav button.active {
-            color: var(--accent);
-        }
-        .bottom-nav button:hover {
-            color: var(--text);
-        }
-        @media (max-width: 768px) {
-            .filter input {
-                width: 140px;
-            }
-            .kpi span {
-                font-size: 1.8rem;
-            }
+        .dot.active {
+            background: #facc15;
         }
     </style>
 </head>
 <body>
-    <div class="app">
-        <div class="pages" id="pages">
-            <!-- Tela 1: Login -->
-            <div class="page login-page">
-                <div class="login-container">
-                    <h2>Login</h2>
-                    <form id="loginForm">
-                        <input type="email" placeholder="Email" required>
-                        <input type="password" placeholder="Senha" required>
-                        <button type="submit">Entrar</button>
-                    </form>
+    <div id="screens">
+        <!-- Tela 3: Motorista -->
+        <div class="screen" id="screen3">
+            <h2>Motorista</h2>
+            <div class="card">
+                <h3>João Silva</h3>
+                <p><strong>CPF:</strong> 123.456.789-00</p>
+                <p><strong>Telefone:</strong> (11) 99999-9999</p>
+                <p><strong>CNH:</strong> 12345678</p>
+                <div class="actions">
+                    <button class="btn btn-edit" onclick="alert('Editar Motorista')">Editar</button>
+                    <button class="btn btn-delete" onclick="alert('Excluir Motorista')">Excluir</button>
                 </div>
-            </div>
-
-            <!-- Tela 2: Dashboard -->
-            <div class="page">
-                <div class="header">
-                    <h1>Dashboard</h1>
-                </div>
-                <div class="kpi-grid">
-                    <div class="kpi">
-                        <strong>Total KM Percorrido</strong>
-                        <span id="total-km">0</span>
-                    </div>
-                    <div class="kpi">
-                        <strong>Km/L Médio</strong>
-                        <span id="kml-avg">0</span>
-                    </div>
-                    <div class="kpi">
-                        <strong>Total Litros</strong>
-                        <span id="total-liters">0</span>
-                    </div>
-                    <div class="kpi">
-                        <strong>Postos Visitados</strong>
-                        <span id="total-postos">0</span>
-                    </div>
-                </div>
-                <div class="filter">
-                    <label>De:
-                        <input type="date" id="date-from">
-                    </label>
-                    <label>A:
-                        <input type="date" id="date-to">
-                    </label>
-                    <button onclick="searchTrips()">Pesquisar</button>
-                    <button class="scan-btn" onclick="scanOCR()">Scan OCR/QR</button>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>KM Início</th>
-                            <th>KM Fim</th>
-                            <th>Litros</th>
-                            <th>Km/L</th>
-                            <th>Posto</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dashboard-tbody"></tbody>
-                </table>
-            </div>
-
-            <!-- Tela 3: Perfis -->
-            <div class="page">
-                <div class="header">
-                    <h1>Perfis de Usuário</h1>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>CPF</th>
-                            <th>Telefone</th>
-                        </tr>
-                    </thead>
-                    <tbody id="profiles-tbody"></tbody>
-                </table>
-            </div>
-
-            <!-- Tela 4: Veículos -->
-            <div class="page">
-                <div class="header">
-                    <h1>Veículos</h1>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Placa</th>
-                            <th>Modelo</th>
-                            <th>KM Atual</th>
-                            <th>Combustível</th>
-                        </tr>
-                    </thead>
-                    <tbody id="vehicles-tbody"></tbody>
-                </table>
-            </div>
-
-            <!-- Tela 5: Postos -->
-            <div class="page">
-                <div class="header">
-                    <h1>Postos</h1>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>CNPJ</th>
-                            <th>Cidade</th>
-                        </tr>
-                    </thead>
-                    <tbody id="postos-tbody"></tbody>
-                </table>
             </div>
         </div>
-        <nav class="bottom-nav">
-            <button onclick="goTo(0)" class="active">Login</button>
-            <button onclick="goTo(1)">Dashboard</button>
-            <button onclick="goTo(2)">Perfis</button>
-            <button onclick="goTo(3)">Veículos</button>
-            <button onclick="goTo(4)">Postos</button>
-        </nav>
+
+        <!-- Tela 4: Veículos -->
+        <div class="screen" id="screen4">
+            <h2>Veículos</h2>
+            <div class="cards-list">
+                <div class="card">
+                    <h3>ABC-1234 - Fiat Uno</h3>
+                    <p><strong>KM Atual:</strong> 150.000 km</p>
+                    <p><strong>Combustível:</strong> Gasolina</p>
+                    <p><strong>Venc. IPVA/Licenciamento:</strong> 01/2024</p>
+                    <div class="actions">
+                        <button class="btn btn-edit" onclick="alert('Editar Veículo ABC-1234')">Editar</button>
+                        <button class="btn btn-delete" onclick="alert('Excluir Veículo ABC-1234')">Excluir</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>DEF-5678 - VW Gol</h3>
+                    <p><strong>KM Atual:</strong> 120.000 km</p>
+                    <p><strong>Combustível:</strong> Diesel</p>
+                    <p><strong>Venc. IPVA/Licenciamento:</strong> 05/2024</p>
+                    <div class="actions">
+                        <button class="btn btn-edit" onclick="alert('Editar Veículo DEF-5678')">Editar</button>
+                        <button class="btn btn-delete" onclick="alert('Excluir Veículo DEF-5678')">Excluir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela 5: Postos -->
+        <div class="screen" id="screen5">
+            <h2>Postos</h2>
+            <div class="cards-list">
+                <div class="card">
+                    <h3>Posto Central</h3>
+                    <p><strong>CNPJ:</strong> 12.345.678/0001-99</p>
+                    <p><strong>Localização:</strong> Rio de Janeiro/RJ</p>
+                    <div class="actions">
+                        <button class="btn btn-edit" onclick="alert('Editar Posto Central')">Editar</button>
+                        <button class="btn btn-delete" onclick="alert('Excluir Posto Central')">Excluir</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Posto Sul</h3>
+                    <p><strong>CNPJ:</strong> 98.765.432/0001-00</p>
+                    <p><strong>Localização:</strong> São Paulo/SP</p>
+                    <div class="actions">
+                        <button class="btn btn-edit" onclick="alert('Editar Posto Sul')">Editar</button>
+                        <button class="btn btn-delete" onclick="alert('Excluir Posto Sul')">Excluir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="indicators">
+        <span class="dot active" data-target="0"></span>
+        <span class="dot" data-target="1"></span>
+        <span class="dot" data-target="2"></span>
     </div>
 
     <script>
-        let currentPage = 0;
-        const totalPages = 5;
-        const pages = document.getElementById('pages');
-        const navBtns = document.querySelectorAll('.bottom-nav button');
-        let startX = 0;
-        let lastDelta = 0;
+        const screensContainer = document.getElementById('screens');
+        const dots = document.querySelectorAll('.dot');
+        const screens = document.querySelectorAll('.screen');
 
-        const trips = [
-            {date: '2024-04-01', km_start: 1000, km_end: 1150, liters: 12.5, posto: 'Shell SP'},
-            {date: '2024-04-05', km_start: 1150, km_end: 1320, liters: 14.2, posto: 'Petrobras RJ'},
-            {date: '2024-04-10', km_start: 1320, km_end: 1480, liters: 13.8, posto: 'Ipiranga BH'},
-            {date: '2024-04-15', km_start: 1480, km_end: 1620, liters: 11.9, posto: 'Shell SP'},
-            {date: '2024-04-20', km_start: 1620, km_end: 1785, liters: 13.5, posto: 'Petrobras RJ'}
-        ];
-
-        const users = [
-            {name: 'João Silva', cpf: '123.456.789-00', tel: '(11) 99999-0001'},
-            {name: 'Maria Oliveira', cpf: '987.654.321-00', tel: '(21) 99999-0002'},
-            {name: 'Pedro Santos', cpf: '456.789.123-00', tel: '(31) 99999-0003'}
-        ];
-
-        const vehicles = [
-            {placa: 'ABC1D23', modelo: 'Honda Civic', km_atual: 150000, combustivel: 'Gasolina'},
-            {placa: 'XYZ9W87', modelo: 'VW Fusca', km_atual: 80000, combustivel: 'Álcool'},
-            {placa: 'DEF4G56', modelo: 'Ford Ka', km_atual: 120000, combustivel: 'Diesel'}
-        ];
-
-        const postos = [
-            {nome: 'Posto Shell Centro', cnpj: '12.345.678/0001-99', cidade: 'São Paulo'},
-            {nome: 'Petrobras Av. Brasil', cnpj: '98.765.432/0001-99', cidade: 'Rio de Janeiro'},
-            {nome: 'Ipiranga Norte', cnpj: '11.223.344/0001-99', cidade: 'Belo Horizonte'}
-        ];
-
-        function goTo(page) {
-            currentPage = Math.max(0, Math.min(totalPages - 1, page));
-            updatePage();
-        }
-
-        function updatePage() {
-            pages.style.transform = `translateX(-${currentPage * 100}%)`;
-            navBtns.forEach((btn, i) => {
-                btn.classList.toggle('active', i === currentPage);
+        function updateDots() {
+            const scrollLeft = screensContainer.scrollLeft;
+            const activeIndex = Math.round(scrollLeft / window.innerWidth);
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === activeIndex);
             });
         }
 
-        // Swipe functionality
-        pages.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            lastDelta = 0;
-            pages.style.transition = 'none';
-        }, { passive: false });
+        screensContainer.addEventListener('scroll', updateDots);
+        window.addEventListener('resize', updateDots);
 
-        pages.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const currentX = e.touches[0].clientX;
-            lastDelta = currentX - startX;
-            pages.style.transform = `translateX(calc(-${currentPage * 100}% + ${lastDelta}px))`;
-        }, { passive: false });
-
-        pages.addEventListener('touchend', () => {
-            pages.style.transition = 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)';
-            if (Math.abs(lastDelta) > 50) {
-                if (lastDelta > 0 && currentPage > 0) {
-                    currentPage--;
-                } else if (lastDelta < 0 && currentPage < totalPages - 1) {
-                    currentPage++;
-                }
-            }
-            updatePage();
-        }, { passive: false });
-
-        function updateKPIs(data) {
-            const totalKm = data.reduce((sum, t) => sum + (t.km_end - t.km_start), 0);
-            const totalLiters = data.reduce((sum, t) => sum + t.liters, 0);
-            const avgKml = totalLiters > 0 ? (totalKm / totalLiters).toFixed(2) : '0.00';
-            const totalPostos = new Set(data.map(t => t.posto)).size;
-            document.getElementById('total-km').textContent = totalKm.toFixed(0);
-            document.getElementById('kml-avg').textContent = avgKml;
-            document.getElementById('total-liters').textContent = totalLiters.toFixed(1);
-            document.getElementById('total-postos').textContent = totalPostos;
-        }
-
-        function renderTable(tbodyId, data, columns) {
-            const tbody = document.getElementById(tbodyId);
-            tbody.innerHTML = data.map(item => {
-                return `<tr>${columns.map(col => `<td>${item[col]}</td>`).join('')}</tr>`;
-            }).join('');
-        }
-
-        function renderDashboardTable(data) {
-            const tbody = document.getElementById('dashboard-tbody');
-            tbody.innerHTML = data.map(t => `
-                <tr>
-                    <td>${t.date}</td>
-                    <td>${t.km_start.toLocaleString()}</td>
-                    <td>${t.km_end.toLocaleString()}</td>
-                    <td>${t.liters.toFixed(1)}</td>
-                    <td>${((t.km_end - t.km_start) / t.liters || 0).toFixed(2)}</td>
-                    <td>${t.posto}</td>
-                </tr>
-            `).join('');
-        }
-
-        function searchTrips() {
-            const from = document.getElementById('date-from').value;
-            const to = document.getElementById('date-to').value;
-            let filtered = trips;
-            if (from) filtered = filtered.filter(t => t.date >= from);
-            if (to) filtered = filtered.filter(t => t.date <= to);
-            renderDashboardTable(filtered);
-            updateKPIs(filtered);
-        }
-
-        function scanOCR() {
-            const fake = {
-                date: new Date().toISOString().split('T')[0],
-                km_start: Math.floor(Math.random() * 1000) + 1700,
-                km_end: Math.floor(Math.random() * 200) + 1800,
-                liters: (Math.random() * 5 + 10).toFixed(1),
-                posto: `Posto Scan ${Date.now().toString().slice(-4)}`
-            };
-            trips.unshift(fake);
-            renderDashboardTable(trips);
-            updateKPIs(trips);
-            alert('QR/OCR escaneado com sucesso! Dados fake adicionados.');
-        }
-
-        // Login
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            goTo(1);
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                screensContainer.scrollTo({
+                    left: index * window.innerWidth,
+                    behavior: 'smooth'
+                });
+            });
         });
 
-        // Init
-        window.addEventListener('load', () => {
-            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-            document.getElementById('date-from').value = thirtyDaysAgo;
-            document.getElementById('date-to').value = new Date().toISOString().split('T')[0];
-
-            renderDashboardTable(trips);
-            updateKPIs(trips);
-
-            renderTable('profiles-tbody', users, ['name', 'cpf', 'tel']);
-            renderTable('vehicles-tbody', vehicles, ['placa', 'modelo', 'km_atual', 'combustivel']);
-            renderTable('postos-tbody', postos, ['nome', 'cnpj', 'cidade']);
-        });
+        // Initial update
+        updateDots();
     </script>
 </body>
 </html>
