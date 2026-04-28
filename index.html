@@ -306,10 +306,18 @@ box-shadow:0 20px 60px rgba(0,0,0,0.6);
 
 
 <script>
-
+/* 🔐 CONTEXTO SAAS */
+function EMP(){
+return localStorage.getItem("empresa")
+}
+function UID(){
+return localStorage.getItem("usuario_id")
+}
 /* ESTADO GLOBAL */
 let iaBox
 let VID=null
+let USER_ID=UID()
+let EMPRESA_ID=EMP()
 let graficoConsumo,graficoGasto
 let tipoGrafico="consumo"
 let filtroInicio=null
@@ -321,9 +329,11 @@ let ultimoCNPJBuscado=null
 function initCNPJAuto(){
 let input=document.getElementById("cnpjBusca")
 if(!input)return
-if(input._bind)return
+if(input._bind===true)return
 input._bind=true
+
 let timer=null
+
 input.addEventListener("input",()=>{
 let v=input.value.replace(/\D/g,"")
 v=v.replace(/^(\d{2})(\d)/,"$1.$2")
@@ -331,12 +341,12 @@ v=v.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3")
 v=v.replace(/\.(\d{3})(\d)/,".$1/$2")
 v=v.replace(/(\d{4})(\d)/,"$1-$2")
 input.value=v
+
 let limpo=v.replace(/\D/g,"")
 clearTimeout(timer)
+
 if(limpo.length===14){
-timer=setTimeout(()=>{
-buscarCNPJ_PRO(limpo)
-},600)
+timer=setTimeout(()=>buscarCNPJ_PRO(limpo),600)
 }
 })
 }
@@ -435,7 +445,9 @@ set("p_uf_auto",uf)
 set("p_cep_auto",cep)
 set("p_cnpj",cnpj)
 let postoInput=document.getElementById("postoInput")
-if(postoInput)postoInput.value=nome
+if(postoInput && !postoInput.value){
+postoInput.value=nome
+}
 let sel=document.getElementById("postoSel")
 if(sel&&sel.options.length){
 let found=false
@@ -482,7 +494,7 @@ return{totalGasto,totalLitros,mediaConsumo,melhor,pior,custoKm,totalAbasteciment
 }
 function renderKPIs(d){
 let el=document.getElementById("kpis")
-if(!el||!d)return
+if(!el||!d||typeof d!=="object")return
 let total=Number(d.totalGasto||0)
 let litros=Number(d.totalLitros||0)
 let media=Number(d.mediaConsumo||0)
@@ -654,20 +666,43 @@ return x[2]+"/"+x[1]
 async function login(){
 let usuario=(user.value||"").trim()
 let senha=(pass.value||"").trim()
-if(!usuario||!senha){alert("Informe usuário e senha");return}
-let {data,error}=await db.from("usuarios").select("*").ilike("usuario_apelido",usuario)
-if(error){console.error(error);alert("Erro conexão");return}
-if(!data||!data.length){alert("Usuário não encontrado");return}
-let userDB=data[0]
-if(userDB.senha_hash!==senha){alert("Senha incorreta");return}
-localStorage.setItem("empresa",userDB.empresa_id)
+
+if(!usuario||!senha){
+alert("Informe usuário e senha")
+return
+}
+
+/* 🔥 BUSCA ÚNICA E SEGURA */
+let {data,error}=await db
+.from("usuarios")
+.select("*")
+.eq("usuario_apelido",usuario)
+.limit(1)
+.single()
+
+if(error || !data){
+alert("Usuário não encontrado")
+return
+}
+
+if(data.senha_hash!==senha){
+alert("Senha incorreta")
+return
+}
+
+/* 🔥 SESSÃO SEGURA */
+localStorage.setItem("empresa",data.empresa_id)
+localStorage.setItem("usuario_id",data.id)
+localStorage.setItem("user",data.usuario_apelido)
+
+/* 🔥 ENTRA NO APP */
 init()
 }
 
 /* 007 INIT */
 async function init(){
 document.body.classList.remove("login")
-document.getElementById("menuHome").style.display="none"
+
 telaLogin.style.display="none"
 app.style.display="block"
 await carregarTudo()
@@ -690,43 +725,18 @@ carregarTudo()
 }
 
 async function carregarTudo(){
-let emp=null
 
-/* 🔥 1. tenta VEÍCULO (PRIORIDADE MÁXIMA) */
-let {data:vCheck}=await db.from("veiculos").select("empresa_id").limit(1)
-if(vCheck&&vCheck.length){
-emp=vCheck[0].empresa_id
-}
+let emp=localStorage.getItem("empresa")
+let uid=localStorage.getItem("usuario_id")
 
-/* 🔥 2. fallback abastecimento */
-if(!emp){
-let {data:abast}=await db.from("abastecimentos").select("empresa_id").limit(1)
-if(abast&&abast.length){
-emp=abast[0].empresa_id
-}
-}
-
-/* 🔥 3. fallback motoristas */
-if(!emp){
-let {data:mot}=await db.from("motoristas").select("empresa_id").limit(1)
-if(mot&&mot.length){
-emp=mot[0].empresa_id
-}
-}
-
-/* 🔥 salva corretamente */
-if(emp && !localStorage.getItem("empresa")){
-localStorage.setItem("empresa",emp)
-}
-
-if(!emp){
-console.error("❌ empresa não encontrada")
+if(!emp||!uid){
+console.error("❌ sessão inválida")
 return
 }
 
-console.log("🚀 EMPRESA CORRETA:",emp)
-if(!emp)return console.error("empresa não encontrada")
-console.log("EMPRESA ATIVA:",emp)
+console.log("🚀 EMPRESA:",emp,"USER:",uid)
+
+/* ELEMENTOS */
 let elMotoristas=document.getElementById("listaMotoristas")
 let elPostos=document.getElementById("listaPostos")
 let elVeiculos=document.getElementById("listaVeiculos")
@@ -735,109 +745,138 @@ let selPosto=document.getElementById("postoSel")
 let selPostoEdit=document.getElementById("e_posto")
 let selVeiculo=document.getElementById("veiculoSel")
 
+/* ========================= */
 /* 🔥 MOTORISTAS */
-let m=[]
+/* ========================= */
+
 let {data:motoristas,error:e1}=await db
 .from("motoristas")
 .select("*")
 .eq("empresa_id",emp)
+.eq("usuario_id",uid)
 
 if(e1){
 console.error("motoristas erro:",e1)
 motoristas=[]
 }
 
-/* 🔥 NÃO FILTRAR DE NOVO */
-m=Array.isArray(motoristas)?motoristas:[]
+let m=Array.isArray(motoristas)?motoristas:[]
 
-console.log("motoristas carregados:",m, "empresa:",emp)
+/* MAP MOTORISTA */
+let mapMotoristas={}
+m.forEach(x=>mapMotoristas[x.id]=x.nome)
 
-/* 🔥 LISTA */
+/* LISTA */
 if(elMotoristas){
 elMotoristas.innerHTML=m.length
 ?m.map(x=>`<div class="item">
 <div class="itemContent">
 <div><b>${x.nome||"-"}</b></div>
-<div style="font-size:11px;color:#94a3b8">CPF: <span id="cpf_${x.id}">***.***.***-**</span></div>
+<div style="font-size:11px;color:#94a3b8">CPF: ***</div>
 <div style="font-size:11px;color:#94a3b8">Tel: ${x.telefone||"-"}</div>
-</div>
-<div class="actions">
-<button class="btnEye" onclick="toggleCPF('${x.id}','${x.cpf||""}')">👁</button>
-<button class="btnEdit" onclick="editarMotorista('${x.id}','${(x.nome||"").replace(/'/g,"")}','${(x.telefone||"").replace(/'/g,"")}','${(x.cpf||"").replace(/'/g,"")}')">✏️</button>
-<button class="btnDel" onclick="excluir('motoristas','${x.id}')">🗑</button>
 </div>
 </div>`).join("")
 :`<div class="item">Nenhum motorista</div>`
 }
 
-/* 🔥 SELECT */
+/* SELECT */
 if(selMotorista){
 selMotorista.innerHTML=m.length
 ?m.map(x=>`<option value="${x.id}">${x.nome||"-"}</option>`).join("")
 :`<option value="">Sem motoristas</option>`
 }
 
+/* ========================= */
 /* 🔥 POSTOS */
-let p=[]
-let {data:postos,error:e2}=await db.from("postos").select("*").eq("empresa_id",emp)
-if(e2){console.error("postos erro:",e2);postos=[]}
-p=Array.isArray(postos)?postos:[]
-console.log("postos:",p)
+/* ========================= */
+
+let {data:postos,error:e2}=await db
+.from("postos")
+.select("*")
+.eq("empresa_id",emp)
+.eq("usuario_id",uid)
+
+if(e2){
+console.error("postos erro:",e2)
+postos=[]
+}
+
+let p=Array.isArray(postos)?postos:[]
 
 if(elPostos){
-elPostos.innerHTML=p.length?p.map(x=>`<div class="item"><div class="itemContent"><div><b>${x.nome_posto||"-"}</b></div><div style="font-size:11px;color:#94a3b8">${x.cidade||"-"} | ${x.uf||"-"} | ${x.cnpj||"-"}</div><div style="font-size:11px;color:#64748b">${x.endereco||""} ${x.numero||""} ${x.cep||""}</div></div><div class="actions"><button class="btnEdit" onclick="editarPosto('${x.id}','${(x.nome_posto||"").replace(/'/g,"")}','${(x.cidade||"").replace(/'/g,"")}','${(x.cnpj||"").replace(/'/g,"")}')">✏️</button><button class="btnDel" onclick="excluir('postos','${x.id}')">🗑</button></div></div>`).join(""):`<div class="item">Nenhum posto</div>`
+elPostos.innerHTML=p.length
+?p.map(x=>`<div class="item"><b>${x.nome_posto||"-"}</b></div>`).join("")
+:`<div class="item">Nenhum posto</div>`
 }
 
 if(selPosto){
-selPosto.innerHTML=p.length?p.map(x=>`<option value="${x.id}">${x.nome_posto||"-"}</option>`).join(""):`<option value="">Sem postos</option>`
+selPosto.innerHTML=p.length
+?p.map(x=>`<option value="${x.id}">${x.nome_posto||"-"}</option>`).join("")
+:`<option value="">Sem postos</option>`
 }
 
 if(selPostoEdit&&selPosto){
 selPostoEdit.innerHTML=selPosto.innerHTML
 }
 
+/* ========================= */
 /* 🔥 VEÍCULOS */
-let v=[]
-let {data:veiculos,error:e3}=await db.from("veiculos").select("*").eq("empresa_id",emp)
-if(e3){console.error("veiculos erro:",e3);veiculos=[]}
-v=Array.isArray(veiculos)?veiculos:[]
-console.log("veiculos:",v)
+/* ========================= */
 
-let mapMotoristas={}
-m.forEach(mo=>{mapMotoristas[mo.id]=mo})
+let {data:veiculos,error:e3}=await db
+.from("veiculos")
+.select("*")
+.eq("empresa_id",emp)
+.eq("usuario_id",uid)
 
-if(selVeiculo){
-selVeiculo.innerHTML=v.length?v.map(x=>`<option value="${x.id}">${x.modelo||x.placa||"Veículo"}</option>`).join(""):`<option value="">Nenhum veículo</option>`
+if(e3){
+console.error("veiculos erro:",e3)
+veiculos=[]
 }
 
-/* 🔥 GARANTE VID */
+let v=Array.isArray(veiculos)?veiculos:[]
+
+/* SELECT VEÍCULO */
+if(selVeiculo){
+selVeiculo.innerHTML=v.length
+?v.map(x=>`<option value="${x.id}">${x.modelo||x.placa||"Veículo"}</option>`).join("")
+:`<option value="">Nenhum veículo</option>`
+}
+
+/* DEFINE VID CORRETO */
 if(v.length){
-VID=selVeiculo&&selVeiculo.value?selVeiculo.value:v[0].id
+VID=v[0].id
+if(selVeiculo)selVeiculo.value=VID
 }else{
 VID=null
-console.warn("⚠️ Nenhum veículo")
 }
 
-/* 🔥 LISTA VEÍCULOS */
+/* LISTA VEÍCULOS */
 if(elVeiculos){
-elVeiculos.innerHTML=v.length?v.map(x=>{
-let mot=mapMotoristas[x.motorista_id]||{}
-let renavamSafe=(x.renavam||"").replace(/'/g,"")
-return `<div class="item"><div class="itemContent"><div><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div><div style="font-size:11px;color:#94a3b8">${x.marca||"-"} | ${x.ano||"-"} | ${x.cor||"-"}</div><div style="font-size:11px;color:#94a3b8">KM ${x.km_atual||"-"} | Comb: ${x.combustivel_principal||"-"}</div><div style="font-size:11px;color:#94a3b8">Motorista: ${mot.nome||"-"}</div><div style="font-size:11px;color:#94a3b8">Renavam: <span id="renavam_${x.id}">***</span></div><div style="font-size:11px;color:#64748b">IPVA: ${x.vencimento_ipva?fData(x.vencimento_ipva):"-"} | Lic: ${x.vencimento_licenciamento?fData(x.vencimento_licenciamento):"-"}</div></div><div class="actions"><button class="btnEye" onclick="toggleRenavam('${x.id}','${renavamSafe}')">👁</button><button class="btnEdit" onclick="editarVeiculo('${x.id}','${(x.placa||"").replace(/'/g,"")}','${(x.marca||"").replace(/'/g,"")}','${(x.modelo||"").replace(/'/g,"")}','${x.ano||""}','${(x.cor||"").replace(/'/g,"")}','${renavamSafe}','${(x.combustivel_principal||"").replace(/'/g,"")}','${x.km_atual||""}','${x.vencimento_ipva||""}','${x.vencimento_licenciamento||""}','${x.motorista_id||""}')">✏️</button><button class="btnDel" onclick="excluir('veiculos','${x.id}')">🗑</button></div></div>`
-}).join(""):`<div class="item">Nenhum veículo</div>`
+elVeiculos.innerHTML=v.length
+?v.map(x=>`<div class="item">
+<div class="itemContent">
+<div><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div>
+<div style="font-size:11px;color:#94a3b8">
+Motorista: ${mapMotoristas[x.motorista_id]||"-"}
+</div>
+</div>
+</div>`).join("")
+:`<div class="item">Nenhum veículo</div>`
 }
 
-/* 🔥 ATUALIZA ABASTECIMENTOS */
+/* ========================= */
+/* 🔥 RENDER FINAL */
+/* ========================= */
+
 setTimeout(()=>{
 if(VID){
 render()
 }else{
-console.warn("Sem VID → não renderiza abastecimentos")
+console.warn("⚠️ sem veículo")
 }
 },100)
-if(!VID && v.length){
-VID=v[0].id
-}
+
 }
 
 async function garantirPosto(){
@@ -916,8 +955,16 @@ if(v_litros<=0)return alert("Litros inválido")
 let v_valorLitro=parseFloat(valor_litro.value)|| (v_litros>0?(v_total/v_litros):0)
 
 /* 🔥 INSERT */
+let uid=localStorage.getItem("usuario_id")
+
+if(!uid){
+alert("Sessão inválida")
+return
+}
+
 let {error}=await db.from("abastecimentos").insert({
 empresa_id:emp,
+usuario_id:uid,
 veiculo_id:VID,
 posto_id:postoId,
 valor_total:parseFloat(v_total.toFixed(2)),
@@ -965,6 +1012,8 @@ let {data,error}=await db
 .from("abastecimentos")
 .select("*,postos(nome_posto)")
 .eq("veiculo_id",VID)
+.eq("empresa_id",localStorage.getItem("empresa"))
+.eq("usuario_id",localStorage.getItem("usuario_id"))
 .order("data_abastecimento",{ascending:false})
 
 if(error){
@@ -1034,9 +1083,16 @@ cpf:cpf
 }
 
 let error=null
-
+if(!emp){
+alert("Sessão inválida. Faça login novamente.")
+return
+}
 if(window.editMotoristaId){
-({error}=await db.from("motoristas").update(payload).eq("id",window.editMotoristaId))
+({error}=await db
+.from("motoristas")
+.update(payload)
+.eq("id",window.editMotoristaId)
+.eq("empresa_id",emp))
 window.editMotoristaId=null
 }else{
 ({error}=await db.from("motoristas").insert(payload))
@@ -1084,9 +1140,16 @@ motorista_id:v_motorista.value||null
 }
 
 let error=null
-
+if(!emp){
+alert("Sessão inválida. Faça login novamente.")
+return
+}
 if(window.editVeiculoId){
-({error}=await db.from("veiculos").update(payload).eq("id",window.editVeiculoId))
+({error}=await db
+.from("veiculos")
+.update(payload)
+.eq("id",window.editVeiculoId)
+.eq("empresa_id",emp))
 window.editVeiculoId=null
 }else{
 ({error}=await db.from("veiculos").insert(payload))
@@ -1122,9 +1185,16 @@ cep:(p_cep.value||"").trim()
 }
 
 let error=null
-
+if(!emp){
+alert("Sessão inválida. Faça login novamente.")
+return
+}
 if(window.editPostoId){
-({error}=await db.from("postos").update(payload).eq("id",window.editPostoId))
+({error}=await db
+.from("postos")
+.update(payload)
+.eq("id",window.editPostoId)
+.eq("empresa_id",emp))
 window.editPostoId=null
 }else{
 ({error}=await db.from("postos").insert(payload))
@@ -1222,7 +1292,13 @@ if(!data||!data.length){
 alert("Registro não encontrado")
 return
 }
-await db.from(t).delete().eq("id",id)
+let emp=localStorage.getItem("empresa")
+
+await db
+.from(t)
+.delete()
+.eq("id",id)
+.eq("empresa_id",emp)
 await carregarTudo()
 render()
 }
@@ -1296,13 +1372,19 @@ await carregarTudo()
 }
 }
 }
-await db.from("abastecimentos").update({
+let emp=localStorage.getItem("empresa")
+
+await db
+.from("abastecimentos")
+.update({
 valor_total:Number(parseFloat(e_valor.value||0).toFixed(2)),
 litros:parseFloat(e_litros.value)||0,
 quilometragem:parseFloat(e_km.value)||0,
 posto_id:postoId,
 data_abastecimento:e_data.value
-}).eq("id",editAbastecimentoId)
+})
+.eq("id",editAbastecimentoId)
+.eq("empresa_id",emp)
 modalEditar.style.display="none"
 render()
 }
