@@ -3,7 +3,7 @@
 /* ========================================= */
 
 const CACHE_NAME="veiculos-v3"
-
+const ASSETS=["./","./index.html","./manifest.json","./favicon.ico"]
 /* 🔥 ARQUIVOS ESSENCIAIS */
 const ASSETS=[
 "./",
@@ -17,11 +17,11 @@ const ASSETS=[
 /* 🔥 INSTALL */
 /* ========================================= */
 self.addEventListener("activate",e=>{
+self.clients.claim()
 e.waitUntil(
 caches.keys().then(keys=>{
 return Promise.all(
-keys.filter(k=>k!==CACHE_NAME)
-.map(k=>caches.delete(k))
+keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k))
 )
 })
 )
@@ -30,38 +30,61 @@ keys.filter(k=>k!==CACHE_NAME)
 /* ========================================= */
 /* 🔥 ACTIVATE */
 /* ========================================= */
-self.addEventListener("activate",e=>{
+self.addEventListener("install",e=>{
+self.skipWaiting()
 e.waitUntil(
-caches.keys().then(keys=>{
-return Promise.all(keys.map(k=>caches.delete(k)))
-})
+caches.open(CACHE_NAME).then(cache=>cache.addAll(ASSETS))
 )
-self.clients.claim()
 })
 
 /* ========================================= */
-/* 🔥 FETCH – CACHE FIRST (ULTRA RÁPIDO) */
+/* 🔥 FETCH – CACHE FIRST (PROFISSIONAL) */
 /* ========================================= */
 self.addEventListener("fetch",e=>{
 
-/* IGNORA REQUISIÇÕES DO SUPABASE */
-if(e.request.url.includes("supabase.co")){
-return
-}
+/* 🔒 IGNORA SUPABASE (API) */
+if(e.request.url.includes("supabase.co"))return
+
+/* 🔒 IGNORA MÉTODOS NÃO-GET */
+if(e.request.method!=="GET")return
 
 e.respondWith(
-caches.match(e.request).then(res=>{
-return res||fetch(e.request).then(network=>{
-return caches.open(CACHE_NAME).then(cache=>{
-cache.put(e.request,network.clone())
-return network
+caches.match(e.request).then(cacheRes=>{
+
+/* 🔥 SE TEM CACHE → RETORNA RÁPIDO */
+if(cacheRes)return cacheRes
+
+/* 🔥 SENÃO → BUSCA NA REDE */
+return fetch(e.request)
+.then(networkRes=>{
+
+/* 🔒 SE RESPOSTA INVÁLIDA → NÃO CACHEIA */
+if(!networkRes||networkRes.status!==200)return networkRes
+
+let clone=networkRes.clone()
+
+/* 🔥 SALVA NO CACHE */
+caches.open(CACHE_NAME).then(cache=>{
+cache.put(e.request,clone)
 })
-}).catch(()=>{
-/* fallback offline */
+
+return networkRes
+
+})
+.catch(()=>{
+
+/* 🔥 FALLBACK OFFLINE */
 if(e.request.destination==="document"){
 return caches.match("./index.html")
 }
+
+/* 🔥 IMAGENS OPCIONAL */
+if(e.request.destination==="image"){
+return caches.match("./favicon.ico")
+}
+
 })
+
 })
 )
 
