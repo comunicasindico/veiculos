@@ -18,324 +18,57 @@
 </head>
 
 <style>
-*{box-sizing:border-box}
-body{
-margin:0;
-font-family:Arial;
-color:#fff;
-background:#020617;
-min-height:100vh;
-display:flex;
-flex-direction:column;
-overflow-x:hidden;
-}
-html,body{
-height:100%;
-width:100%;
-}
-.page{
-width:100%;
-flex-shrink:0;
-overflow-y:auto;
-padding:14px;
-padding-bottom:100px;
-max-width:100vw;
-}
-/* 🔥 LOGIN BACKGROUND */
-body.login{
-background:
-linear-gradient(to bottom,rgba(0,0,0,.15),rgba(0,0,0,.75)),
-url("img/bcveiculos.png") center/cover no-repeat fixed;
-}
-
-/* 🔥 RESPONSIVO LOGIN */
-@media(max-width:768px){
-body.login{background-position:center top;background-size:cover}
-#telaLogin{padding-top:20px;transform:translateY(-20px)}
-#telaLogin>div{margin-top:0}
-}
-@media(min-width:769px){
-body.login{background-position:center;background-size:cover}
-}
-
-/* 🔥 OVERLAY */
-body.login::before{
-content:"";
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:linear-gradient(to bottom,rgba(2,6,23,0.35),rgba(2,6,23,0.9));
-z-index:0;
-pointer-events:none;
-}
-body:not(.login)::before{
-content:"";
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(2,6,23,0.92);
-z-index:-1;
-pointer-events:none;
-}
-
-/* 🔥 BASE ESTRUTURAL (CORRIGIDO) */
-.container{
-width:100%;
-max-width:100vw;
-height:100vh;
-margin:auto;
-display:flex;
-flex-direction:column;
-overflow:hidden;
-padding:10px
-}
-#app{
-width:100%;
-min-height:100vh;
-display:flex;
-flex-direction:column;
-overflow-x:hidden;
-}
-#pages{
-display:flex;
-width:100%;
-height:100%;
-min-height:100vh;
-overflow:hidden;
-transition:transform .35s ease;
-}
-.page{
-width:100%;
-flex:0 0 100%;
-min-height:100%;
-overflow-y:auto;
-padding:14px;
-}
-
-/* 🔥 CARDS */
-.card{
-width:100%;
-background:rgba(30,41,59,0.65);
-backdrop-filter:blur(10px);
-padding:12px;
-border-radius:18px;
-margin-top:10px;
-border:1px solid rgba(255,255,255,0.05);
-box-shadow:0 6px 20px rgba(0,0,0,0.4)
-}
-
-/* 🔥 INPUTS */
-input,select{
-width:100%;
-padding:12px;
-margin-top:6px;
-border-radius:12px;
-border:none;
-background:rgba(51,65,85,0.6);
-color:#fff;
-font-size:14px
-}
-
-/* 🔥 BOTÕES */
-button{
-padding:10px;
-border:none;
-border-radius:10px;
-font-weight:bold;
-cursor:pointer
-}
-.btnSave{
-background:linear-gradient(135deg,#22c55e,#16a34a);
-color:#000;
-width:100%;
-border-radius:14px;
-font-weight:600;
-box-shadow:0 6px 20px rgba(34,197,94,.4)
-}
-.btnCancel{background:#64748b;color:#fff}
-.btnLogout{background:#dc2626;color:#fff;width:180px}
-.btnExit{
-background:linear-gradient(135deg,#dc2626,#991b1b)!important;
-color:#fff!important;
-}
-
-/* 🔥 HEADER */
-.headerApp{
-position:sticky;
-top:0;
-background:rgba(2,6,23,0.7);
-backdrop-filter:blur(10px);
-padding:10px;
-border-bottom:1px solid rgba(255,255,255,0.05);
-z-index:20
-}
-
-/* 🔥 TOPBAR */
-#topBar{
-position:sticky;
-top:0;
-display:flex;
-justify-content:space-between;
-gap:8px;
-padding:10px;
-background:rgba(2,6,23,0.8);
-backdrop-filter:blur(10px);
-z-index:30;
-}
-#topBar button{
-flex:1;
-padding:10px;
-border:none;
-border-radius:12px;
-font-weight:600;
-background:#1e293b;
-color:#e5e7eb;
-}
-#topBar button:last-child{
-background:#dc2626;
-color:#fff;
-}
-
-/* 🔥 ITENS */
-.item{display:flex;align-items:center;gap:10px}
-.itemContent{flex:1;min-width:0}
-.actions{
-display:flex;
-gap:6px;
-margin-left:auto;
-}
-.actions button{
-width:34px;
-height:34px;
-padding:0;
-border-radius:8px;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
-/* 🔥 FORM */
-.field{margin-top:8px;display:flex;flex-direction:column}
-.field label{font-size:11px;color:#94a3b8;margin-bottom:2px}
-
-/* 🔥 LOGIN BOX */
-#telaLogin{
-display:flex;
-justify-content:center;
-align-items:flex-start;
-height:100vh;
-padding:20px;
-padding-top:40px;
-position:relative;
-z-index:2
-}
-.login-box{
-background:rgba(2,6,23,0.55);
-backdrop-filter:blur(6px);
-border:1px solid rgba(255,255,255,0.08);
-box-shadow:0 20px 60px rgba(0,0,0,0.6);
-border-radius:20px;
-padding:20px
-}
-
-/* 🔥 BOTÕES FLUTUANTES */
-.btnFloat{
-width:58px;
-height:58px;
-border-radius:18px;
-border:none;
-background:rgba(30,41,59,0.55);
-backdrop-filter:blur(12px);
-color:#fff;
-font-size:22px;
-display:flex;
-align-items:center;
-justify-content:center;
-box-shadow:0 8px 30px rgba(0,0,0,0.6);
-transition:.25s
-}
-.btnFloat:hover{transform:translateY(-2px)}
+*{box-sizing:border-box}html,body{height:100%;width:100%}body{margin:0;font-family:Arial;color:#fff;background:#020617;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+body.login{background:linear-gradient(to bottom,rgba(0,0,0,.2),rgba(0,0,0,.85)),url("img/bcveiculos.png") center/cover no-repeat fixed}
+body.login::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(2,6,23,0.3),rgba(2,6,23,0.9));z-index:0}
+body:not(.login)::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:#020617;z-index:-1}
+.container{width:100%;height:100vh;display:flex;flex-direction:column;overflow:hidden;padding:10px}
+#app{width:100%;min-height:100vh;display:flex;flex-direction:column}
+#pages{display:flex;width:100%;height:100%;transition:.35s}
+.page{flex:0 0 100%;overflow-y:auto;padding:14px;padding-bottom:100px;scroll-behavior:smooth}
+.card{background:rgba(30,41,59,.65);backdrop-filter:blur(10px);padding:12px;border-radius:16px;margin-top:10px;border:1px solid rgba(255,255,255,.05);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+input,select{width:100%;padding:12px;margin-top:6px;border-radius:10px;border:none;background:rgba(51,65,85,.6);color:#fff;font-size:14px}
+button{padding:10px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
+.btnSave{background:linear-gradient(135deg,#22c55e,#16a34a);color:#000;width:100%;box-shadow:0 6px 20px rgba(34,197,94,.4)}
+.btnExit{background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff}
+.headerApp{position:sticky;top:0;background:rgba(2,6,23,.7);backdrop-filter:blur(10px;padding:10px;border-bottom:1px solid rgba(255,255,255,.05);z-index:20}
+#topBar{position:sticky;top:0;display:flex;gap:6px;padding:10px;background:rgba(2,6,23,.85);z-index:30}
+#topBar button{flex:1;background:#1e293b;color:#e5e7eb}
+#topBar button:last-child{background:#dc2626;color:#fff}
+.item{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.05)}
+.itemContent{flex:1}
+.actions{display:flex;gap:6px}
+.actions button{width:34px;height:34px;padding:0;border-radius:8px}
+.field{margin-top:8px}
+.field label{font-size:11px;color:#94a3b8}
+#telaLogin{display:flex;justify-content:center;align-items:flex-start;height:100vh;padding:20px;padding-top:40px;z-index:2}
+.login-box{background:rgba(2,6,23,.55);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);box-shadow:0 20px 60px rgba(0,0,0,.6);border-radius:20px;padding:20px;width:100%;max-width:360px}
+canvas{width:100%!important;height:220px!important;border-radius:10px;margin-top:10px;background:#fff}
+#lista{max-height:45vh;overflow-y:auto}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);justify-content:center;align-items:center;z-index:999}
+.modalBox{width:95%;max-width:420px;background:#1e293b;padding:15px;border-radius:12px}
+#navBar{position:fixed;bottom:0;left:0;width:100%;height:70px;display:flex;background:#0f172a;border-top:1px solid #1e293b}
+#navBar button{flex:1;border:none;background:rgba(30,41,59,.7);color:#cbd5e1;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#navBar button.active{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff}
+@media(max-width:768px){.page{padding:10px;padding-bottom:100px}#telaLogin{padding-top:20px}#topBar{flex-direction:row}#navBar{height:65px}.login-box{width:100%;max-width:320px;padding:16px}}
+@media(min-width:769px){.container{max-width:500px;margin:auto}.page{padding:18px}}
+.btnFloat{position:fixed;right:14px;width:56px;height:56px;border-radius:16px;border:none;background:rgba(30,41,59,.6);backdrop-filter:blur(12px);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 25px rgba(0,0,0,.6);z-index:999;transition:.2s}
+.btnFloat:hover{transform:translateY(-3px)}
 .btnFloat:active{transform:scale(.92)}
-.btnSair{
-background:linear-gradient(135deg,#dc2626,#b91c1c);
-box-shadow:0 8px 30px rgba(220,38,38,.5)
-}
-
-/* 🔥 CANVAS */
-canvas{
-width:100%!important;
-max-width:100%;
-border-radius:10px;
-margin-top:10px;
-background:#fff
-}
-
-/* 🔥 MODAL */
-.modal{
-display:none;
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.7);
-justify-content:center;
-align-items:center;
-z-index:999
-}
-.modalBox{
-width:95%;
-max-width:420px;
-background:#1e293b;
-padding:15px;
-border-radius:12px
-}
+.btnFloat.ia{bottom:150px;background:linear-gradient(135deg,#22c55e,#16a34a)}
+.btnFloat.scan{bottom:85px;background:linear-gradient(135deg,#3b82f6,#1d4ed8)}
+.btnFloat.add{bottom:20px;background:linear-gradient(135deg,#f59e0b,#d97706)}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);justify-content:center;align-items:center;z-index:9999;animation:fadeIn .25s ease}
+.modal.active{display:flex}
+.modalBox{width:92%;max-width:420px;background:#1e293b;border-radius:16px;padding:16px;box-shadow:0 15px 40px rgba(0,0,0,.6);animation:scaleIn .2s ease}
 #modalOCR .modalBox{max-height:90vh;overflow-y:auto}
-#modalOCR video{max-height:35vh;object-fit:cover}
-#modalOCR img{max-height:35vh;object-fit:contain}
-
-/* 🔥 NAVBAR (UNIFICADO E CORRIGIDO) */
-#navBar{
-position:fixed;
-bottom:0;
-left:0;
-width:100%;
-height:70px;
-display:flex;
-background:#0f172a;
-border-top:1px solid #1e293b;
-z-index:9999
-}
-#navBar button{
-flex:1;
-border:none;
-background:rgba(30,41,59,0.7);
-color:#cbd5e1;
-font-size:11px;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-gap:2px;
-transition:.25s;
-}
-#navBar button:hover{background:#334155;color:#fff}
-#navBar button.active{
-background:linear-gradient(135deg,#3b82f6,#1d4ed8);
-color:#fff;
-box-shadow:0 6px 20px rgba(59,130,246,.4);
-}
-#navBar button span{font-size:10px}
-
-/* 🔥 ANIMAÇÃO */
-@keyframes fadeIn{
-from{opacity:0;transform:translateY(10px)}
-to{opacity:1;transform:translateY(0)}
-}
+#modalOCR video{width:100%;max-height:40vh;border-radius:10px;object-fit:cover}
+#modalOCR img{width:100%;max-height:40vh;border-radius:10px;object-fit:contain}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.modalBox h3{margin:0 0 10px 0}
+.modalBox input{margin-top:6px}
+.modalBox button{margin-top:8px}
 
 
 </style>
@@ -395,7 +128,6 @@ to{opacity:1;transform:translateY(0)}
 </div>
 
 <canvas id="graficoConsumo"></canvas>
-<canvas id="graficoGasto"></canvas>
 
 </div>
 </div>
@@ -830,55 +562,19 @@ async function salvar(){
 let emp=EMP()
 let uid=UID()
 if(!emp||!uid)return alert("Sessão inválida")
-if(!VID){
-alert("Cadastre um veículo primeiro")
-return
-}
-
+if(!VID)return alert("Cadastre um veículo")
 let v_total=parseFloat(valor.value)||0
 let v_litros=parseFloat(litros.value)||0
 let v_km=parseFloat(km.value)||0
 let v_data=data.value
-
 if(!v_data)return alert("Informe data")
-if(v_total<=0)return alert("Valor inválido")
-if(v_litros<=0)return alert("Litros inválido")
-
-let v_valorLitro=v_litros>0?(v_total/v_litros):0
-
-/* 🔥 MONTA OBJETO LIMPO */
-let payload={
-empresa_id:emp,
-veiculo_id:VID,
-valor_total:v_total,
-litros:v_litros,
-quilometragem:v_km,
-data_abastecimento:v_data
-}
-
-/* 🔥 CAMPOS OPCIONAIS (SÓ ENVIA SE EXISTIR) */
-if(uid)payload.usuario_id=uid
-if(postoSel && postoSel.value)payload.posto_id=postoSel.value
-if(v_valorLitro)payload.valor_litro=v_valorLitro
-if(tanque && tanque.value)payload.tanque=tanque.value
-
-console.log("📦 INSERT:",payload)
-
-/* 🔥 EXECUTA */
+if(v_total<=0||v_litros<=0)return alert("Valores inválidos")
+let payload={empresa_id:emp,veiculo_id:VID,valor_total:v_total,litros:v_litros,quilometragem:v_km,data_abastecimento:v_data,usuario_id:uid}
+let postoSel=document.getElementById("postoSel")
+if(postoSel&&postoSel.value)payload.posto_id=postoSel.value
 let {error}=await db.from("abastecimentos").insert(payload)
-
-if(error){
-console.error("❌ ERRO SUPABASE:",error)
-alert("Erro ao salvar: "+error.message)
-return
-}
-
-alert("✅ Salvo com sucesso")
-
-valor.value=""
-litros.value=""
-km.value=""
-
+if(error){console.error(error);alert("Erro");return}
+valor.value="";litros.value="";km.value=""
 render()
 }
 
@@ -891,11 +587,8 @@ if(!VID)return
 let listaEl=document.getElementById("lista")
 let {data,error}=await db.from("abastecimentos").select("*,postos(nome_posto)").eq("veiculo_id",VID).eq("empresa_id",EMP()).order("data_abastecimento",{ascending:false})
 if(error){listaEl.innerHTML="Erro";return}
-if(!data||!data.length){
-listaEl.innerHTML="<div class='item'>Sem histórico</div>"
-renderDashboard([])
-return
-}
+if(!data||!data.length){listaEl.innerHTML="<div class='item'>Sem histórico</div>";renderDashboard([]);return}
+data=data.slice(0,50)
 listaEl.innerHTML=data.map(a=>{
 let valor=Number(a.valor_total||0)
 let litros=Number(a.litros||0)
@@ -954,8 +647,8 @@ totalAbastecimentos:lista.length
 function renderDashboard(lista){
 if(!Array.isArray(lista))return
 let dados=[...lista]
-if(filtroInicio)dados=dados.filter(x=>x.data_abastecimento>=filtroInicio)
-if(filtroFim)dados=dados.filter(x=>x.data_abastecimento<=filtroFim)
+if(filtroInicio)dados=dados.filter(x=>new Date(x.data_abastecimento)>=new Date(filtroInicio))
+if(filtroFim)dados=dados.filter(x=>new Date(x.data_abastecimento)<=new Date(filtroFim))
 if(!dados.length)return
 dados=dados.sort((a,b)=>new Date(a.data_abastecimento)-new Date(b.data_abastecimento))
 let labels=dados.map(x=>fData(x.data_abastecimento))
@@ -965,20 +658,12 @@ let a=dados[i],b=dados[i-1]
 let km=a.quilometragem-b.quilometragem
 if(km>0&&a.litros>0)consumo.push(km/a.litros);else consumo.push(null)
 }
-let total=dados.map(x=>Number(x.valor_total||0))
-let litrosArr=dados.map(x=>Number(x.litros||0))
-let dataset=consumo
-if(tipoGrafico==="total")dataset=total
-if(tipoGrafico==="litros")dataset=litrosArr
 if(graficoConsumo)graficoConsumo.destroy()
-graficoConsumo=new Chart(graficoConsumoEl,{
-type:"line",
-data:{labels,datasets:[{data:dataset,borderWidth:2}]},
-options:{responsive:true}
-})
+graficoConsumo=new Chart(graficoConsumoEl,{type:"line",data:{labels,datasets:[{data:consumo,borderWidth:2}]},options:{responsive:true}})
 let ind=calcularIndicadores(dados)
 renderKPIs(ind)
 }
+
 window.editMotoristaId=null
 window.editVeiculoId=null
 window.editPostoId=null
@@ -1250,23 +935,15 @@ return
 await carregarTudo()
 render()
 }
-function bindPostoInput(){
 
+function bindPostoInput(){
+let postoSel=document.getElementById("postoSel")
+let postoInput=document.getElementById("postoInput")
 if(!postoSel||!postoInput)return
 if(postoSel._bind)return
-
 postoSel._bind=true
-
-postoSel.addEventListener("change",()=>{
-if(!postoInput.value){
-postoInput.value=postoSel.options[postoSel.selectedIndex]?.text||""
-}
-})
-
-postoInput.addEventListener("input",()=>{
-postoSel.value=""
-})
-
+postoSel.addEventListener("change",()=>{if(!postoInput.value){postoInput.value=postoSel.options[postoSel.selectedIndex]?.text||""}})
+postoInput.addEventListener("input",()=>{postoSel.value=""})
 }
   
 /* =========================================================
