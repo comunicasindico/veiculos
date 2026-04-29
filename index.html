@@ -710,19 +710,11 @@ render()
 selVeiculo._bind=true
 }
 
-/* 🔥 CRIA VEÍCULO PADRÃO (SEM LOOP) */
+/* 🔥 NÃO CRIAR AUTOMÁTICO */
 if(!veiculos.length){
-let {data:novo,error}=await db.from("veiculos").insert({
-empresa_id:emp,
-placa:"AAA0000",
-modelo:"Veículo Inicial"
-}).select().single()
-
-if(!error&&novo){
-VID=novo.id
-await carregarTudo()
+console.warn("⚠️ Nenhum veículo cadastrado")
+VID=null
 return
-}
 }
 
 /* 🔥 RENDER FINAL */
