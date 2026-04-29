@@ -19,8 +19,28 @@
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial;color:#fff;background:#020617;overflow:hidden}
-
+body{
+margin:0;
+font-family:Arial;
+color:#fff;
+background:#020617;
+height:100vh;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
+html,body{
+height:100%;
+width:100%;
+}
+.page{
+width:100%;
+flex-shrink:0;
+overflow-y:auto;
+padding:14px;
+padding-bottom:100px;
+max-width:100vw;
+}
 /* 🔥 LOGIN BACKGROUND */
 body.login{
 background:
@@ -674,17 +694,32 @@ selPosto.innerHTML=postos.length
 }
 
 /* ========================= */
-/* 🔥 VEÍCULOS */
+/* 🔥 VEÍCULOS (FIX COMPLETO) */
 /* ========================= */
-let qVeiculos=db.from("veiculos").select("*").eq("empresa_id",emp)
-if(uid)qVeiculos=qVeiculos.eq("usuario_id",uid)
+let qVeiculos=db
+.from("veiculos")
+.select("*")
+.eq("empresa_id",emp)
+
+/* 🔥 CORREÇÃO CRÍTICA (UUID + NULL) */
+if(uid){
+qVeiculos=qVeiculos.or(`usuario_id.eq.${uid},usuario_id.is.null`)
+}
+
 let {data:veiculos,error:e3}=await qVeiculos
-if(e3){console.error("veiculos erro:",e3);veiculos=[]}
-veiculos=veiculos||[]
+
+if(e3){
+console.error("veiculos erro:",e3)
+veiculos=[]
+}
+
+veiculos=Array.isArray(veiculos)?veiculos:[]
+
+console.log("VEICULOS CARREGADOS:",veiculos)
 
 if(selVeiculo){
 if(veiculos.length){
-selVeiculo.innerHTML=veiculos.map(x=>`<option value="${x.id}">${x.modelo||x.placa||"Veículo"}</option>`).join("")
+selVeiculo.innerHTML=veiculos.map(x=>`<option value="${x.id}">${x.modelo?x.modelo+" - "+(x.placa||""):x.placa||"Veículo"}</option>`).join("")
 if(!VID||!veiculos.find(v=>v.id===VID)){
 VID=veiculos[0].id
 }
@@ -711,9 +746,9 @@ selVeiculo._bind=true
 }
 
 /* 🔥 NÃO CRIAR AUTOMÁTICO */
-if(!veiculos.length){
-console.warn("⚠️ Nenhum veículo cadastrado")
-VID=null
+if(!data || !data.length){
+console.warn("Nenhum veículo")
+veiculoSel.innerHTML='<option value="">Sem veículo</option>'
 return
 }
 
