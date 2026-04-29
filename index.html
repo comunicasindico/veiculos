@@ -710,7 +710,7 @@ veiculos=v1||[]
 
 /* 🔥 FILTRO LOCAL (SUBSTITUI .or) */
 if(uid){
-veiculos=veiculos.filter(v=>!v.usuario_id||v.usuario_id===uid)
+veiculos=veiculos.filter(v=>v.usuario_id===uid)
 }
 
 console.log("VEICULOS CARREGADOS:",veiculos)
@@ -764,6 +764,7 @@ return
 /* 🔥 RENDER */
 if(VID){
 setTimeout(()=>render(),50)
+}
 }
 
 async function salvar(){
