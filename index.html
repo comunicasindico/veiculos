@@ -41,8 +41,11 @@ button{padding:10px;border:none;border-radius:10px;font-weight:bold;cursor:point
 .actions button{width:34px;height:34px;padding:0;border-radius:8px}
 .field{margin-top:8px}
 .field label{font-size:11px;color:#94a3b8}
-#telaLogin{display:flex;justify-content:center;align-items:flex-start;height:100vh;padding:20px;padding-top:40px;z-index:2}
-.login-box{background:rgba(2,6,23,.55);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);box-shadow:0 20px 60px rgba(0,0,0,.6);border-radius:20px;padding:20px;width:100%;max-width:360px}
+#telaLogin{position:fixed;top:0;left:0;width:100%;height:100vh;display:flex;justify-content:center;align-items:center;z-index:9999}
+.login-box{width:100%;max-width:360px;background:rgba(2,6,23,.75);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.8);animation:scaleIn .25s ease}
+.login-box h2{text-align:center;margin-bottom:14px;font-weight:600}
+.login-box input{margin-top:8px}
+.login-box button{margin-top:10px}
 canvas{width:100%!important;height:220px!important;border-radius:10px;margin-top:10px;background:#fff}
 #lista{max-height:45vh;overflow-y:auto}
 .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);justify-content:center;align-items:center;z-index:999}
@@ -76,7 +79,8 @@ canvas{width:100%!important;height:220px!important;border-radius:10px;margin-top
 <body>
 <div id="telaLogin">
 <div class="login-box">
-<h2 style="text-align:center;margin-bottom:10px">🚗 Veículos - Carro e Moto</h2>
+<h2>🚗 Veículos PRO</h2>
+<div style="text-align:center;font-size:12px;color:#94a3b8;margin-bottom:10px">Controle total de abastecimento</div>
 <input id="user" placeholder="Usuário ou e-mail">
 <input id="pass" type="password" placeholder="Senha">
 <button class="btnSave" onclick="login()">Entrar</button>
@@ -1309,8 +1313,11 @@ inputData.value=hoje.toISOString().slice(0,10)
 }
 if(typeof initCNPJAuto==="function")initCNPJAuto()
 if(EMP()){
-document.body.classList.remove("login")
 init()
+}else{
+document.body.classList.add("login")
+document.getElementById("app").style.display="none"
+document.getElementById("telaLogin").style.display="flex"
 }
 })
 
