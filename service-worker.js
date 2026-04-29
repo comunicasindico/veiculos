@@ -2,7 +2,7 @@
 /* 🔥 SW VEÍCULOS PRO – CACHE INTELIGENTE */
 /* ========================================= */
 
-const CACHE_NAME="veiculos-v2"
+const CACHE_NAME="veiculos-v3"
 
 /* 🔥 ARQUIVOS ESSENCIAIS */
 const ASSETS=[
