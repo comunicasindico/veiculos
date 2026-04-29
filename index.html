@@ -663,7 +663,9 @@ let selVeiculo=document.getElementById("veiculoSel")
 /* 🔥 MOTORISTAS */
 /* ========================= */
 let qMotoristas=db.from("motoristas").select("*").eq("empresa_id",emp)
-if(uid)qMotoristas=qMotoristas.eq("usuario_id",uid)
+if(uid && uid!=="null" && uid!=="undefined"){
+qMotoristas=qMotoristas.eq("usuario_id",uid)
+}
 let {data:motoristas,error:e1}=await qMotoristas
 if(e1){console.error("motoristas erro:",e1);motoristas=[]}
 motoristas=motoristas||[]
@@ -726,12 +728,21 @@ veiculos=[]
 }else{
 veiculos=Array.isArray(v1)?v1:[]
 }
-/* 🔒 FILTRO FINAL ANTI-LIXO (OBRIGATÓRIO) */
+
+/* 🔥 FILTRO POR USUÁRIO (COLOCAR AQUI) */
+if(uid && uid!=="null"){
+veiculos=veiculos.filter(v=>
+String(v.usuario_id||"")===String(uid)
+)
+}
+
+/* 🔒 FILTRO FINAL ANTI-LIXO (DEPOIS DO UID) */
 veiculos=veiculos.filter(v=>
 v.placa &&
 v.placa!=="AAA0000" &&
 !String(v.modelo||"").toLowerCase().includes("inicial")
 )
+
 console.log("VEICULOS CARREGADOS:",veiculos)
 
 /* 🔥 SELECT VEÍCULO */
@@ -803,7 +814,7 @@ let qAbaste=db
 .from("abastecimentos")
 .select("*")
 .eq("empresa_id",emp)
-if(uid){
+if(uid && uid!=="null"){
 qAbaste=qAbaste.eq("usuario_id",uid)
 }
 let {data:abastecimentos,error:eA}=await qAbaste
