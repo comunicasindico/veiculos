@@ -694,35 +694,41 @@ selPosto.innerHTML=postos.length
 }
 
 /* ========================= */
-/* 🔥 VEÍCULOS (FIX COMPLETO) */
+/* 🔥 VEÍCULOS (CORREÇÃO FINAL REAL) */
 /* ========================= */
-let qVeiculos=db
+
+let veiculos=[]
+
+/* 🔥 BUSCA SEGURA (SEM .or) */
+let {data:v1,error:e1}=await db
 .from("veiculos")
 .select("*")
 .eq("empresa_id",emp)
 
-/* 🔥 CORREÇÃO CRÍTICA (UUID + NULL) */
+if(e1){
+console.error("veiculos erro:",e1)
+}else{
+veiculos=v1||[]
+}
+
+/* 🔥 FILTRO LOCAL (SUBSTITUI .or) */
 if(uid){
-qVeiculos=qVeiculos.or(`usuario_id.eq.${uid},usuario_id.is.null`)
+veiculos=veiculos.filter(v=>!v.usuario_id||v.usuario_id===uid)
 }
-
-let {data:veiculos,error:e3}=await qVeiculos
-
-if(e3){
-console.error("veiculos erro:",e3)
-veiculos=[]
-}
-
-veiculos=Array.isArray(veiculos)?veiculos:[]
 
 console.log("VEICULOS CARREGADOS:",veiculos)
 
+/* 🔥 SELECT */
 if(selVeiculo){
 if(veiculos.length){
-selVeiculo.innerHTML=veiculos.map(x=>`<option value="${x.id}">${x.modelo?x.modelo+" - "+(x.placa||""):x.placa||"Veículo"}</option>`).join("")
+selVeiculo.innerHTML=veiculos.map(x=>
+`<option value="${x.id}">${x.modelo?x.modelo+" - "+(x.placa||""):x.placa||"Veículo"}</option>`
+).join("")
+
 if(!VID||!veiculos.find(v=>v.id===VID)){
 VID=veiculos[0].id
 }
+
 selVeiculo.value=VID
 }else{
 selVeiculo.innerHTML=`<option value="">Sem veículo</option>`
@@ -730,13 +736,19 @@ VID=null
 }
 }
 
+/* 🔥 LISTA */
 if(elVeiculos){
 elVeiculos.innerHTML=veiculos.length
-?veiculos.map(x=>`<div class="item"><div class="itemContent"><b>${x.modelo||"-"}</b> | ${x.placa||"-"}</div></div>`).join("")
+?veiculos.map(x=>`
+<div class="item">
+<div class="itemContent">
+<b>${x.modelo||"-"}</b> | ${x.placa||"-"}
+</div>
+</div>`).join("")
 :`<div class="item">Nenhum veículo</div>`
 }
 
-/* 🔥 BIND SELECT VEÍCULO */
+/* 🔥 BIND */
 if(selVeiculo&&!selVeiculo._bind){
 selVeiculo.addEventListener("change",()=>{
 VID=selVeiculo.value
@@ -745,17 +757,16 @@ render()
 selVeiculo._bind=true
 }
 
-/* 🔥 NÃO CRIAR AUTOMÁTICO */
-if(!data || !data.length){
-console.warn("Nenhum veículo")
-veiculoSel.innerHTML='<option value="">Sem veículo</option>'
+/* 🔥 CORREÇÃO CRÍTICA */
+if(!veiculos.length){
+console.warn("⚠️ Nenhum veículo cadastrado")
+VID=null
 return
 }
 
-/* 🔥 RENDER FINAL */
+/* 🔥 RENDER */
 if(VID){
 setTimeout(()=>render(),50)
-}
 }
 
 async function salvar(){
