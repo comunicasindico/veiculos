@@ -603,17 +603,27 @@ init()
 function abrirCadastro(){
 alert("Cadastro em breve")
 }
-
+  
+if(typeof bindPostoEdicao!=="function"){
+function bindPostoEdicao(){}
+}
 /* INIT */
 async function init(){
 document.getElementById("menuHome")?.remove()
 document.body.classList.remove("login")
 telaLogin.style.display="none"
 app.style.display="block"
+
+console.log("EMP:",EMP())
+console.log("UID:",UID())
+
 await carregarTudo()
-bindPostoInput()
-bindPostoEdicao()
+
+if(typeof bindPostoInput==="function")bindPostoInput()
+if(typeof bindPostoEdicao==="function")bindPostoEdicao()
+
 setTimeout(()=>carregarSelectsPadrao(),50)
+
 goTo(0)
 render()
 }
@@ -710,7 +720,12 @@ veiculos=v1||[]
 
 /* 🔥 FILTRO LOCAL (SUBSTITUI .or) */
 if(uid){
-veiculos=veiculos.filter(v=>v.usuario_id===uid)
+veiculos=veiculos.filter(v=>
+String(v.usuario_id)===String(uid) &&
+(v.modelo||v.placa)
+)
+}else{
+veiculos=[]
 }
 
 console.log("VEICULOS CARREGADOS:",veiculos)
