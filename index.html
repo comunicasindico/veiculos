@@ -555,14 +555,36 @@ return x[2]+"/"+x[1]
 async function login(){
 let usuario=(user.value||"").trim()
 let senha=(pass.value||"").trim()
+
 if(!usuario||!senha)return alert("Informe usuário e senha")
-let {data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",usuario).single()
-if(error||!data)return alert("Usuário não encontrado")
-if(data.senha_hash!==senha)return alert("Senha incorreta")
+
+let {data,error}=await db
+.from("usuarios")
+.select("*")
+.eq("usuario_apelido",usuario)
+.maybeSingle()
+
+if(error){
+console.error(error)
+return alert("Erro conexão")
+}
+
+if(!data){
+return alert("Usuário não encontrado")
+}
+
+if(data.senha_hash!==senha){
+return alert("Senha incorreta")
+}
+
 localStorage.setItem("empresa",data.empresa_id)
 localStorage.setItem("usuario_id",data.id)
 localStorage.setItem("user",data.usuario_apelido)
+
 init()
+}
+function abrirCadastro(){
+alert("Cadastro em breve")
 }
 
 /* INIT */
@@ -1615,7 +1637,9 @@ render()
 
 <script>
 if("serviceWorker" in navigator){
-navigator.serviceWorker.register("./sw.js")
+navigator.serviceWorker.register("./service-worker.js")
+.then(()=>console.log("SW OK"))
+.catch(e=>console.error("SW erro",e))
 }
 </script>
 
