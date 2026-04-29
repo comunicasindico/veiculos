@@ -553,7 +553,7 @@ return x[2]+"/"+x[1]
 
 /* LOGIN */
 async function login(){
-let usuario=(user.value||"").trim()
+let usuario=(user.value||"").trim().toLowerCase()
 let senha=(pass.value||"").trim()
 
 if(!usuario||!senha){
@@ -564,7 +564,7 @@ return
 let {data,error}=await db
 .from("usuarios")
 .select("*")
-.eq("usuario_apelido",usuario)
+.ilike("usuario_apelido",usuario)
 
 if(error){
 console.error(error)
@@ -577,14 +577,18 @@ alert("Usuário não encontrado")
 return
 }
 
-let userDB=data[0]
+let userDB=data.find(u=>u.usuario_apelido.toLowerCase().trim()===usuario)
+
+if(!userDB){
+alert("Usuário não encontrado")
+return
+}
 
 if(userDB.senha_hash!==senha){
 alert("Senha incorreta")
 return
 }
 
-/* 🔥 GARANTE UUID */
 localStorage.setItem("empresa",userDB.empresa_id)
 localStorage.setItem("usuario_id",userDB.id)
 
