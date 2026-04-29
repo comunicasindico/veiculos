@@ -556,33 +556,41 @@ async function login(){
 let usuario=(user.value||"").trim()
 let senha=(pass.value||"").trim()
 
-if(!usuario||!senha)return alert("Informe usuário e senha")
+if(!usuario||!senha){
+alert("Informe usuário e senha")
+return
+}
 
 let {data,error}=await db
 .from("usuarios")
 .select("*")
 .eq("usuario_apelido",usuario)
-.maybeSingle()
 
 if(error){
 console.error(error)
-return alert("Erro conexão")
+alert("Erro conexão")
+return
 }
 
-if(!data){
-return alert("Usuário não encontrado")
+if(!data || !data.length){
+alert("Usuário não encontrado")
+return
 }
 
-if(data.senha_hash!==senha){
-return alert("Senha incorreta")
+let userDB=data[0]
+
+if(userDB.senha_hash!==senha){
+alert("Senha incorreta")
+return
 }
 
-localStorage.setItem("empresa",data.empresa_id)
-localStorage.setItem("usuario_id",data.id)
-localStorage.setItem("user",data.usuario_apelido)
+/* 🔥 GARANTE UUID */
+localStorage.setItem("empresa",userDB.empresa_id)
+localStorage.setItem("usuario_id",userDB.id)
 
 init()
 }
+
 function abrirCadastro(){
 alert("Cadastro em breve")
 }
