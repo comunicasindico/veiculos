@@ -992,197 +992,222 @@ if(m_email)m_email.value=""
 
 /* 🔥 VEÍCULO */
 async function salvarVeiculo(){
+
 let emp=EMP()
-let placa=(v_placa.value||"").toUpperCase()
-let modelo=(v_modelo.value||"")
-if(!placa||!modelo)return alert("Preencha dados")
+let uid=localStorage.getItem("uid")
+
+let placa=(v_placa.value||"").toUpperCase().trim()
+let modelo=(v_modelo.value||"").trim()
+
+if(!placa||!modelo){
+alert("Preencha placa e modelo")
+return
+}
+
+/* 🔥 BLOQUEIO DUPLICADO (PLACA) */
+let {data:existe}=await db
+.from("veiculos")
+.select("id")
+.eq("empresa_id",emp)
+.eq("placa",placa)
+.limit(1)
+
+if(existe && existe.length && !window.editVeiculoId){
+alert("Já existe veículo com esta placa")
+return
+}
+
+/* 🔥 PAYLOAD LIMPO */
 let payload={
 empresa_id:emp,
+usuario_id:uid, /* 🔥 CRÍTICO */
 placa,
-marca:v_marca.value||"",
+marca:(v_marca.value||"").trim(),
 modelo,
 ano:parseInt(v_ano.value)||null,
-cor:v_cor.value||"",
-renavam:v_renavam.value||"",
+cor:(v_cor.value||"").trim(),
+renavam:(v_renavam.value||"").trim(),
 combustivel_principal:v_combustivel.value||"",
 km_atual:parseFloat(v_km.value)||0,
 vencimento_ipva:v_ipva.value||null,
 vencimento_licenciamento:v_licenciamento.value||null,
-motorista_id:v_motorista.value||null
+motorista_id:(v_motorista.value && v_motorista.value!=="")?v_motorista.value:null
 }
+
 let error=null
+
 if(window.editVeiculoId){
-({error}=await db.from("veiculos").update(payload).eq("id",window.editVeiculoId).eq("empresa_id",emp))
+
+({error}=await db
+.from("veiculos")
+.update(payload)
+.eq("id",window.editVeiculoId)
+.eq("empresa_id",emp)
+)
+
 window.editVeiculoId=null
+
 }else{
-({error}=await db.from("veiculos").insert(payload))
+
+({error}=await db
+.from("veiculos")
+.insert([payload]) /* 🔥 SEMPRE ARRAY */
+)
+
 }
-if(error)return alert("Erro veículo")
+
+if(error){
+console.error(error)
+alert("Erro ao salvar veículo")
+return
+}
+
+/* 🔥 LIMPA E RECARREGA */
 cancelarVeiculo()
 await carregarTudo()
 }
 
-function editarVeiculo(id,placa,marca,modelo,ano,cor,renavam,comb,km,ipva,lic,motorista){
-window.editVeiculoId=id
-v_placa.value=placa||""
-v_marca.value=marca||""
-v_modelo.value=modelo||""
-v_ano.value=ano||""
-v_cor.value=cor||""
-v_renavam.value=renavam||""
-v_combustivel.value=comb||""
-v_km.value=km||""
-v_ipva.value=(ipva||"").split("T")[0]
-v_licenciamento.value=(lic||"").split("T")[0]
-v_motorista.value=motorista||""
-document.getElementById("formVeiculo").style.display="block"
-document.getElementById("listaVeiculos").style.display="none"
-}
-
-function cancelarVeiculo(){
-document.getElementById("formVeiculo").style.display="none"
-document.getElementById("listaVeiculos").style.display="block"
-window.editVeiculoId=null
-v_placa.value=""
-v_marca.value=""
-v_modelo.value=""
-v_ano.value=""
-v_cor.value=""
-v_renavam.value=""
-v_combustivel.value=""
-v_km.value=""
-v_ipva.value=""
-v_licenciamento.value=""
-}
-
-/* 🔥 POSTO */
 async function salvarPosto(){
+
 let emp=EMP()
+
 let nome=(p_nome.value||"").trim()
-if(!nome)return alert("Informe nome")
+if(!nome){
+alert("Informe nome do posto")
+return
+}
+
+/* 🔥 NORMALIZA CNPJ */
+let cnpj=(p_cnpj.value||"").replace(/\D/g,"")
+
+/* 🔥 BLOQUEIO DUPLICADO */
+let {data:existe}=await db
+.from("postos")
+.select("id")
+.eq("empresa_id",emp)
+.eq("cnpj",cnpj)
+.limit(1)
+
+if(existe && existe.length && cnpj && !window.editPostoId){
+alert("Já existe posto com este CNPJ")
+return
+}
+
 let payload={
 empresa_id:emp,
 nome_posto:nome,
-cidade:p_cidade.value||"",
-cnpj:p_cnpj.value||"",
-endereco:p_endereco.value||"",
-numero:p_numero.value||"",
-uf:p_uf.value||"",
-cep:p_cep.value||""
+cidade:(p_cidade.value||"").trim(),
+cnpj:cnpj,
+endereco:(p_endereco.value||"").trim(),
+numero:(p_numero.value||"").trim(),
+uf:(p_uf.value||"").trim(),
+cep:(p_cep.value||"").replace(/\D/g,"")
 }
+
 let error=null
+
 if(window.editPostoId){
-({error}=await db.from("postos").update(payload).eq("id",window.editPostoId).eq("empresa_id",emp))
+
+({error}=await db
+.from("postos")
+.update(payload)
+.eq("id",window.editPostoId)
+.eq("empresa_id",emp)
+)
+
 window.editPostoId=null
+
 }else{
-({error}=await db.from("postos").insert(payload))
+
+({error}=await db
+.from("postos")
+.insert([payload]) /* 🔥 PADRÃO CORRETO */
+)
+
 }
-if(error)return alert("Erro posto")
+
+if(error){
+console.error(error)
+alert("Erro ao salvar posto")
+return
+}
+
 cancelarPosto()
 await carregarTudo()
 }
-
-function editarPosto(id,nome,cidade,cnpj){
-window.editPostoId=id
-p_nome.value=nome||""
-p_cidade.value=cidade||""
-p_cnpj.value=cnpj||""
-document.getElementById("formPosto").style.display="block"
-document.getElementById("listaPostos").style.display="none"
-}
-
-function cancelarPosto(){
-document.getElementById("formPosto").style.display="none"
-document.getElementById("listaPostos").style.display="block"
-window.editPostoId=null
-p_nome.value=""
-p_cidade.value=""
-p_cnpj.value=""
-p_endereco.value=""
-p_numero.value=""
-p_uf.value=""
-p_cep.value=""
-}
-
-/* 🔥 ABASTECIMENTO EDIÇÃO */
-function editarAbastecimento(id,valor,litros,km,data,posto){
-window.editAbastecimentoId=id
-modalEditar.style.display="flex"
-e_valor.value=valor||""
-e_litros.value=litros||""
-e_km.value=km||""
-e_data.value=(data||"").split("T")[0]
-e_posto.value=posto||""
-}
-
 async function salvarEdicao(){
+
 let emp=EMP()
-await db.from("abastecimentos").update({
+
+let payload={
 valor_total:parseFloat(e_valor.value)||0,
 litros:parseFloat(e_litros.value)||0,
 quilometragem:parseFloat(e_km.value)||0,
-data_abastecimento:e_data.value
-}).eq("id",editAbastecimentoId).eq("empresa_id",emp)
+data_abastecimento:e_data.value||null,
+posto_id:(e_posto.value && e_posto.value!=="")?e_posto.value:null,
+tipo_combustivel:e_combustivel?e_combustivel.value:""
+}
+
+let {error}=await db
+.from("abastecimentos")
+.update(payload)
+.eq("id",editAbastecimentoId)
+.eq("empresa_id",emp)
+
+if(error){
+console.error(error)
+alert("Erro ao atualizar abastecimento")
+return
+}
+
 modalEditar.style.display="none"
 render()
 }
-
-function fecharEditar(){modalEditar.style.display="none"}
-
-/* 🔥 EXCLUSÃO SEGURA */
 async function excluir(t,id){
-if(!confirm("Excluir?"))return
+
+if(!confirm("Excluir registro?"))return
+
 if(t==="abastecimentos"){
-alert("Registro consolidado não pode excluir")
+alert("Registro consolidado não pode ser excluído")
 return
 }
+
 let emp=EMP()
-await db.from(t).delete().eq("id",id).eq("empresa_id",emp)
+
+let {error}=await db
+.from(t)
+.delete()
+.eq("id",id)
+.eq("empresa_id",emp)
+
+if(error){
+console.error(error)
+alert("Erro ao excluir")
+return
+}
+
 await carregarTudo()
 render()
 }
-
-/* 🔥 FORM CONTROL */
-function toggleForm(id){
-let el=document.getElementById(id)
-if(!el)return
-let lista=id==="formMotorista"?"listaMotoristas":id==="formVeiculo"?"listaVeiculos":"listaPostos"
-let l=document.getElementById(lista)
-if(el.style.display==="none"){
-el.style.display="block"
-if(l)l.style.display="none"
-}else{
-el.style.display="none"
-if(l)l.style.display="block"
-}
-}
-
-/* 🔥 BINDS */
 function bindPostoInput(){
+
 if(!postoSel||!postoInput)return
 if(postoSel._bind)return
+
 postoSel._bind=true
+
 postoSel.addEventListener("change",()=>{
 if(!postoInput.value){
 postoInput.value=postoSel.options[postoSel.selectedIndex]?.text||""
 }
 })
-postoInput.addEventListener("input",()=>{postoSel.value=""})
-}
 
-function bindPostoEdicao(){
-if(!e_posto||!e_postoInput)return
-e_posto.addEventListener("change",()=>{
-if(!e_postoInput.value){
-e_postoInput.value=e_posto.options[e_posto.selectedIndex]?.text||""
-}
+postoInput.addEventListener("input",()=>{
+postoSel.value=""
 })
-e_postoInput.addEventListener("input",()=>{e_posto.value=""})
+
 }
-
-let imagemAtualOCR=null
-let qrScanner=null
-
+  
 /* =========================================================
 🔥 ABRIR CAMERA OCR
 ========================================================= */
