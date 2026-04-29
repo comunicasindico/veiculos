@@ -561,8 +561,8 @@ return x[2]+"/"+x[1]
 
 /* LOGIN */
 async function login(){
-let usuario=(user.value||"").trim().toLowerCase()
-let senha=(pass.value||"").trim()
+let usuario=(document.getElementById("user").value||"").trim()
+let senha=(document.getElementById("pass").value||"").trim()
 
 if(!usuario||!senha){
 alert("Informe usuário e senha")
@@ -572,7 +572,7 @@ return
 let {data,error}=await db
 .from("usuarios")
 .select("*")
-.ilike("usuario_apelido",usuario)
+.eq("usuario_apelido",usuario)
 
 if(error){
 console.error(error)
@@ -580,26 +580,23 @@ alert("Erro conexão")
 return
 }
 
-if(!data || !data.length){
+if(!data||!data.length){
 alert("Usuário não encontrado")
 return
 }
 
-let userDB=data.find(u=>u.usuario_apelido.toLowerCase().trim()===usuario)
-
-if(!userDB){
-alert("Usuário não encontrado")
-return
-}
+let userDB=data[0]
 
 if(userDB.senha_hash!==senha){
 alert("Senha incorreta")
 return
 }
 
+/* 🔥 SALVA SESSÃO */
+localStorage.setItem("uid",userDB.id)
 localStorage.setItem("empresa",userDB.empresa_id)
-localStorage.setItem("usuario_id",userDB.id)
 
+/* 🔥 ENTRA NO APP */
 init()
 }
 
@@ -700,13 +697,13 @@ selPosto.innerHTML=postos.length
 let veiculos=[]
 
 /* 🔥 BUSCA SEGURA (SEM .or) */
-let {data:v1,error:e1}=await db
+let {data:v1,error:eVeiculos}=await db
 .from("veiculos")
 .select("*")
 .eq("empresa_id",emp)
 
-if(e1){
-console.error("veiculos erro:",e1)
+if(eVeiculos){
+console.error("veiculos erro:",eVeiculos)
 }else{
 veiculos=v1||[]
 }
