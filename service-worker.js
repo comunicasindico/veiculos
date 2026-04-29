@@ -3,19 +3,24 @@
 /* ========================================= */
 
 const CACHE_NAME="veiculos-v3"
-const ASSETS=["./","./index.html","./manifest.json","./favicon.ico"]
-/* 🔥 ARQUIVOS ESSENCIAIS */
 const ASSETS=[
 "./",
 "./index.html",
 "./manifest.json",
+"./favicon.ico",
 "./img/192x192.png",
 "./img/512x512.png"
 ]
 
-/* ========================================= */
 /* 🔥 INSTALL */
-/* ========================================= */
+self.addEventListener("install",e=>{
+self.skipWaiting()
+e.waitUntil(
+caches.open(CACHE_NAME).then(cache=>cache.addAll(ASSETS))
+)
+})
+
+/* 🔥 ACTIVATE */
 self.addEventListener("activate",e=>{
 self.clients.claim()
 e.waitUntil(
@@ -24,16 +29,6 @@ return Promise.all(
 keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k))
 )
 })
-)
-})
-
-/* ========================================= */
-/* 🔥 ACTIVATE */
-/* ========================================= */
-self.addEventListener("install",e=>{
-self.skipWaiting()
-e.waitUntil(
-caches.open(CACHE_NAME).then(cache=>cache.addAll(ASSETS))
 )
 })
 
