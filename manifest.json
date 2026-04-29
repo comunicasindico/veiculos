@@ -1,7 +1,7 @@
 {
 "name":"IA VEÍCULOS",
 "short_name":"Veículos",
-"start_url":"./",
+"start_url": "./?v=3",
 "scope":"./",
 "display":"standalone",
 "display_override":["standalone","window-controls-overlay"],
