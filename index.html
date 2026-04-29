@@ -544,6 +544,17 @@ const SUPABASE_URL="https://gspdlrenyrzbkxlvyugc.supabase.co"
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"
 window.db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
+/* 🔒 BLOQUEIO GLOBAL VEÍCULO FAKE */
+const VEICULO_BLOQUEADO = ["AAA0000","VEÍCULO INICIAL"]
+
+function validarVeiculoPayload(p){
+if(!p)return false
+if(VEICULO_BLOQUEADO.includes((p.placa||"").toUpperCase()))return false
+if((p.modelo||"").toLowerCase().includes("inicial"))return false
+return true
+}
+
+
 function goTo(i){
 currentPage=i
 let pages=document.getElementById("pages")
@@ -714,17 +725,6 @@ console.error("veiculos erro:",eVeiculos)
 veiculos=[]
 }else{
 veiculos=Array.isArray(v1)?v1:[]
-}
-
-/* 🔥 FILTRO PROFISSIONAL (ANTI-LIXO + SOMENTE USUÁRIO) */
-if(uid){
-veiculos=veiculos.filter(v=>
-String(v.usuario_id)===String(uid) &&      // só do usuário
-v.modelo && v.modelo!=="Veículo Inicial" && // remove lixo antigo
-v.placa && v.placa!=="AAA0000"              // remove placa fake
-)
-}else{
-veiculos=[]
 }
 
 console.log("VEICULOS CARREGADOS:",veiculos)
@@ -1037,25 +1037,23 @@ if(m_email)m_email.value=""
 /* 🔥 VEÍCULO */
 async function salvarVeiculo(){
 let emp=EMP()
-let uid=UID()
 let placa=(v_placa.value||"").toUpperCase().trim()
 let modelo=(v_modelo.value||"").trim()
 
-if(!uid)return alert("Sessão inválida. Faça login novamente.")
-if(!placa||!modelo)return alert("Preencha placa e modelo")
+if(!placa||!modelo){
+alert("Preencha placa e modelo")
+return
+}
 
-// 🔥 valida placa básica (BR)
-let placaOk=/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$|^[A-Z]{3}[0-9]{4}$/.test(placa)
-if(!placaOk)return alert("Placa inválida")
-
-// 🔥 bloqueia valores proibidos
-if(placa==="AAA0000"||modelo==="Veículo Inicial"){
-return alert("Dados inválidos")
+/* 🔒 BLOQUEIO ANTI-LIXO */
+if(placa==="AAA0000" || modelo.toLowerCase().includes("inicial")){
+alert("Veículo inválido")
+return
 }
 
 let payload={
 empresa_id:emp,
-usuario_id:uid, // 🔥 obrigatório
+usuario_id:UID(),
 placa,
 marca:v_marca.value||"",
 modelo,
@@ -1070,6 +1068,7 @@ motorista_id:v_motorista.value||null
 }
 
 let error=null
+
 if(window.editVeiculoId){
 ({error}=await db.from("veiculos")
 .update(payload)
@@ -1077,12 +1076,17 @@ if(window.editVeiculoId){
 .eq("empresa_id",emp))
 window.editVeiculoId=null
 }else{
+if(!validarVeiculoPayload(payload)){
+alert("Bloqueado: veículo inválido")
+return
+}
 ({error}=await db.from("veiculos").insert(payload))
 }
 
 if(error){
 console.error(error)
-return alert("Erro ao salvar veículo")
+alert("Erro veículo")
+return
 }
 
 cancelarVeiculo()
