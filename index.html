@@ -236,6 +236,7 @@ let iaBox
 let VID=null
 let USER_ID=UID()
 let EMPRESA_ID=EMP()
+let TIPO_USUARIO=localStorage.getItem("tipo")||"user"
 let graficoConsumo,graficoGasto
 let tipoGrafico="consumo"
 let filtroInicio=null
@@ -311,7 +312,7 @@ let u=data[0]
 if(u.senha_hash!==senha){alert("Senha incorreta");return}
 localStorage.setItem("uid",u.id)
 localStorage.setItem("empresa",u.empresa_id)
-localStorage.setItem("tipo",userDB.tipo||"user")
+localStorage.setItem("tipo",u.tipo||"user")
 
 /* 🔥 TROCA DE TELA LIMPA */
 document.body.classList.remove("login")
@@ -330,27 +331,87 @@ function bindPostoEdicao(){}
 }
 /* INIT */
 async function init(){
+
+let app=document.getElementById("app")
+let login=document.getElementById("telaLogin")
+let topBar=document.getElementById("topBar")
+
+/* 🔥 SEGURANÇA UI */
 document.getElementById("menuHome")?.remove()
 document.body.classList.remove("login")
-telaLogin.style.display="none"
-app.style.display="block"
 
+if(login)login.style.display="none"
+if(app)app.style.display="block"
+if(topBar)topBar.style.display="flex"
+
+/* 🔍 DEBUG */
 console.log("EMP:",EMP())
 console.log("UID:",UID())
 
+/* 🔥 CARREGA DADOS */
 await carregarTudo()
 
+/* 🔧 BINDS */
 if(typeof bindPostoInput==="function")bindPostoInput()
 if(typeof bindPostoEdicao==="function")bindPostoEdicao()
 
-setTimeout(()=>carregarSelectsPadrao(),50)
-document.getElementById("topBar").style.display="flex"
-goTo(0)
+/* 🔥 SELECT VEÍCULO */
+let vs=document.getElementById("veiculoSel")
+
+if(vs){
+
+/* GARANTE VALOR INICIAL */
+if(vs.options.length){
+
+let salvo=localStorage.getItem("veiculo_atual")
+
+if(salvo && [...vs.options].find(o=>o.value===salvo)){
+VID=salvo
+}else{
+VID=vs.options[0].value
+}
+
+/* 🔥 SINCRONIZA SELECT */
+vs.value=VID
+
+vs.value=VID
+
+}
+
+/* EVENTO */
+if(!vs._bind){
+vs._bind=true
+vs.addEventListener("change",()=>{
+VID=vs.value
+
+/* 🔥 SALVA AUTOMATICO */
+localStorage.setItem("veiculo_atual",VID)
+
 render()
+})
+}
+
+}
+
+/* 🔥 PADRÃO */
+setTimeout(()=>carregarSelectsPadrao(),50)
+
+/* 🔥 TELA INICIAL */
+goTo(0)
+
+/* 🔥 RENDER FINAL (SÓ SE TEM VID) */
+if(VID){
+render()
+}else{
+let lista=document.getElementById("lista")
+if(lista)lista.innerHTML="<div class='item'>Cadastre um veículo</div>"
+}
+
 }
 
 function logout(){
 localStorage.clear()
+localStorage.removeItem("veiculo_atual")
 document.body.classList.add("login")
 document.getElementById("app").style.display="none"
 document.getElementById("telaLogin").style.display="flex"
@@ -395,9 +456,6 @@ let {data:postos,error:e2}=await qPostos
 /* ========================= */
 /* 🔥 VEÍCULOS (FINAL DEFINITIVO SEM LIXO) */
 /* ========================= */
-
-let emp=EMP()
-let uid=UID()
 let tipo=localStorage.getItem("tipo")||"user"
 
 let qVeiculos=db.from("veiculos").select("*").eq("empresa_id",emp)
@@ -411,16 +469,29 @@ let {data:veiculos,error:eVeiculos}=await qVeiculos
 if(eVeiculos){console.error(eVeiculos);veiculos=[]}
 veiculos=veiculos||[]
   
-/* ========================= */
-/* 🔥 ABASTECIMENTOS */
-/* ========================= */
-let qAbaste=db.from("abastecimentos").select("*").eq("empresa_id",emp)
+/* =========================
+🔥 ABASTECIMENTOS
+========================= */
+let qA=db.from("abastecimentos").select("*,postos(nome_posto)").eq("empresa_id",emp)
 
 if(tipo!=="admin"){
-qAbaste=qAbaste.eq("usuario_id",uid)
+qA=qA.eq("usuario_id",uid)
 }
 
-let {data:abastecimentos,error:eA}=await qAbaste
+let {data:a,error:eA}=await qA
+ABASTECIMENTOS=eA?[]:(a||[])
+
+/* =========================
+🔥 RENDER SELECT VEICULO
+========================= */
+let sel=document.getElementById("veiculoSel")
+if(sel){
+sel.innerHTML=VEICULOS.length
+?VEICULOS.map(v=>`<option value="${v.id}">${v.modelo||"-"} - ${v.placa||""}</option>`).join("")
+:`<option>Sem veículos</option>`
+}
+
+}
 
 async function salvar(){
 let emp=EMP()
@@ -444,22 +515,73 @@ render()
 
 /* 🔥 RENDER PRINCIPAL */
 async function render(){
+
 if(!db)return
+
 let vs=document.getElementById("veiculoSel")
-if(vs&&vs.value)VID=vs.value
-if(!VID)return
 let listaEl=document.getElementById("lista")
-let {data,error}=await db.from("abastecimentos").select("*,postos(nome_posto)").eq("veiculo_id",VID).eq("empresa_id",EMP()).order("data_abastecimento",{ascending:false})
-if(error){listaEl.innerHTML="Erro";return}
-if(!data||!data.length){listaEl.innerHTML="<div class='item'>Sem histórico</div>";renderDashboard([]);return}
+
+/* 🔥 GARANTE VID */
+if(vs && vs.value){
+VID=vs.value
+}
+
+/* 🔒 SE NÃO TEM VEÍCULO */
+if(!VID || VID===""){
+console.warn("⚠️ Nenhum veículo selecionado")
+if(listaEl)listaEl.innerHTML="<div class='item'>Selecione um veículo</div>"
+renderDashboard([])
+return
+}
+
+/* 🔥 BUSCA */
+let {data,error}=await db
+.from("abastecimentos")
+.select("*,postos(nome_posto)")
+.eq("veiculo_id",VID)
+.eq("empresa_id",EMP())
+.order("data_abastecimento",{ascending:false})
+
+/* 🔒 ERRO */
+if(error){
+console.error(error)
+if(listaEl)listaEl.innerHTML="Erro ao carregar"
+return
+}
+
+/* 🔒 SEM DADOS */
+if(!data || !data.length){
+if(listaEl)listaEl.innerHTML="<div class='item'>Sem histórico</div>"
+renderDashboard([])
+return
+}
+
+/* 🔥 LIMITE */
 data=data.slice(0,50)
+
+/* 🔥 RENDER LISTA */
 listaEl.innerHTML=data.map(a=>{
+
 let valor=Number(a.valor_total||0)
 let litros=Number(a.litros||0)
 let km=Number(a.quilometragem||0)
-return `<div class="item"><div class="itemContent"><div><b>${fData(a.data_abastecimento)}</b> | ${a.postos?.nome_posto||"-"}</div><div style="font-size:11px;color:#94a3b8">R$ ${valor.toFixed(2)} | ${litros}L | KM ${km}</div></div></div>`
+
+return `
+<div class="item">
+<div class="itemContent">
+<div><b>${fData(a.data_abastecimento)}</b> | ${a.postos?.nome_posto||"-"}</div>
+<div style="font-size:11px;color:#94a3b8">
+R$ ${valor.toFixed(2)} | ${litros}L | KM ${km}
+</div>
+</div>
+</div>
+`
+
 }).join("")
+
+/* 🔥 DASHBOARD */
 renderDashboard(data)
+
 }
 
 /* 🔥 KPIs */
