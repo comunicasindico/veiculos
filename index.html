@@ -430,18 +430,17 @@ let emp=EMP()
 let uid=UID()
 let tipo=localStorage.getItem("tipo")||"user"
 if(!emp)return console.error("sem empresa")
+let selMotorista=document.getElementById("v_motorista")
+let selPosto=document.getElementById("postoSel")
 let selVeiculo=document.getElementById("veiculoSel")
 let elMotoristas=document.getElementById("listaMotoristas")
 let elPostos=document.getElementById("listaPostos")
 let elVeiculos=document.getElementById("listaVeiculos")
-let selMotorista=document.getElementById("v_motorista")
-let selPosto=document.getElementById("postoSel")
 /* 🔥 MOTORISTAS (SEM FILTRO POR USUARIO) */
 let qMotoristas=db.from("motoristas").select("*").eq("empresa_id",emp)
 let {data:motoristas,error:e1}=await qMotoristas
 if(e1){console.error("motoristas erro:",e1);motoristas=[]}
 motoristas=motoristas||[]
-let selMotorista=document.getElementById("v_motorista")
 if(selMotorista){
 if(motoristas.length){
 selMotorista.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome||"Motorista"}</option>`).join("")
