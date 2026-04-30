@@ -23,7 +23,7 @@ body.login{background:linear-gradient(to bottom,rgba(0,0,0,.2),rgba(0,0,0,.85)),
 body.login::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(2,6,23,0.3),rgba(2,6,23,0.9));z-index:0}
 body:not(.login)::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:#020617;z-index:-1}
 .container{width:100%;height:100vh;display:flex;flex-direction:column;overflow:hidden;padding:10px}
-#app{width:100%;min-height:100vh;display:flex;flex-direction:column}
+#app{width:100%;min-height:100vh;display:none;flex-direction:column}
 #pages{display:flex;width:100%;height:100%;transition:.35s}
 .page{flex:0 0 100%;overflow-y:auto;padding:14px;padding-bottom:100px;scroll-behavior:smooth}
 .card{background:rgba(30,41,59,.65);backdrop-filter:blur(10px);padding:12px;border-radius:16px;margin-top:10px;border:1px solid rgba(255,255,255,.05);box-shadow:0 6px 20px rgba(0,0,0,.4)}
@@ -75,7 +75,7 @@ canvas{width:100%!important;height:220px!important;border-radius:10px;margin-top
 .login-box{color:#fff}
 .login-box input{background:rgba(255,255,255,.08)}
 .login-box{backdrop-filter:blur(22px)}
-
+body.login #app{display:none!important}
 
 
 </style>
@@ -280,6 +280,9 @@ let tipoGrafico="consumo"
 let filtroInicio=null
 let filtroFim=null
 let currentPage=0
+let qrScanner=null
+let imagemAtualOCR=null
+
 const SUPABASE_URL="https://gspdlrenyrzbkxlvyugc.supabase.co"
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"
 window.db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
@@ -316,40 +319,19 @@ return x[2]+"/"+x[1]
 async function login(){
 let usuario=(document.getElementById("user").value||"").trim()
 let senha=(document.getElementById("pass").value||"").trim()
+if(!usuario||!senha){alert("Informe usuário e senha");return}
+let {data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",usuario)
+if(error||!data||!data.length){alert("Usuário não encontrado");return}
+let u=data[0]
+if(u.senha_hash!==senha){alert("Senha incorreta");return}
+localStorage.setItem("uid",u.id)
+localStorage.setItem("empresa",u.empresa_id)
 
-if(!usuario||!senha){
-alert("Informe usuário e senha")
-return
-}
+/* 🔥 TROCA DE TELA LIMPA */
+document.body.classList.remove("login")
+document.getElementById("telaLogin").style.display="none"
+document.getElementById("app").style.display="block"
 
-let {data,error}=await db
-.from("usuarios")
-.select("*")
-.eq("usuario_apelido",usuario)
-
-if(error){
-console.error(error)
-alert("Erro conexão")
-return
-}
-
-if(!data||!data.length){
-alert("Usuário não encontrado")
-return
-}
-
-let userDB=data[0]
-
-if(userDB.senha_hash!==senha){
-alert("Senha incorreta")
-return
-}
-
-/* 🔥 SALVA SESSÃO */
-localStorage.setItem("uid",userDB.id)
-localStorage.setItem("empresa",userDB.empresa_id)
-
-/* 🔥 ENTRA NO APP */
 init()
 }
 
@@ -381,12 +363,12 @@ goTo(0)
 render()
 }
 
-/* LOGOUT */
 function logout(){
 localStorage.clear()
-location.reload()
+document.body.classList.add("login")
+document.getElementById("app").style.display="none"
+document.getElementById("telaLogin").style.display="flex"
 }
-
 async function carregarTudo(){
 let emp=EMP()
 let uid=UID()
@@ -749,197 +731,94 @@ if(m_email)m_email.value=""
 /* 🔥 VEÍCULO */
 async function salvarVeiculo(){
 let emp=EMP()
-let placa=(v_placa.value||"").toUpperCase().trim()
+let uid=UID()
+let placa=(v_placa.value||"").toUpperCase().replace(/\s+/g,"").trim()
 let modelo=(v_modelo.value||"").trim()
-
-if(!placa||!modelo){
-alert("Preencha placa e modelo")
-return
-}
-/* 🔒 BLOQUEIO FORTE */
-if(
-placa==="AAA0000" ||
-placa.length<5 ||
-modelo.toLowerCase().includes("inicial")
-){
-alert("Veículo inválido")
-return
-}
-
+if(!placa||!modelo){alert("Preencha placa e modelo");return}
+if(placa==="AAA0000"||placa.length<5||modelo.toLowerCase().includes("inicial")){alert("Veículo inválido");return}
 let payload={
 empresa_id:emp,
-usuario_id:UID(),
+usuario_id:uid||null,
 placa,
-marca:v_marca.value||"",
+marca:(v_marca.value||"").trim(),
 modelo,
 ano:parseInt(v_ano.value)||null,
-cor:v_cor.value||"",
-renavam:v_renavam.value||"",
-combustivel_principal:v_combustivel.value||"",
+cor:(v_cor.value||"").trim(),
+renavam:(v_renavam.value||"").trim(),
+combustivel_principal:(v_combustivel.value||"").trim(),
 km_atual:parseFloat(v_km.value)||0,
 vencimento_ipva:v_ipva.value||null,
 vencimento_licenciamento:v_licenciamento.value||null,
-motorista_id:v_motorista.value||null
+motorista_id:(v_motorista&&v_motorista.value)?v_motorista.value:null
 }
-
 let error=null
-
 if(window.editVeiculoId){
-({error}=await db.from("veiculos")
-.update(payload)
-.eq("id",window.editVeiculoId)
-.eq("empresa_id",emp))
+({error}=await db.from("veiculos").update(payload).eq("id",window.editVeiculoId).eq("empresa_id",emp))
 window.editVeiculoId=null
 }else{
-if(!validarVeiculoPayload(payload)){
-alert("Bloqueado: veículo inválido")
-return
-}
-let {data:existeVeiculo}=await db
-.from("veiculos")
-.select("id")
-.eq("empresa_id",emp)
-.eq("placa",placa)
-.limit(1)
-
-if(existeVeiculo && existeVeiculo.length && !window.editVeiculoId){
-alert("Já existe veículo com essa placa")
-return
-}
-
+if(!validarVeiculoPayload(payload)){alert("Bloqueado: veículo inválido");return}
+let {data:existeVeiculo,error:eDup}=await db.from("veiculos").select("id").eq("empresa_id",emp).eq("placa",placa).limit(1)
+if(eDup){console.error(eDup);alert("Erro ao validar placa");return}
+if(existeVeiculo&&existeVeiculo.length){alert("Já existe veículo com essa placa");return}
 ({error}=await db.from("veiculos").insert(payload))
 }
-
-if(error){
-console.error(error)
-alert("Erro veículo")
-return
-}
-
+if(error){console.error(error);alert("Erro veículo");return}
 cancelarVeiculo()
 await carregarTudo()
 }
 
 async function salvarPosto(){
-
 let emp=EMP()
-
 let nome=(p_nome.value||"").trim()
-if(!nome){
-alert("Informe nome do posto")
-return
-}
-
-/* 🔥 NORMALIZA CNPJ */
+if(!nome){alert("Informe nome do posto");return}
 let cnpj=(p_cnpj.value||"").replace(/\D/g,"")
-
-/* 🔥 BLOQUEIO DUPLICADO */
-let {data:existe}=await db
-.from("postos")
-.select("id")
-.eq("empresa_id",emp)
-.eq("cnpj",cnpj)
-.limit(1)
-
-if(existe && existe.length && cnpj && !window.editPostoId){
-alert("Já existe posto com este CNPJ")
-return
-}
-
+let {data:existe,error:eDup}=await db.from("postos").select("id").eq("empresa_id",emp).eq("cnpj",cnpj).limit(1)
+if(eDup){console.error(eDup);alert("Erro ao validar CNPJ");return}
+if(existe&&existe.length&&cnpj&&!window.editPostoId){alert("Já existe posto com este CNPJ");return}
 let payload={
 empresa_id:emp,
 nome_posto:nome,
 cidade:(p_cidade.value||"").trim(),
-cnpj:cnpj,
+cnpj:cnpj||null,
 endereco:(p_endereco.value||"").trim(),
 numero:(p_numero.value||"").trim(),
 uf:(p_uf.value||"").trim(),
 cep:(p_cep.value||"").replace(/\D/g,"")
 }
-
 let error=null
-
 if(window.editPostoId){
-
-({error}=await db
-.from("postos")
-.update(payload)
-.eq("id",window.editPostoId)
-.eq("empresa_id",emp)
-)
-
+({error}=await db.from("postos").update(payload).eq("id",window.editPostoId).eq("empresa_id",emp))
 window.editPostoId=null
-
 }else{
-
-({error}=await db
-.from("postos")
-.insert([payload]) /* 🔥 PADRÃO CORRETO */
-)
-
+({error}=await db.from("postos").insert([payload]))
 }
-
-if(error){
-console.error(error)
-alert("Erro ao salvar posto")
-return
-}
-
+if(error){console.error(error);alert("Erro ao salvar posto");return}
 cancelarPosto()
 await carregarTudo()
 }
 
 async function salvarEdicao(){
-
 let emp=EMP()
-
 let payload={
 valor_total:parseFloat(e_valor.value)||0,
 litros:parseFloat(e_litros.value)||0,
 quilometragem:parseFloat(e_km.value)||0,
 data_abastecimento:e_data.value||null,
-posto_id:(e_posto.value && e_posto.value!=="")?e_posto.value:null
+posto_id:(e_posto&&e_posto.value)?e_posto.value:null
 }
-
-let {error}=await db
-.from("abastecimentos")
-.update(payload)
-.eq("id",editAbastecimentoId)
-.eq("empresa_id",emp)
-
-if(error){
-console.error(error)
-alert("Erro ao atualizar abastecimento")
-return
-}
-
-modalEditar.style.display="none"
+let {error}=await db.from("abastecimentos").update(payload).eq("id",window.editAbastecimentoId).eq("empresa_id",emp)
+if(error){console.error(error);alert("Erro ao atualizar abastecimento");return}
+let modalEditar=document.getElementById("modalEditar")
+if(modalEditar)modalEditar.style.display="none"
 render()
 }
 
 async function excluir(t,id){
-
 if(!confirm("Excluir registro?"))return
-
-if(t==="abastecimentos"){
-alert("Registro consolidado não pode ser excluído")
-return
-}
-
+if(t==="abastecimentos"){alert("Registro consolidado não pode ser excluído");return}
 let emp=EMP()
-
-let {error}=await db
-.from(t)
-.delete()
-.eq("id",id)
-.eq("empresa_id",emp)
-
-if(error){
-console.error(error)
-alert("Erro ao excluir")
-return
-}
-
+let {error}=await db.from(t).delete().eq("id",id).eq("empresa_id",emp)
+if(error){console.error(error);alert("Erro ao excluir");return}
 await carregarTudo()
 render()
 }
@@ -950,7 +829,12 @@ let postoInput=document.getElementById("postoInput")
 if(!postoSel||!postoInput)return
 if(postoSel._bind)return
 postoSel._bind=true
-postoSel.addEventListener("change",()=>{if(!postoInput.value){postoInput.value=postoSel.options[postoSel.selectedIndex]?.text||""}})
+postoSel.addEventListener("change",()=>{
+if(!postoInput.value){
+let opt=postoSel.options[postoSel.selectedIndex]
+postoInput.value=opt?opt.text:""
+}
+})
 postoInput.addEventListener("input",()=>{postoSel.value=""})
 }
   
@@ -1305,9 +1189,8 @@ if(kmAtual<1000)alert("⚠️ KM baixo")
 
 /* 🔥 EVENTOS AUTOMÁTICOS */
 document.addEventListener("DOMContentLoaded",()=>{
-document.body.classList.add("login")
 window.graficoConsumoEl=document.getElementById("graficoConsumo")
-window.graficoGastoEl=document.getElementById("graficoGasto")
+/* REMOVA referência a graficoGasto se você já removeu o canvas */
 let inputData=document.getElementById("data")
 if(inputData&&!inputData.value){
 let hoje=new Date()
@@ -1320,8 +1203,10 @@ if(EMP()){
 init()
 }else{
 document.body.classList.add("login")
-document.getElementById("app").style.display="none"
-document.getElementById("telaLogin").style.display="flex"
+let app=document.getElementById("app")
+let telaLogin=document.getElementById("telaLogin")
+if(app)app.style.display="none"
+if(telaLogin)telaLogin.style.display="flex"
 }
 })
 
@@ -1363,7 +1248,11 @@ function trocarGrafico(tipo){
 tipoGrafico=tipo||"consumo"
 render()
 }
-
+function fecharEditar(){
+let modalEditar=document.getElementById("modalEditar")
+if(modalEditar)modalEditar.style.display="none"
+window.editAbastecimentoId=null
+}
 
   
 </script>
