@@ -310,11 +310,16 @@ let {data,error}=await db.from("usuarios").select("*").eq("usuario_apelido",usua
 if(error||!data||!data.length){alert("Usuário não encontrado");return}
 let u=data[0]
 if(u.senha_hash!==senha){alert("Senha incorreta");return}
+
+/* 🔥 DEFINE TIPO AUTOMÁTICO */
+let tipo=(usuario==="admin")?"admin":"user"
+
+/* 🔥 SALVA SESSÃO */
 localStorage.setItem("uid",u.id)
 localStorage.setItem("empresa",u.empresa_id)
-localStorage.setItem("tipo",u.usuario_apelido==="admin"?"admin":"user")
+localStorage.setItem("tipo",tipo)
 
-/* 🔥 TROCA DE TELA LIMPA */
+/* 🔥 UI */
 document.body.classList.remove("login")
 document.getElementById("telaLogin").style.display="none"
 document.getElementById("app").style.display="block"
@@ -433,7 +438,11 @@ let selMotorista=document.getElementById("v_motorista")
 let selPosto=document.getElementById("postoSel")
 /* 🔥 MOTORISTAS */
 let qMotoristas=db.from("motoristas").select("*").eq("empresa_id",emp)
-if(tipo!=="admin"){qMotoristas=qMotoristas.eq("usuario_id",uid)}
+if(tipo==="admin"){
+qMotoristas=qMotoristas.eq("empresa_id",emp)
+}else{
+qMotoristas=qMotoristas.eq("usuario_id",uid)
+}
 let {data:motoristas,error:e1}=await qMotoristas
 if(e1){console.error("motoristas erro:",e1);motoristas=[]}
 motoristas=motoristas||[]
@@ -443,17 +452,23 @@ selMotorista.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome}</opt
 }else{
 selMotorista.innerHTML="<option value=''>Sem motoristas</option>"
 }}
-/* 🔥 POSTOS */
-let qPostos=db.from("postos").select("*").eq("empresa_id",emp)
+/* 🔥 POSTOS (CORRIGIDO ADMIN/USER) */
+let qPostos=db.from("postos").select("*")
+if(tipo==="admin"){
+qPostos=qPostos.eq("empresa_id",emp)
+}else{
+qPostos=qPostos.eq("usuario_id",uid)
+}
 let {data:postos,error:e2}=await qPostos
 if(e2){console.error("postos erro:",e2);postos=[]}
 postos=postos||[]
 if(selPosto){
 if(postos.length){
-selPosto.innerHTML=postos.map(p=>`<option value="${p.id}">${p.nome_posto}</option>`).join("")
+selPosto.innerHTML=postos.map(p=>`<option value="${p.id}">${p.nome_posto||"Posto"}</option>`).join("")
 }else{
 selPosto.innerHTML="<option value=''>Sem postos</option>"
-}}
+}
+}
 /* 🔥 VEÍCULOS */
 let qVeiculos=db.from("veiculos").select("*").eq("empresa_id",emp)
 if(tipo!=="admin"){
@@ -478,7 +493,11 @@ VID=null
 }}
 /* 🔥 ABASTECIMENTOS */
 let qA=db.from("abastecimentos").select("*").eq("empresa_id",emp)
-if(tipo!=="admin"){qA=qA.eq("usuario_id",uid)}
+if(tipo==="admin"){
+qMotoristas=qMotoristas.eq("empresa_id",emp)
+}else{
+qMotoristas=qMotoristas.eq("usuario_id",uid)
+}
 let {data:a,error:eA}=await qA
 if(eA){console.error("abastecimentos erro:",eA);window.ABASTECIMENTOS=[]}
 else{window.ABASTECIMENTOS=a||[]}
@@ -770,6 +789,7 @@ if(eDup){console.error(eDup);alert("Erro ao validar CNPJ");return}
 if(existe&&existe.length&&cnpj&&!window.editPostoId){alert("Já existe posto com este CNPJ");return}
 let payload={
 empresa_id:emp,
+usuario_id:UID(),
 nome_posto:nome,
 cidade:(p_cidade.value||"").trim(),
 cnpj:cnpj||null,
