@@ -425,16 +425,15 @@ async function carregarTudo(){
 let emp=EMP()
 let uid=UID()
 let tipo=localStorage.getItem("tipo")||"user"
-
 if(!emp)return console.error("sem empresa")
-
+let selVeiculo=document.getElementById("veiculoSel")
 let elMotoristas=document.getElementById("listaMotoristas")
 let elPostos=document.getElementById("listaPostos")
+
 let elVeiculos=document.getElementById("listaVeiculos")
 
 let selMotorista=document.getElementById("v_motorista")
 let selPosto=document.getElementById("postoSel")
-let selVeiculo=document.getElementById("veiculoSel")
 
 /* ========================= */
 /* 🔥 MOTORISTAS */
@@ -458,86 +457,55 @@ motoristas=[]
 /* 🔥 POSTOS */
 /* ========================= */
 let qPostos=db.from("postos").select("*").eq("empresa_id",emp)
-
-if(tipo!=="admin"){
-qPostos=qPostos.eq("usuario_id",uid)
-}
-
 let {data:postos,error:e2}=await qPostos
-
 postos=postos||[]
-
 if(e2){
 console.error("postos erro:",e2)
 postos=[]
 }
-
-/* ========================= */
 /* 🔥 VEÍCULOS */
-/* ========================= */
 let qVeiculos=db.from("veiculos").select("*").eq("empresa_id",emp)
-
 if(tipo!=="admin"){
 qVeiculos=qVeiculos.eq("usuario_id",uid)
 }
-
 let {data:veiculos,error:eVeiculos}=await qVeiculos
-
-veiculos=veiculos||[]
-
 if(eVeiculos){
-console.error("veiculos erro:",eVeiculos)
+console.error("Erro veículos:",eVeiculos)
 veiculos=[]
 }
-
-/* 🔥 SELECT VEÍCULO (ÚNICO BLOCO — SEM DUPLICAÇÃO) */
+veiculos=veiculos||[]
+/* 🔥 SELECT VEÍCULOS */
 if(selVeiculo){
-
 if(veiculos.length){
-
 selVeiculo.innerHTML=veiculos.map(v=>
 `<option value="${v.id}">
 ${v.modelo||"Veículo"}${v.placa?" - "+v.placa:""}
 </option>`
 ).join("")
-
-/* 🔥 DEFINE VID */
 if(!VID || !veiculos.find(v=>v.id===VID)){
 VID=veiculos[0].id
 }
-
 selVeiculo.value=VID
-
 }else{
-
 selVeiculo.innerHTML="<option value=''>Nenhum veículo cadastrado</option>"
 VID=null
-
 }
-
 }
-
-/* ========================= */
-/* 🔥 ABASTECIMENTOS */
-/* ========================= */
-let qA=db
-.from("abastecimentos")
-.select("*,postos(nome_posto)")
-.eq("empresa_id",emp)
-
+/* 🔥 ABASTECIMENTOS (SEM RELAÇÃO POR ENQUANTO) */
+let qA=db.from("abastecimentos").select("*").eq("empresa_id",emp)
 if(tipo!=="admin"){
 qA=qA.eq("usuario_id",uid)
 }
-
 let {data:a,error:eA}=await qA
-
-window.ABASTECIMENTOS=eA?[]:(a||[])
-
 if(eA){
 console.error("abastecimentos erro:",eA)
+window.ABASTECIMENTOS=[]
+}else{
+window.ABASTECIMENTOS=a||[]
 }
 
 }
+
 
 async function salvar(){
 let emp=EMP()
@@ -615,7 +583,7 @@ let km=Number(a.quilometragem||0)
 return `
 <div class="item">
 <div class="itemContent">
-<div><b>${fData(a.data_abastecimento)}</b> | ${a.postos?.nome_posto||"-"}</div>
+<div><b>${fData(a.data_abastecimento)}</b> | "-"}</div>
 <div style="font-size:11px;color:#94a3b8">
 R$ ${valor.toFixed(2)} | ${litros}L | KM ${km}
 </div>
