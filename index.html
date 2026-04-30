@@ -350,7 +350,7 @@ console.log("UID:",UID())
 
 /* 🔥 CARREGA DADOS */
 await carregarTudo()
-
+await garantirMotoristaUsuario()
 /* 🔧 BINDS */
 if(typeof bindPostoInput==="function")bindPostoInput()
 if(typeof bindPostoEdicao==="function")bindPostoEdicao()
@@ -421,7 +421,6 @@ fecharQR()
 }
 
 async function carregarTudo(){
-
 let emp=EMP()
 let uid=UID()
 let tipo=localStorage.getItem("tipo")||"user"
@@ -429,93 +428,61 @@ if(!emp)return console.error("sem empresa")
 let selVeiculo=document.getElementById("veiculoSel")
 let elMotoristas=document.getElementById("listaMotoristas")
 let elPostos=document.getElementById("listaPostos")
-
 let elVeiculos=document.getElementById("listaVeiculos")
-
 let selMotorista=document.getElementById("v_motorista")
+let selPosto=document.getElementById("postoSel")
+/* 🔥 MOTORISTAS */
+let qMotoristas=db.from("motoristas").select("*").eq("empresa_id",emp)
+if(tipo!=="admin"){qMotoristas=qMotoristas.eq("usuario_id",uid)}
+let {data:motoristas,error:e1}=await qMotoristas
+if(e1){console.error("motoristas erro:",e1);motoristas=[]}
+motoristas=motoristas||[]
 if(selMotorista){
-if(motoristas && motoristas.length){
-selMotorista.innerHTML=motoristas.map(m=>
-`<option value="${m.id}">${m.nome}</option>`
-).join("")
+if(motoristas.length){
+selMotorista.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome}</option>`).join("")
 }else{
 selMotorista.innerHTML="<option value=''>Sem motoristas</option>"
-}
-}
-  
-let selPosto=document.getElementById("postoSel")
-
-/* ========================= */
-/* 🔥 MOTORISTAS */
-/* ========================= */
-let qMotoristas=db.from("motoristas").select("*").eq("empresa_id",emp)
-
-if(tipo!=="admin"){
-qMotoristas=qMotoristas.eq("usuario_id",uid)
-}
-
-let {data:motoristas,error:e1}=await qMotoristas
-
-motoristas=motoristas||[]
-
-if(e1){
-console.error("motoristas erro:",e1)
-motoristas=[]
-}
-
-/* ========================= */
+}}
 /* 🔥 POSTOS */
-/* ========================= */
 let qPostos=db.from("postos").select("*").eq("empresa_id",emp)
 let {data:postos,error:e2}=await qPostos
+if(e2){console.error("postos erro:",e2);postos=[]}
 postos=postos||[]
-if(e2){
-console.error("postos erro:",e2)
-postos=[]
-}
+if(selPosto){
+if(postos.length){
+selPosto.innerHTML=postos.map(p=>`<option value="${p.id}">${p.nome_posto}</option>`).join("")
+}else{
+selPosto.innerHTML="<option value=''>Sem postos</option>"
+}}
 /* 🔥 VEÍCULOS */
 let qVeiculos=db.from("veiculos").select("*").eq("empresa_id",emp)
 if(tipo!=="admin"){
+let {data:mot}=await db.from("motoristas").select("id").eq("usuario_id",uid).limit(1)
+if(mot&&mot.length){
+qVeiculos=qVeiculos.eq("motorista_id",mot[0].id)
+}else{
 qVeiculos=qVeiculos.eq("usuario_id",uid)
 }
-let {data:veiculos,error:eVeiculos}=await qVeiculos
-if(eVeiculos){
-console.error("Erro veículos:",eVeiculos)
-veiculos=[]
 }
+let {data:veiculos,error:eVeiculos}=await qVeiculos
+if(eVeiculos){console.error("Erro veículos:",eVeiculos);veiculos=[]}
 veiculos=veiculos||[]
-/* 🔥 SELECT VEÍCULOS */
 if(selVeiculo){
 if(veiculos.length){
-selVeiculo.innerHTML=veiculos.map(v=>
-`<option value="${v.id}">
-${v.modelo||"Veículo"}${v.placa?" - "+v.placa:""}
-</option>`
-).join("")
-if(!VID || !veiculos.find(v=>v.id===VID)){
-VID=veiculos[0].id
-}
+selVeiculo.innerHTML=veiculos.map(v=>`<option value="${v.id}">${v.modelo||"Veículo"}${v.placa?" - "+v.placa:""}</option>`).join("")
+if(!VID||!veiculos.find(v=>v.id===VID)){VID=veiculos[0].id}
 selVeiculo.value=VID
 }else{
 selVeiculo.innerHTML="<option value=''>Nenhum veículo cadastrado</option>"
 VID=null
-}
-}
-/* 🔥 ABASTECIMENTOS (SEM RELAÇÃO POR ENQUANTO) */
+}}
+/* 🔥 ABASTECIMENTOS */
 let qA=db.from("abastecimentos").select("*").eq("empresa_id",emp)
-if(tipo!=="admin"){
-qA=qA.eq("usuario_id",uid)
-}
+if(tipo!=="admin"){qA=qA.eq("usuario_id",uid)}
 let {data:a,error:eA}=await qA
-if(eA){
-console.error("abastecimentos erro:",eA)
-window.ABASTECIMENTOS=[]
-}else{
-window.ABASTECIMENTOS=a||[]
+if(eA){console.error("abastecimentos erro:",eA);window.ABASTECIMENTOS=[]}
+else{window.ABASTECIMENTOS=a||[]}
 }
-
-}
-
 
 async function salvar(){
 let emp=EMP()
@@ -528,7 +495,7 @@ let v_km=parseFloat(km.value)||0
 let v_data=data.value
 if(!v_data)return alert("Informe data")
 if(v_total<=0||v_litros<=0)return alert("Valores inválidos")
-let payload={empresa_id:emp,veiculo_id:VID,valor_total:v_total,litros:v_litros,quilometragem:v_km,data_abastecimento:v_data,usuario_id:uid}
+let payload={empresa_id:emp,veiculo_id:VID,valor_total:v_total,litros:v_litros,quilometragem:v_km,data_abastecimento:v_data,usuario_id:uid,motorista_id:await getMotoristaAtual()}
 let postoSel=document.getElementById("postoSel")
 if(postoSel&&postoSel.value)payload.posto_id=postoSel.value
 let {error}=await db.from("abastecimentos").insert(payload)
@@ -769,7 +736,7 @@ combustivel_principal:(v_combustivel.value||"").trim(),
 km_atual:parseFloat(v_km.value)||0,
 vencimento_ipva:v_ipva.value||null,
 vencimento_licenciamento:v_licenciamento.value||null,
-motorista_id:(v_motorista&&v_motorista.value)?v_motorista.value:null
+motorista_id:await getMotoristaAtual()
 }
 let error=null
 if(window.editVeiculoId){
@@ -785,6 +752,12 @@ if(existeVeiculo&&existeVeiculo.length){alert("Já existe veículo com essa plac
 if(error){console.error(error);alert("Erro veículo");return}
 cancelarVeiculo()
 await carregarTudo()
+}
+
+async function getMotoristaAtual(){
+let uid=UID()
+let {data}=await db.from("motoristas").select("id").eq("usuario_id",uid).limit(1)
+return data&&data.length?data[0].id:null
 }
 
 async function salvarPosto(){
@@ -1281,8 +1254,30 @@ let modalEditar=document.getElementById("modalEditar")
 if(modalEditar)modalEditar.style.display="none"
 window.editAbastecimentoId=null
 }
+function toggleForm(id){
+let form=document.getElementById(id)
+if(!form)return
+if(form.style.display==="none" || !form.style.display){
+form.style.display="block"
+}else{
+form.style.display="none"
+}
+}
+async function garantirMotoristaUsuario(){
+let uid=UID()
+let emp=EMP()
+if(!uid||!emp)return
+let {data,error}=await db.from("motoristas").select("*").eq("usuario_id",uid).eq("empresa_id",emp).limit(1)
+if(error){console.error(error);return}
+if(!data||!data.length){
+let {data:user}=await db.from("usuarios").select("*").eq("id",uid).single()
+let nome=user?.usuario_apelido||"Usuário"
+let {error:e2}=await db.from("motoristas").insert({empresa_id:emp,usuario_id:uid,nome:nome})
+if(e2)console.error(e2)
+}
+}
 
-  
+
 </script>
 
 
