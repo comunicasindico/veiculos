@@ -452,13 +452,8 @@ selMotorista.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome}</opt
 }else{
 selMotorista.innerHTML="<option value=''>Sem motoristas</option>"
 }}
-/* 🔥 POSTOS (CORRIGIDO ADMIN/USER) */
-let qPostos=db.from("postos").select("*")
-if(tipo==="admin"){
-qPostos=qPostos.eq("empresa_id",emp)
-}else{
-qPostos=qPostos.eq("usuario_id",uid)
-}
+/* 🔥 POSTOS (SEM USUARIO_ID) */
+let qPostos=db.from("postos").select("*").eq("empresa_id",emp)
 let {data:postos,error:e2}=await qPostos
 if(e2){console.error("postos erro:",e2);postos=[]}
 postos=postos||[]
