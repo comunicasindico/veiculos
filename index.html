@@ -419,14 +419,19 @@ document.getElementById("topBar").style.display="none"
 fecharOCR()
 fecharQR()
 }
+
 async function carregarTudo(){
+
 let emp=EMP()
 let uid=UID()
+let tipo=localStorage.getItem("tipo")||"user"
+
 if(!emp)return console.error("sem empresa")
 
 let elMotoristas=document.getElementById("listaMotoristas")
 let elPostos=document.getElementById("listaPostos")
 let elVeiculos=document.getElementById("listaVeiculos")
+
 let selMotorista=document.getElementById("v_motorista")
 let selPosto=document.getElementById("postoSel")
 let selVeiculo=document.getElementById("veiculoSel")
@@ -442,6 +447,13 @@ qMotoristas=qMotoristas.eq("usuario_id",uid)
 
 let {data:motoristas,error:e1}=await qMotoristas
 
+motoristas=motoristas||[]
+
+if(e1){
+console.error("motoristas erro:",e1)
+motoristas=[]
+}
+
 /* ========================= */
 /* 🔥 POSTOS */
 /* ========================= */
@@ -453,11 +465,16 @@ qPostos=qPostos.eq("usuario_id",uid)
 
 let {data:postos,error:e2}=await qPostos
 
-/* ========================= */
-/* 🔥 VEÍCULOS (FINAL DEFINITIVO SEM LIXO) */
-/* ========================= */
-let tipo=localStorage.getItem("tipo")||"user"
+postos=postos||[]
 
+if(e2){
+console.error("postos erro:",e2)
+postos=[]
+}
+
+/* ========================= */
+/* 🔥 VEÍCULOS */
+/* ========================= */
 let qVeiculos=db.from("veiculos").select("*").eq("empresa_id",emp)
 
 if(tipo!=="admin"){
@@ -466,16 +483,14 @@ qVeiculos=qVeiculos.eq("usuario_id",uid)
 
 let {data:veiculos,error:eVeiculos}=await qVeiculos
 
+veiculos=veiculos||[]
+
 if(eVeiculos){
-console.error("Erro veículos:",eVeiculos)
+console.error("veiculos erro:",eVeiculos)
 veiculos=[]
 }
 
-veiculos=veiculos||[]
-
-/* 🔥 SELECT VEÍCULOS */
-let selVeiculo=document.getElementById("veiculoSel")
-
+/* 🔥 SELECT VEÍCULO (ÚNICO BLOCO — SEM DUPLICAÇÃO) */
 if(selVeiculo){
 
 if(veiculos.length){
@@ -501,27 +516,25 @@ VID=null
 }
 
 }
-  
-/* =========================
-🔥 ABASTECIMENTOS
-========================= */
-let qA=db.from("abastecimentos").select("*,postos(nome_posto)").eq("empresa_id",emp)
+
+/* ========================= */
+/* 🔥 ABASTECIMENTOS */
+/* ========================= */
+let qA=db
+.from("abastecimentos")
+.select("*,postos(nome_posto)")
+.eq("empresa_id",emp)
 
 if(tipo!=="admin"){
 qA=qA.eq("usuario_id",uid)
 }
 
 let {data:a,error:eA}=await qA
-ABASTECIMENTOS=eA?[]:(a||[])
 
-/* =========================
-🔥 RENDER SELECT VEICULO
-========================= */
-let sel=document.getElementById("veiculoSel")
-if(sel){
-sel.innerHTML=VEICULOS.length
-?VEICULOS.map(v=>`<option value="${v.id}">${v.modelo||"-"} - ${v.placa||""}</option>`).join("")
-:`<option>Sem veículos</option>`
+window.ABASTECIMENTOS=eA?[]:(a||[])
+
+if(eA){
+console.error("abastecimentos erro:",eA)
 }
 
 }
