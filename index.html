@@ -312,7 +312,7 @@ let u=data[0]
 if(u.senha_hash!==senha){alert("Senha incorreta");return}
 localStorage.setItem("uid",u.id)
 localStorage.setItem("empresa",u.empresa_id)
-localStorage.setItem("tipo",u.tipo||"user")
+localStorage.setItem("tipo",u.usuario_apelido==="admin"?"admin":"user")
 
 /* 🔥 TROCA DE TELA LIMPA */
 document.body.classList.remove("login")
@@ -433,6 +433,16 @@ let elPostos=document.getElementById("listaPostos")
 let elVeiculos=document.getElementById("listaVeiculos")
 
 let selMotorista=document.getElementById("v_motorista")
+if(selMotorista){
+if(motoristas && motoristas.length){
+selMotorista.innerHTML=motoristas.map(m=>
+`<option value="${m.id}">${m.nome}</option>`
+).join("")
+}else{
+selMotorista.innerHTML="<option value=''>Sem motoristas</option>"
+}
+}
+  
 let selPosto=document.getElementById("postoSel")
 
 /* ========================= */
