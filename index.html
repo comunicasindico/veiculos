@@ -86,7 +86,7 @@ canvas{width:100%!important;height:220px!important;background:#fff;border-radius
 body.login #app{display:none!important}
 body.login #modalOCR{display:none!important}
 body.login #modalQR{display:none!important}
-
+body.login #topBar{display:none!important}
 
 
 
@@ -112,8 +112,8 @@ body.login #modalQR{display:none!important}
 <div id="app" style="display:none">
 
 <!-- 🔝 TOPO -->
-<div id="topBar">
-<button onclick="voltarDashboard()">⬅</button>
+<div id="topBar" style="display:none">
+<button onclick="abrirTela('tela_dashboard')">⬅ Voltar</button>
 <button onclick="logout()">Sair</button>
 </div>
 
@@ -311,6 +311,7 @@ let u=data[0]
 if(u.senha_hash!==senha){alert("Senha incorreta");return}
 localStorage.setItem("uid",u.id)
 localStorage.setItem("empresa",u.empresa_id)
+localStorage.setItem("tipo",userDB.tipo||"user")
 
 /* 🔥 TROCA DE TELA LIMPA */
 document.body.classList.remove("login")
@@ -343,7 +344,7 @@ if(typeof bindPostoInput==="function")bindPostoInput()
 if(typeof bindPostoEdicao==="function")bindPostoEdicao()
 
 setTimeout(()=>carregarSelectsPadrao(),50)
-
+document.getElementById("topBar").style.display="flex"
 goTo(0)
 render()
 }
@@ -353,6 +354,7 @@ localStorage.clear()
 document.body.classList.add("login")
 document.getElementById("app").style.display="none"
 document.getElementById("telaLogin").style.display="flex"
+document.getElementById("topBar").style.display="none"
 fecharOCR()
 fecharQR()
 }
@@ -372,168 +374,53 @@ let selVeiculo=document.getElementById("veiculoSel")
 /* 🔥 MOTORISTAS */
 /* ========================= */
 let qMotoristas=db.from("motoristas").select("*").eq("empresa_id",emp)
-if(uid && uid!=="null" && uid!=="undefined"){
+
+if(tipo!=="admin"){
 qMotoristas=qMotoristas.eq("usuario_id",uid)
 }
+
 let {data:motoristas,error:e1}=await qMotoristas
-if(e1){console.error("motoristas erro:",e1);motoristas=[]}
-motoristas=motoristas||[]
-let mapMotoristas={}
-motoristas.forEach(x=>mapMotoristas[x.id]=x.nome)
-if(elMotoristas){
-elMotoristas.innerHTML=motoristas.length
-?motoristas.map(x=>`<div class="item">
-<div class="itemContent">
-<div><b>${x.nome||"-"}</b></div>
-<div style="font-size:11px;color:#94a3b8">
-CNH: ${x.cnh||"-"} | Tel: ${x.telefone||"-"}
-</div>
-<div style="font-size:11px;color:#94a3b8">
-Email: ${x.email||"-"}
-</div>
-</div>
-</div>`).join("")
-:`<div class="item">Nenhum motorista</div>`
-}
-if(selMotorista){
-selMotorista.innerHTML=motoristas.length
-?motoristas.map(x=>`<option value="${x.id}">${x.nome}</option>`).join("")
-:`<option value="">Sem motoristas</option>`
-}
 
 /* ========================= */
 /* 🔥 POSTOS */
 /* ========================= */
 let qPostos=db.from("postos").select("*").eq("empresa_id",emp)
+
+if(tipo!=="admin"){
+qPostos=qPostos.eq("usuario_id",uid)
+}
+
 let {data:postos,error:e2}=await qPostos
-if(e2){console.error("postos erro:",e2);postos=[]}
-postos=postos||[]
-if(elPostos){
-elPostos.innerHTML=postos.length
-?postos.map(x=>`<div class="item"><b>${x.nome_posto||"-"}</b></div>`).join("")
-:`<div class="item">Nenhum posto</div>`
-}
-if(selPosto){
-selPosto.innerHTML=postos.length
-?postos.map(x=>`<option value="${x.id}">${x.nome_posto}</option>`).join("")
-:`<option value="">Sem postos</option>`
-}
 
 /* ========================= */
 /* 🔥 VEÍCULOS (FINAL DEFINITIVO SEM LIXO) */
 /* ========================= */
 
-let veiculos=[]
+let emp=EMP()
+let uid=UID()
+let tipo=localStorage.getItem("tipo")||"user"
 
-/* 🔥 BUSCA SEGURA */
-let {data:v1,error:eVeiculos}=await db
-.from("veiculos")
-.select("*")
-.eq("empresa_id",emp)
+let qVeiculos=db.from("veiculos").select("*").eq("empresa_id",emp)
 
-if(eVeiculos){
-console.error("veiculos erro:",eVeiculos)
-veiculos=[]
-}else{
-veiculos=Array.isArray(v1)?v1:[]
+if(tipo!=="admin"){
+qVeiculos=qVeiculos.eq("usuario_id",uid)
 }
 
-/* 🔥 FILTRO POR USUÁRIO (COLOCAR AQUI) */
-if(uid && uid!=="null"){
-veiculos=veiculos.filter(v=>
-String(v.usuario_id||"")===String(uid)
-)
-}
+let {data:veiculos,error:eVeiculos}=await qVeiculos
 
-/* 🔒 FILTRO FINAL ANTI-LIXO (DEPOIS DO UID) */
-veiculos=veiculos.filter(v=>
-v.placa &&
-v.placa!=="AAA0000" &&
-!String(v.modelo||"").toLowerCase().includes("inicial")
-)
-
-console.log("VEICULOS CARREGADOS:",veiculos)
-
-/* 🔥 SELECT VEÍCULO */
-if(selVeiculo){
-if(veiculos.length){
-
-selVeiculo.innerHTML=veiculos.map(x=>
-`<option value="${x.id}">
-${x.modelo?x.modelo:"Veículo"}${x.placa?" - "+x.placa:""}
-</option>`
-).join("")
-
-if(!VID || !veiculos.find(v=>v.id===VID)){
-VID=veiculos[0].id
-}
-
-selVeiculo.value=VID
-
-}else{
-
-selVeiculo.innerHTML=`<option value="">🚫 Cadastre um veículo</option>`
-VID=null
-
-}
-}
-
-/* 🔥 LISTA VEÍCULOS */
-if(elVeiculos){
-elVeiculos.innerHTML=veiculos.length
-?veiculos.map(x=>`
-<div class="item">
-<div class="itemContent">
-<b>${x.modelo||"-"}</b> | ${x.placa||"-"}
-</div>
-</div>
-`).join("")
-:`<div class="item">
-<div class="itemContent" style="opacity:.7">
-🚗 Nenhum veículo cadastrado<br>
-<small>Cadastre um veículo para começar</small>
-</div>
-</div>`
-}
-
-/* 🔥 BIND SELECT */
-if(selVeiculo && !selVeiculo._bind){
-selVeiculo.addEventListener("change",()=>{
-VID=selVeiculo.value
-render()
-})
-selVeiculo._bind=true
-}
-
-/* 🔥 NÃO TRAVAR O APP */
-if(!veiculos.length){
-console.warn("⚠️ Nenhum veículo cadastrado")
-VID=null
-}else{
-/* 🔥 RENDER SOMENTE SE EXISTIR */
-if(VID){
-setTimeout(()=>render(),50)
-}
-}
+if(eVeiculos){console.error(eVeiculos);veiculos=[]}
+veiculos=veiculos||[]
   
 /* ========================= */
 /* 🔥 ABASTECIMENTOS */
 /* ========================= */
-let qAbaste=db
-.from("abastecimentos")
-.select("*")
-.eq("empresa_id",emp)
-if(uid && uid!=="null"){
+let qAbaste=db.from("abastecimentos").select("*").eq("empresa_id",emp)
+
+if(tipo!=="admin"){
 qAbaste=qAbaste.eq("usuario_id",uid)
 }
+
 let {data:abastecimentos,error:eA}=await qAbaste
-if(eA){
-console.error("abastecimentos erro:",eA)
-abastecimentos=[]
-}
-abastecimentos=abastecimentos||[]
-console.log("ABASTECIMENTOS:",abastecimentos)
-}
 
 async function salvar(){
 let emp=EMP()
