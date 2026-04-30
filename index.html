@@ -436,22 +436,19 @@ let elPostos=document.getElementById("listaPostos")
 let elVeiculos=document.getElementById("listaVeiculos")
 let selMotorista=document.getElementById("v_motorista")
 let selPosto=document.getElementById("postoSel")
-/* 🔥 MOTORISTAS */
+/* 🔥 MOTORISTAS (SEM FILTRO POR USUARIO) */
 let qMotoristas=db.from("motoristas").select("*").eq("empresa_id",emp)
-if(tipo==="admin"){
-qMotoristas=qMotoristas.eq("empresa_id",emp)
-}else{
-qMotoristas=qMotoristas.eq("usuario_id",uid)
-}
 let {data:motoristas,error:e1}=await qMotoristas
 if(e1){console.error("motoristas erro:",e1);motoristas=[]}
 motoristas=motoristas||[]
+let selMotorista=document.getElementById("v_motorista")
 if(selMotorista){
 if(motoristas.length){
-selMotorista.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome}</option>`).join("")
+selMotorista.innerHTML=motoristas.map(m=>`<option value="${m.id}">${m.nome||"Motorista"}</option>`).join("")
 }else{
 selMotorista.innerHTML="<option value=''>Sem motoristas</option>"
-}}
+}
+}
 /* 🔥 POSTOS (SEM USUARIO_ID) */
 let qPostos=db.from("postos").select("*").eq("empresa_id",emp)
 let {data:postos,error:e2}=await qPostos
@@ -660,9 +657,11 @@ window.editVeiculoId=null
 window.editPostoId=null
 window.editAbastecimentoId=null
 
-/* 🔥 MOTORISTA */
+/* 🔥 MOTORISTA (CORRIGIDO PROFISSIONAL) */
 async function salvarMotorista(){
 let emp=EMP()
+let uid=UID()
+if(!emp||!uid)return alert("Sessão inválida")
 
 let nome=(m_nome.value||"").trim()
 let tel=(m_tel.value||"").trim()
@@ -674,6 +673,7 @@ if(!nome)return alert("Informe o nome")
 
 let payload={
 empresa_id:emp,
+usuario_id:uid,
 nome:nome,
 telefone:tel,
 cpf:cpf,
@@ -691,6 +691,19 @@ if(window.editMotoristaId){
 .eq("empresa_id",emp))
 window.editMotoristaId=null
 }else{
+
+/* 🔒 EVITA DUPLICADO POR NOME */
+let {data:existe}=await db
+.from("motoristas")
+.select("id")
+.eq("empresa_id",emp)
+.eq("nome",nome)
+.limit(1)
+
+if(existe && existe.length){
+return alert("Já existe motorista com esse nome")
+}
+
 ({error}=await db.from("motoristas").insert(payload))
 }
 
@@ -705,6 +718,7 @@ cancelarMotorista()
 await carregarTudo()
 }
 
+/* 🔥 EDITAR MOTORISTA (BLINDADO) */
 function editarMotorista(id,nome,tel,cpf,cnh,email){
 window.editMotoristaId=id
 
@@ -714,14 +728,23 @@ if(m_cpf)m_cpf.value=cpf||""
 if(m_cnh)m_cnh.value=cnh||""
 if(m_email)m_email.value=email||""
 
-document.getElementById("formMotorista").style.display="block"
-document.getElementById("listaMotoristas").style.display="none"
+let form=document.getElementById("formMotorista")
+let lista=document.getElementById("listaMotoristas")
+
+if(form)form.style.display="block"
+if(lista)lista.style.display="none"
 }
 
+/* 🔥 CANCELAR MOTORISTA (RESET LIMPO) */
 function cancelarMotorista(){
-document.getElementById("formMotorista").style.display="none"
-document.getElementById("listaMotoristas").style.display="block"
+let form=document.getElementById("formMotorista")
+let lista=document.getElementById("listaMotoristas")
+
+if(form)form.style.display="none"
+if(lista)lista.style.display="block"
+
 window.editMotoristaId=null
+
 m_nome.value=""
 m_tel.value=""
 if(m_cpf)m_cpf.value=""
@@ -729,17 +752,19 @@ if(m_cnh)m_cnh.value=""
 if(m_email)m_email.value=""
 }
 
-/* 🔥 VEÍCULO */
+/* 🔥 VEÍCULO (CORRIGIDO PROFISSIONAL) */
 async function salvarVeiculo(){
 let emp=EMP()
 let uid=UID()
+if(!emp||!uid)return alert("Sessão inválida")
 let placa=(v_placa.value||"").toUpperCase().replace(/\s+/g,"").trim()
 let modelo=(v_modelo.value||"").trim()
 if(!placa||!modelo){alert("Preencha placa e modelo");return}
 if(placa==="AAA0000"||placa.length<5||modelo.toLowerCase().includes("inicial")){alert("Veículo inválido");return}
+let motoristaId=await getMotoristaAtual()
 let payload={
 empresa_id:emp,
-usuario_id:uid||null,
+usuario_id:uid,
 placa,
 marca:(v_marca.value||"").trim(),
 modelo,
@@ -750,17 +775,15 @@ combustivel_principal:(v_combustivel.value||"").trim(),
 km_atual:parseFloat(v_km.value)||0,
 vencimento_ipva:v_ipva.value||null,
 vencimento_licenciamento:v_licenciamento.value||null,
-motorista_id:await getMotoristaAtual()
+motorista_id:motoristaId
 }
 let error=null
 if(window.editVeiculoId){
 ({error}=await db.from("veiculos").update(payload).eq("id",window.editVeiculoId).eq("empresa_id",emp))
 window.editVeiculoId=null
 }else{
-if(!validarVeiculoPayload(payload)){alert("Bloqueado: veículo inválido");return}
-let {data:existeVeiculo,error:eDup}=await db.from("veiculos").select("id").eq("empresa_id",emp).eq("placa",placa).limit(1)
-if(eDup){console.error(eDup);alert("Erro ao validar placa");return}
-if(existeVeiculo&&existeVeiculo.length){alert("Já existe veículo com essa placa");return}
+let {data:existe}=await db.from("veiculos").select("id").eq("empresa_id",emp).eq("placa",placa).limit(1)
+if(existe&&existe.length)return alert("Já existe veículo com essa placa")
 ({error}=await db.from("veiculos").insert(payload))
 }
 if(error){console.error(error);alert("Erro veículo");return}
@@ -768,23 +791,27 @@ cancelarVeiculo()
 await carregarTudo()
 }
 
+/* 🔥 MOTORISTA AUTOMÁTICO */
 async function getMotoristaAtual(){
 let uid=UID()
-let {data}=await db.from("motoristas").select("id").eq("usuario_id",uid).limit(1)
+let emp=EMP()
+let {data,error}=await db.from("motoristas").select("id").eq("empresa_id",emp).eq("usuario_id",uid).limit(1)
+if(error)return null
 return data&&data.length?data[0].id:null
 }
 
+/* 🔥 POSTO (CORRIGIDO SEM usuario_id) */
 async function salvarPosto(){
 let emp=EMP()
+if(!emp)return alert("Sessão inválida")
 let nome=(p_nome.value||"").trim()
-if(!nome){alert("Informe nome do posto");return}
+if(!nome)return alert("Informe nome do posto")
 let cnpj=(p_cnpj.value||"").replace(/\D/g,"")
 let {data:existe,error:eDup}=await db.from("postos").select("id").eq("empresa_id",emp).eq("cnpj",cnpj).limit(1)
-if(eDup){console.error(eDup);alert("Erro ao validar CNPJ");return}
-if(existe&&existe.length&&cnpj&&!window.editPostoId){alert("Já existe posto com este CNPJ");return}
+if(eDup){console.error(eDup);return alert("Erro ao validar CNPJ")}
+if(existe&&existe.length&&cnpj&&!window.editPostoId)return alert("Já existe posto com este CNPJ")
 let payload={
 empresa_id:emp,
-usuario_id:UID(),
 nome_posto:nome,
 cidade:(p_cidade.value||"").trim(),
 cnpj:cnpj||null,
@@ -798,15 +825,17 @@ if(window.editPostoId){
 ({error}=await db.from("postos").update(payload).eq("id",window.editPostoId).eq("empresa_id",emp))
 window.editPostoId=null
 }else{
-({error}=await db.from("postos").insert([payload]))
+({error}=await db.from("postos").insert(payload))
 }
 if(error){console.error(error);alert("Erro ao salvar posto");return}
 cancelarPosto()
 await carregarTudo()
 }
 
+/* 🔥 EDIÇÃO ABASTECIMENTO */
 async function salvarEdicao(){
 let emp=EMP()
+if(!emp)return
 let payload={
 valor_total:parseFloat(e_valor.value)||0,
 litros:parseFloat(e_litros.value)||0,
@@ -821,9 +850,10 @@ if(modalEditar)modalEditar.style.display="none"
 render()
 }
 
+/* 🔥 EXCLUIR */
 async function excluir(t,id){
 if(!confirm("Excluir registro?"))return
-if(t==="abastecimentos"){alert("Registro consolidado não pode ser excluído");return}
+if(t==="abastecimentos")return alert("Registro consolidado não pode ser excluído")
 let emp=EMP()
 let {error}=await db.from(t).delete().eq("id",id).eq("empresa_id",emp)
 if(error){console.error(error);alert("Erro ao excluir");return}
@@ -831,6 +861,7 @@ await carregarTudo()
 render()
 }
 
+/* 🔥 INPUT POSTO */
 function bindPostoInput(){
 let postoSel=document.getElementById("postoSel")
 let postoInput=document.getElementById("postoInput")
@@ -838,10 +869,8 @@ if(!postoSel||!postoInput)return
 if(postoSel._bind)return
 postoSel._bind=true
 postoSel.addEventListener("change",()=>{
-if(!postoInput.value){
 let opt=postoSel.options[postoSel.selectedIndex]
-postoInput.value=opt?opt.text:""
-}
+if(opt)postoInput.value=opt.text||""
 })
 postoInput.addEventListener("input",()=>{postoSel.value=""})
 }
