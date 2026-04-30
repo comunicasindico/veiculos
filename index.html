@@ -466,8 +466,41 @@ qVeiculos=qVeiculos.eq("usuario_id",uid)
 
 let {data:veiculos,error:eVeiculos}=await qVeiculos
 
-if(eVeiculos){console.error(eVeiculos);veiculos=[]}
+if(eVeiculos){
+console.error("Erro veículos:",eVeiculos)
+veiculos=[]
+}
+
 veiculos=veiculos||[]
+
+/* 🔥 SELECT VEÍCULOS */
+let selVeiculo=document.getElementById("veiculoSel")
+
+if(selVeiculo){
+
+if(veiculos.length){
+
+selVeiculo.innerHTML=veiculos.map(v=>
+`<option value="${v.id}">
+${v.modelo||"Veículo"}${v.placa?" - "+v.placa:""}
+</option>`
+).join("")
+
+/* 🔥 DEFINE VID */
+if(!VID || !veiculos.find(v=>v.id===VID)){
+VID=veiculos[0].id
+}
+
+selVeiculo.value=VID
+
+}else{
+
+selVeiculo.innerHTML="<option value=''>Nenhum veículo cadastrado</option>"
+VID=null
+
+}
+
+}
   
 /* =========================
 🔥 ABASTECIMENTOS
