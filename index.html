@@ -76,8 +76,13 @@ canvas{width:100%!important;height:220px!important;border-radius:10px;margin-top
 .login-box input{background:rgba(255,255,255,.08)}
 .login-box{backdrop-filter:blur(22px)}
 body.login #app{display:none!important}
+body.login #modalOCR{display:none!important}
+body.login #modalQR{display:none!important}
 
 
+
+
+  
 </style>
   
 
@@ -340,6 +345,8 @@ localStorage.clear()
 document.body.classList.add("login")
 document.getElementById("app").style.display="none"
 document.getElementById("telaLogin").style.display="flex"
+fecharOCR()
+fecharQR()
 }
 async function carregarTudo(){
 let emp=EMP()
@@ -814,10 +821,15 @@ postoInput.addEventListener("input",()=>{postoSel.value=""})
 🔥 ABRIR CAMERA OCR
 ========================================================= */
 async function abrirCameraOCR(){
+
+if(document.body.classList.contains("login"))return
+
 let modal=document.getElementById("modalOCR")
 let video=document.getElementById("videoOCR")
 if(!modal||!video)return
+
 modal.style.display="flex"
+
 let stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
 video.srcObject=stream
 }
@@ -1027,13 +1039,16 @@ resolve(null)
 }
 
 /* =========================================================
-🔥 FECHAR MODAIS
+🔥 FECHAR MODAIS  OCR    QR
 ========================================================= */
 function fecharOCR(){
 let modal=document.getElementById("modalOCR")
 let video=document.getElementById("videoOCR")
 if(modal)modal.style.display="none"
-if(video&&video.srcObject)video.srcObject.getTracks().forEach(t=>t.stop())
+if(video&&video.srcObject){
+video.srcObject.getTracks().forEach(t=>t.stop())
+video.srcObject=null
+}
 }
 
 function fecharQR(){
@@ -1161,25 +1176,25 @@ if(kmAtual<1000)alert("⚠️ KM baixo")
 
 /* 🔥 EVENTOS AUTOMÁTICOS */
 document.addEventListener("DOMContentLoaded",()=>{
-window.graficoConsumoEl=document.getElementById("graficoConsumo")
-/* REMOVA referência a graficoGasto se você já removeu o canvas */
-let inputData=document.getElementById("data")
-if(inputData&&!inputData.value){
-let hoje=new Date()
-let offset=hoje.getTimezoneOffset()
-hoje=new Date(hoje.getTime()-offset*60000)
-inputData.value=hoje.toISOString().slice(0,10)
-}
-if(typeof initCNPJAuto==="function")initCNPJAuto()
+
+let app=document.getElementById("app")
+let login=document.getElementById("telaLogin")
+
 if(EMP()){
+document.body.classList.remove("login")
+if(app)app.style.display="block"
+if(login)login.style.display="none"
 init()
 }else{
 document.body.classList.add("login")
-let app=document.getElementById("app")
-let telaLogin=document.getElementById("telaLogin")
 if(app)app.style.display="none"
-if(telaLogin)telaLogin.style.display="flex"
+if(login)login.style.display="flex"
 }
+
+/* 🔥 BLOQUEIA MODAIS */
+fecharOCR()
+fecharQR()
+
 })
 
 window.addEventListener("load",()=>{
