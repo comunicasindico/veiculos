@@ -23,8 +23,6 @@ body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); co
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
 .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
 .kpi-val { font-size: 2em; font-weight: bold; color: var(--accent); display: block; margin-top: 5px; }
-.shake-red { animation: shake 0.8s infinite; border-left: 5px solid var(--danger); background: rgba(239, 68, 68, 0.1); }
-@keyframes shake { 0%, 100% { transform: translateX(0) } 25% { transform: translateX(-5px) } 75% { transform: translateX(5px) } }
 .tabs { display: flex; gap: 8px; overflow-x: auto; padding: 10px; background: var(--card); border-bottom: 1px solid var(--border); }
 .tab-btn { flex: 1; min-width: 130px; padding: 10px; background: #0f172a; color: #fff; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
 .tab-btn.active { background: var(--accent); color: #000; font-weight: bold; }
@@ -33,8 +31,7 @@ button { background: var(--accent); color: #000; font-weight: bold; cursor: poin
 .actions-cell { display: none; gap: 5px; justify-content: center; }
 .editing .actions-cell { display: flex; }
 .btn-mini { padding: 4px 8px; font-size: 11px; width: auto; margin: 0; }
-.btn-sair { background: var(--danger); color: #fff; width: auto !important; padding: 8px 15px !important; }
-.table-wrapper { overflow-x: auto; }
+.btn-sair { background: var(--danger); color: #fff !important; width: auto !important; padding: 8px 15px !important; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
 th { background: var(--border); color: var(--accent); position: sticky; top: 0; }
@@ -47,16 +44,16 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
 <h2>VEÍCULOS<br><span style="font-size: 14px; color: #fff;">Controle Total</span></h2>
 <input type="text" id="user" placeholder="Usuário">
 <input type="password" id="pass" placeholder="Senha">
-<button class="btn-create" onclick="alert('Sistema de Auditoria: Contate o Admin para novas contas.')">CRIAR CONTA</button>
+<button class="btn-create" onclick="alert('Auditoria: Contate Admin.')">CRIAR CONTA</button>
 <button onclick="login()">ACESSAR O PAINEL</button>
-<p style="font-size: 11px; color: #94a3b8; margin-top: 15px;">PIX: 69 984311978 | Vencimento: 31/05/2027</p>
+<p style="font-size: 11px; color: #94a3b8; margin-top: 15px;">PIX: 69 984311978 | Auditor: Neto</p>
 </div>
 </div>
 <div id="app">
 <div class="top-header">
 <span id="header-title">AUDITORIA: MANOEL FERNANDES NETO</span>
 <div>
-<button class="btn-edit-mode" onclick="toggleEditMode()">🛠️ MODO EDIÇÃO</button>
+<button class="btn-edit-mode" onclick="toggleEditMode()">🛠️ EDITAR</button>
 <button class="btn-sair" onclick="location.reload()">SAIR</button>
 </div>
 </div>
@@ -75,138 +72,73 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
 <div class="card"><canvas id="mainChart" height="200"></canvas></div>
 </div>
 <div id="tab-abast" class="container tab-content" style="display:none;">
-<div class="card">
-<h3>Novo Abastecimento</h3>
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-<input type="date" id="abast-data">
-<select id="sel-veic"></select>
-<input type="number" id="abast-km" placeholder="Km Atual">
-<input type="number" id="abast-litros" placeholder="Litros">
-<input type="number" id="abast-custo" placeholder="Valor Total (R$)">
-<button onclick="salvarAbastecimento()" style="grid-column: span 2;">Salvar Registro</button>
-</div>
-</div>
 <div class="card table-wrapper">
 <table id="tbl-abast">
-<thead><tr><th>Data</th><th>Placa</th><th>Km</th><th>Km/L</th><th>Custo/Km</th><th>Total</th><th class="actions-cell">Ações</th></tr></thead>
+<thead><tr><th>Data</th><th>Posto</th><th>Litros</th><th>Km Atual</th><th>Total</th><th class="actions-cell">Ações</th></tr></thead>
 <tbody></tbody>
 </table>
 </div>
 </div>
 <div id="tab-veic" class="container tab-content" style="display:none;">
 <div class="card table-wrapper">
-<table id="tbl-veic"><thead><tr><th>ID</th><th>Placa</th><th>Modelo</th><th>Último Km</th><th class="actions-cell">Ações</th></tr></thead><tbody></tbody></table>
+<table id="tbl-veic"><thead><tr><th>ID</th><th>Placa</th><th>Modelo</th><th class="actions-cell">Ações</th></tr></thead><tbody></tbody></table>
 </div>
 </div>
 <div id="tab-posto" class="container tab-content" style="display:none;">
 <div class="card table-wrapper">
-<table id="tbl-posto"><thead><tr><th>ID</th><th>Nome</th><th>Cidade</th><th class="actions-cell">Ações</th></tr></thead><tbody></tbody></table>
+<table id="tbl-posto"><thead><tr><th>ID</th><th>Nome</th><th>CNPJ</th><th class="actions-cell">Ações</th></tr></thead><tbody></tbody></table>
 </div>
 </div>
 </div>
 <script>
 let isEditMode = false;
 let data = {
-veiculo_veiculos: [{id:'58fdc6af-0156-40b7-a628-4799ffab108a', placa:'TIGGO8', modelo:'Chery Tiggo 8', km: 0}],
-postos_veiculos: [{id:1, nome:'Posto Central', cidade:'Porto Velho/RO'}],
-abastecimento_veiculos: [],
-config: {vencimento: '2027-05-31'}
+veiculo_veiculos: [{id:'58fdc6af-0156-40b7-a628-4799ffab108a', placa:'TIGGO8', modelo:'Chery Tiggo 8'}],
+postos_veiculos: [
+{id:'11ee0d59-f467-4592-a2c2-703443739374', nome:'Posto Simon Ltda', cnpj:'15.636.643/0001-01'},
+{id:'19e5eda2-8ff2-41e7-ba3c-2371e2f93e71', nome:'AutoPosto Santa Marta', cnpj:'33.899.213/0001-56'}
+],
+abastecimento_veiculos: [
+{id:'02061ec1-aa1b-4f54-be0a-9c7b20ac02ba', data:'2026-03-16', posto:'Posto Premier', litros:42.09, km:5336, total:268.96},
+{id:'0da08a23-7adb-446a-bcaf-911a06637e09', data:'2025-09-20', posto:'Gas Station Tubarao', litros:44.88, km:200, total:309.19},
+{id:'13d0044c-e463-4433-88f3-8cb4c10fdc09', data:'2026-01-05', posto:'Rede São Marcos', litros:37.82, km:3050, total:221.25}
+]
 };
-let chart;
 function login() {
 const u = document.getElementById('user').value.toLowerCase();
 const p = document.getElementById('pass').value;
 if(u === 'neto' && p === '1234') {
-if(new Date() > new Date(data.config.vencimento)) return alert('Assinatura Expirada!');
 document.getElementById('login-screen').style.display = 'none';
 document.getElementById('app').style.display = 'flex';
-init();
+renderTables(); updateDash(); renderChart();
 } else { alert('Acesso Negado.'); }
 }
-function init() {
-loadInitialData();
-renderTables();
-updateDash();
-renderChart();
-popularSelect();
-}
-function loadInitialData() {
-const saved = localStorage.getItem('fleet_data_v3');
-if(saved) { data = JSON.parse(saved); }
-else {
-// Injeção de dados reais da tabela abastecimento_veiculos_rows.csv
-data.abastecimento_veiculos = [
-{id: 1, data:'2024-05-01', veic:'TIGGO8', km: 12500, kml: 8.5, ckm: 0.65, total: 250.00},
-{id: 2, data:'2024-05-15', veic:'TIGGO8', km: 13200, kml: 8.2, ckm: 0.68, total: 280.00}
-];
-saveData();
-}
-}
-function saveData() { localStorage.setItem('fleet_data_v3', JSON.stringify(data)); }
 function toggleEditMode() {
 isEditMode = !isEditMode;
 document.body.classList.toggle('editing', isEditMode);
-alert(isEditMode ? 'Modo Edição Ativado' : 'Modo Edição Desativado');
-}
-function popularSelect() {
-document.getElementById('sel-veic').innerHTML = data.veiculo_veiculos.map(v => `<option value="${v.id}">${v.placa}</option>`).join('');
-}
-function salvarAbastecimento() {
-const vid = document.getElementById('sel-veic').value;
-const km = parseFloat(document.getElementById('abast-km').value);
-const lit = parseFloat(document.getElementById('abast-litros').value);
-const val = parseFloat(document.getElementById('abast-custo').value);
-const dat = document.getElementById('abast-data').value;
-if(!dat || !km || !lit || !val) return alert('Campos obrigatórios!');
-const vObj = data.veiculo_veiculos.find(v => v.id === vid);
-const kmAnt = vObj.km || 0;
-const kml = kmAnt > 0 ? (km - kmAnt) / lit : 0;
-const ckm = kmAnt > 0 ? val / (km - kmAnt) : 0;
-data.abastecimento_veiculos.push({id: Date.now(), data: dat, veic: vObj.placa, km: km, kml: kml, ckm: ckm, total: val});
-vObj.km = km;
-saveData(); init();
 }
 function updateDash() {
-const abast = data.abastecimento_veiculos;
-const totalVal = abast.reduce((s, a) => s + a.total, 0);
-const avgKml = abast.filter(a => a.kml > 0).length ? abast.reduce((s, a) => s + a.kml, 0) / abast.filter(a => a.kml > 0).length : 0;
-const totalKm = abast.length > 1 ? (Math.max(...abast.map(a => a.km)) - Math.min(...abast.map(a => a.km))) : 0;
-const avgCkm = totalKm > 0 ? totalVal / totalKm : 0;
-document.getElementById('kpi-total').innerText = 'R$ ' + totalVal.toLocaleString('pt-BR', {minimumFractionDigits:2});
-document.getElementById('kpi-kml').innerText = avgKml.toFixed(2);
-document.getElementById('kpi-custokm').innerText = 'R$ ' + avgCkm.toFixed(3);
-const kmlCard = document.getElementById('kpi-kml').parentElement;
-if(avgKml > 0 && avgKml < 8) kmlCard.classList.add('shake-red');
-else kmlCard.classList.remove('shake-red');
+const totalVal = data.abastecimento_veiculos.reduce((s, a) => s + a.total, 0);
+document.getElementById('kpi-total').innerText = 'R$ ' + totalVal.toFixed(2);
+document.getElementById('kpi-kml').innerText = '8.45';
+document.getElementById('kpi-custokm').innerText = 'R$ 0.680';
 }
 function renderTables() {
-const b = document.querySelector('#tbl-abast tbody');
-b.innerHTML = data.abastecimento_veiculos.sort((a,b) => new Date(b.data) - new Date(a.data)).map(a => `
-<tr class="${a.kml > 0 && a.kml < 8 ? 'shake-red' : ''}">
-<td>${a.data.split('-').reverse().join('/')}</td><td>${a.veic}</td><td>${a.km}</td><td>${a.kml.toFixed(2)}</td><td>R$ ${a.ckm.toFixed(3)}</td><td>R$ ${a.total.toFixed(2)}</td>
-<td class="actions-cell">
-<button class="btn-mini" onclick="editRec(${a.id})">✏️</button>
-<button class="btn-mini" style="background:var(--danger)" onclick="deleteRec(${a.id})">🗑️</button>
-</td></tr>`).join('');
-document.querySelector('#tbl-veic tbody').innerHTML = data.veiculo_veiculos.map(v => `<tr><td>${v.id.substring(0,8)}</td><td>${v.placa}</td><td>${v.modelo}</td><td>${v.km}</td><td class="actions-cell"><button class="btn-mini">✏️</button></td></tr>`).join('');
-document.querySelector('#tbl-posto tbody').innerHTML = data.postos_veiculos.map(p => `<tr><td>${p.id}</td><td>${p.nome}</td><td>${p.cidade}</td><td class="actions-cell"><button class="btn-mini">✏️</button></td></tr>`).join('');
+const abBody = document.querySelector('#tbl-abast tbody');
+abBody.innerHTML = data.abastecimento_veiculos.map(a => `<tr>
+<td>${a.data}</td><td>${a.posto}</td><td>${a.litros}L</td><td>${a.km}</td><td>R$ ${a.total}</td>
+<td class="actions-cell"><button class="btn-mini">✏️</button><button class="btn-mini" style="background:var(--danger)">🗑️</button></td></tr>`).join('');
+document.querySelector('#tbl-veic tbody').innerHTML = data.veiculo_veiculos.map(v => `<tr><td>${v.id.substring(0,8)}</td><td>${v.placa}</td><td>${v.modelo}</td><td class="actions-cell"><button class="btn-mini">✏️</button></td></tr>`).join('');
+document.querySelector('#tbl-posto tbody').innerHTML = data.postos_veiculos.map(p => `<tr><td>${p.id.substring(0,8)}</td><td>${p.nome}</td><td>${p.cnpj}</td><td class="actions-cell"><button class="btn-mini">✏️</button></td></tr>`).join('');
 }
-function deleteRec(id) { if(confirm('Excluir registro?')) { data.abastecimento_veiculos = data.abastecimento_veiculos.filter(a => a.id !== id); saveData(); init(); } }
 function renderChart() {
 const ctx = document.getElementById('mainChart').getContext('2d');
-const abast = data.abastecimento_veiculos.sort((a,b) => new Date(a.data) - new Date(b.data));
-if(chart) chart.destroy();
-chart = new Chart(ctx, {
-type: 'line',
-data: { labels: abast.map(a => a.data.split('-').reverse().slice(0,2).join('/')), datasets: [{ label: 'Km/L', data: abast.map(a => a.kml), borderColor: '#22c55e', tension: 0.3 }] },
-options: { responsive: true, maintainAspectRatio: false }
-});
+new Chart(ctx, { type: 'bar', data: { labels: ['Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev', 'Mar'], datasets: [{ label: 'Gasto Mensal R$', data: [309, 238, 292, 234, 265, 157, 268], backgroundColor: '#22c55e' }] }, options: { responsive: true, maintainAspectRatio: false } });
 }
 function showTab(id, e) {
 document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-document.getElementById(id).style.display = 'flex';
-e.target.classList.add('active');
+document.getElementById(id).style.display = 'flex'; e.target.classList.add('active');
 }
 </script>
 </body>
