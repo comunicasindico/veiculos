@@ -3,191 +3,87 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>VEÍCULOS - Controle Total</title>
-<link rel="icon" href="data:,">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-<style>
-:root { --bg: #0f172a; --card: #1e293b; --accent: #22c55e; --danger: #ef4444; --border: #334155; --text: #f8fafc; }
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); height: 100vh; width: 100vw; overflow: hidden; }
-#login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://raw.githubusercontent.com/comunicasindico/veiculos/main/img/bcveiculos.png') no-repeat center center fixed; background-size: cover; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-.login-box { width: 380px; background: rgba(15, 23, 42, 0.9); padding: 35px; border-radius: 20px; text-align: center; border: 1px solid var(--border); backdrop-filter: blur(10px); }
-.login-box h2 { color: var(--accent); margin-bottom: 25px; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
-.btn-create { background: var(--danger) !important; color: #fff !important; margin-bottom: 10px !important; }
-#app { display: none; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-.container { flex: 1; display: flex; flex-direction: column; padding: 15px; overflow-y: auto; gap: 15px; }
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-.card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
-.kpi-val { font-size: 2em; font-weight: bold; color: var(--accent); display: block; margin-top: 5px; }
-.shake-red { animation: shake 0.8s infinite; border-left: 5px solid var(--danger); background: rgba(239, 68, 68, 0.1); }
-@keyframes shake { 0%, 100% { transform: translateX(0) } 25% { transform: translateX(-5px) } 75% { transform: translateX(5px) } }
-.tabs { display: flex; gap: 8px; overflow-x: auto; padding: 10px; background: var(--card); border-bottom: 1px solid var(--border); }
-.tab-btn { flex: 1; min-width: 130px; padding: 10px; background: #0f172a; color: #fff; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; white-space: nowrap; }
-.tab-btn.active { background: var(--accent); color: #000; font-weight: bold; }
-input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid var(--border); background: #0f172a; color: #fff; font-size: 15px; }
-button { background: var(--accent); color: #000; font-weight: bold; cursor: pointer; border: none; }
-.table-wrapper { overflow-x: auto; max-height: 400px; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
-th { background: var(--border); color: var(--accent); position: sticky; top: 0; }
-@media (max-width: 768px) { body { overflow: auto; } #app { height: auto; } .modules { grid-template-columns: 1fr; } }
-</style>
+<title>Sistema Fleet Audit Neto V3</title>
+<style>* { box-sizing: border-box; }
+body { margin: 0; padding: 0; min-height: 100vh; background: #121212; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: auto; }
+header { background: #1e1e1e; padding: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+header h1 { margin: 0; font-size: 1.8em; }
+section { background: #1e1e1e; margin: 15px; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+h2 { display: flex; justify-content: space-between; align-items: center; margin-top: 0; font-size: 1.4em; border-bottom: 2px solid #333; padding-bottom: 10px; }
+table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+th { background: #333; font-weight: bold; }
+.edit-btn, .delete-btn, .add-btn, .sair-btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; margin-right: 5px; }
+.edit-btn { background: #4caf50; color: white; }
+.delete-btn { background: #f44336; color: white; }
+.add-btn { background: #2196f3; color: white; }
+.sair-btn { background: #f44336; color: white; }
+#modal { border: none; }
+.modal-content { background: #1e1e1e; margin: 5% auto; padding: 30px; border-radius: 10px; width: 90%; max-width: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.close { color: #aaa; float: right; font-size: 35px; font-weight: bold; cursor: pointer; line-height: 30px; }
+.close:hover { color: white; }
+#editForm { display: flex; flex-direction: column; gap: 15px; }
+#editForm label { display: flex; flex-direction: column; font-weight: bold; }
+#editForm input, #editForm select { padding: 12px; background: #333; color: #fff; border: 1px solid #555; border-radius: 5px; font-size: 1em; }
+#editForm button[type="submit"] { background: #4caf50; color: white; padding: 12px; font-size: 1.1em; border-radius: 5px; cursor: pointer; }
+@media (max-width: 768px) { header { flex-direction: column; gap: 10px; } section { margin: 10px 5px; padding: 15px; } th, td { padding: 8px 4px; font-size: 0.9em; } .modal-content { width: 95%; margin: 10% auto; padding: 20px; } }</style>
 </head>
 <body>
-<div id="login-screen">
-<div class="login-box">
-<h2>VEÍCULOS<br><span style="font-size: 14px; color: #fff;">Controle Total</span></h2>
-<input type="text" id="user" placeholder="Usuário">
-<input type="password" id="pass" placeholder="Senha">
-<button class="btn-create" onclick="alert('Sistema de Auditoria: Contate o Admin para novas contas.')">CRIAR CONTA</button>
-<button onclick="login()">ACESSAR O PAINEL</button>
-<p style="font-size: 11px; color: #94a3b8; margin-top: 15px;">Assinatura: Manoel Fernandes Neto<br>PIX: 69 984311978</p>
+<header>
+<h1>Sistema Fleet Audit Neto V3 - Layout Auditoria Dark</h1>
+<button class="sair-btn" onclick="sair()">SAIR</button>
+</header>
+<section id="users-section">
+<h2>usuarios_veiculos <button class="sair-btn" onclick="sair()">SAIR</button></h2>
+<table id="users-table">
+<thead>
+<tr><th>Nome</th><th>Email</th><th>Ações</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+</section>
+<section id="drivers-section">
+<h2>motoristas_veiculos <button class="add-btn" data-entity="drivers">Adicionar</button> <button class="sair-btn" onclick="sair()">SAIR</button></h2>
+<table id="drivers-table">
+<thead>
+<tr><th>Nome</th><th>CPF</th><th>CNH</th><th>Ações</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+</section>
+<section id="vehicles-section">
+<h2>veiculo_veiculos <button class="add-btn" data-entity="vehicles">Adicionar</button> <button class="sair-btn" onclick="sair()">SAIR</button></h2>
+<table id="vehicles-table">
+<thead>
+<tr><th>Placa</th><th>Modelo</th><th>Ano</th><th>KM Atual</th><th>Ações</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+</section>
+<section id="stations-section">
+<h2>postos_veiculos <button class="add-btn" data-entity="stations">Adicionar</button> <button class="sair-btn" onclick="sair()">SAIR</button></h2>
+<table id="stations-table">
+<thead>
+<tr><th>Nome</th><th>Endereço</th><th>Cidade</th><th>Ações</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+</section>
+<section id="fuelings-section">
+<h2>abastecimento_veiculos <button class="add-btn" data-entity="fuelings">Adicionar</button> <button class="sair-btn" onclick="sair()">SAIR</button></h2>
+<table id="fuelings-table">
+<thead>
+<tr><th>Veículo</th><th>Motorista</th><th>Posto</th><th>Data</th><th>Litros</th><th>Valor</th><th>KM</th><th>Ações</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+</section>
+<dialog id="modal">
+<div class="modal-content">
+<span class="close" id="closeModal">&times;</span>
+<form id="editForm"></form>
 </div>
-</div>
-<div id="app" style="display:none;">
-<div class="tabs">
-<button class="tab-btn active" onclick="showTab('tab-dash', event)">📊 Dashboard</button>
-<button class="tab-btn" onclick="showTab('tab-abast', event)">⛽ Abastecimentos</button>
-<button class="tab-btn" onclick="showTab('tab-veic', event)">🚗 Veículos</button>
-<button class="tab-btn" onclick="showTab('tab-mot', event)">👨 Motoristas</button>
-</div>
-<div id="tab-dash" class="container tab-content">
-<div class="kpi-grid">
-<div class="card">Km/L Médio <span id="kpi-kml" class="kpi-val">--</span></div>
-<div class="card">Custo/Km <span id="kpi-custokm" class="kpi-val">--</span></div>
-<div class="card">Gasto Total <span id="kpi-total" class="kpi-val">--</span></div>
-</div>
-<div class="card"><canvas id="mainChart"></canvas></div>
-</div>
-<div id="tab-abast" class="container tab-content" style="display:none;">
-<div class="card">
-<h3>Novo Abastecimento</h3>
-<input type="date" id="abast-data">
-<select id="sel-veic"></select>
-<input type="number" id="abast-km" placeholder="Km Atual">
-<input type="number" id="abast-litros" placeholder="Litros">
-<input type="number" id="abast-custo" placeholder="Valor Total (R$)">
-<button onclick="salvarAbastecimento()">Salvar Registro</button>
-</div>
-<div class="card table-wrapper">
-<table id="tbl-abast"><thead><tr><th>Data</th><th>Placa</th><th>Km</th><th>Km/L</th><th>Custo/Km</th><th>Total</th></tr></thead><tbody></tbody></table>
-</div>
-</div>
-<div id="tab-veic" class="container tab-content" style="display:none;">
-<div class="card table-wrapper">
-<table id="tbl-veic"><thead><tr><th>ID</th><th>Placa</th><th>Modelo</th><th>Último Km</th></tr></thead><tbody></tbody></table>
-</div>
-</div>
-<div id="tab-mot" class="container tab-content" style="display:none;">
-<div class="card table-wrapper">
-<table id="tbl-mot"><thead><tr><th>ID</th><th>Nome</th><th>CPF</th><th>Veículo</th></tr></thead><tbody></tbody></table>
-</div>
-</div>
-</div>
-<script>
-let data = {
-veiculo_veiculos: [{id:'58fdc6af-0156-40b7-a628-4799ffab108a', placa:'TIGGO8', modelo:'Chery Tiggo 8', km: 0}],
-motoristas_veiculos: [{id:'e3b9835f-e6aa-45d0-9ca6-36c5e4609e5a', nome:'Neto', cpf:'***.***.***-**', veiculo_id:'58fdc6af-0156-40b7-a628-4799ffab108a'}],
-abastecimento_veiculos: [],
-config: {vencimento: '2027-05-31'}
-};
-let chart;
-function login() {
-const u = document.getElementById('user').value.toLowerCase();
-const p = document.getElementById('pass').value;
-if(u === 'neto' && p === '1234') {
-if(new Date() > new Date(data.config.vencimento)) { return alert('Assinatura Expirada!'); }
-document.getElementById('login-screen').style.display = 'none';
-document.getElementById('app').style.display = 'flex';
-init();
-} else { alert('Acesso Negado: Verifique Usuário e Senha.'); }
-}
-function init() {
-loadData();
-renderTables();
-updateDash();
-renderChart();
-popularSelect();
-}
-function loadData() {
-const sv = localStorage.getItem('veiculo_veiculos');
-const sa = localStorage.getItem('abastecimento_veiculos');
-const sm = localStorage.getItem('motoristas_veiculos');
-if(sv) data.veiculo_veiculos = JSON.parse(sv);
-if(sa) data.abastecimento_veiculos = JSON.parse(sa);
-if(sm) data.motoristas_veiculos = JSON.parse(sm);
-}
-function saveData() {
-localStorage.setItem('veiculo_veiculos', JSON.stringify(data.veiculo_veiculos));
-localStorage.setItem('abastecimento_veiculos', JSON.stringify(data.abastecimento_veiculos));
-localStorage.setItem('motoristas_veiculos', JSON.stringify(data.motoristas_veiculos));
-}
-function popularSelect() {
-const s = document.getElementById('sel-veic');
-s.innerHTML = data.veiculo_veiculos.map(v => `<option value="${v.id}">${v.placa}</option>`).join('');
-}
-function salvarAbastecimento() {
-const vid = document.getElementById('sel-veic').value;
-const km = parseFloat(document.getElementById('abast-km').value);
-const lit = parseFloat(document.getElementById('abast-litros').value);
-const val = parseFloat(document.getElementById('abast-custo').value);
-const dat = document.getElementById('abast-data').value;
-if(!dat || !km || !lit || !val) { return alert('Preencha todos os campos.'); }
-const vObj = data.veiculo_veiculos.find(v => v.id === vid);
-const kmAnt = vObj.km || 0;
-if(km <= kmAnt && data.abastecimento_veiculos.length > 0) { return alert('Km atual deve ser maior que ' + kmAnt); }
-const kml = kmAnt > 0 ? (km - kmAnt) / lit : 0;
-const ckm = kmAnt > 0 ? val / (km - kmAnt) : 0;
-data.abastecimento_veiculos.push({data: dat, veic: vObj.placa, km: km, kml: kml, ckm: ckm, total: val});
-vObj.km = km;
-saveData();
-init();
-}
-function updateDash() {
-const abast = data.abastecimento_veiculos;
-const totalVal = abast.reduce((s, a) => s + a.total, 0);
-const avgKml = abast.filter(a => a.kml > 0).length ? abast.reduce((s, a) => s + a.kml, 0) / abast.filter(a => a.kml > 0).length : 0;
-const totalKm = abast.length > 0 ? (Math.max(...abast.map(a => a.km)) - Math.min(...abast.map(a => a.km))) : 0;
-const avgCkm = totalKm > 0 ? totalVal / totalKm : 0;
-document.getElementById('kpi-total').innerText = 'R$ ' + totalVal.toLocaleString('pt-BR', {minimumFractionDigits:2});
-document.getElementById('kpi-kml').innerText = avgKml.toFixed(2);
-document.getElementById('kpi-custokm').innerText = 'R$ ' + avgCkm.toFixed(3);
-if(avgKml > 0 && avgKml < 8) { document.getElementById('kpi-kml').parentElement.classList.add('shake-red'); }
-else { document.getElementById('kpi-kml').parentElement.classList.remove('shake-red'); }
-}
-function renderTables() {
-const b = document.querySelector('#tbl-abast tbody');
-b.innerHTML = data.abastecimento_veiculos.sort((a,b) => new Date(b.data) - new Date(a.data)).map(a => `
-<tr class="${a.kml > 0 && a.kml < 8 ? 'shake-red' : ''}">
-<td>${a.data.split('-').reverse().join('/')}</td>
-<td>${a.veic}</td>
-<td>${a.km}</td>
-<td>${a.kml.toFixed(2)}</td>
-<td>R$ ${a.ckm.toFixed(3)}</td>
-<td>R$ ${a.total.toFixed(2)}</td>
-</tr>`).join('');
-document.querySelector('#tbl-veic tbody').innerHTML = data.veiculo_veiculos.map(v => `<tr><td>${v.id.substring(0,8)}</td><td>${v.placa}</td><td>${v.modelo}</td><td>${v.km}</td></tr>`).join('');
-document.querySelector('#tbl-mot tbody').innerHTML = data.motoristas_veiculos.map(m => `<tr><td>${m.id.substring(0,8)}</td><td>${m.nome}</td><td>${m.cpf}</td><td>TIGGO8</td></tr>`).join('');
-}
-function renderChart() {
-const ctx = document.getElementById('mainChart').getContext('2d');
-const abast = data.abastecimento_veiculos.sort((a,b) => new Date(a.data) - new Date(b.data));
-if(chart) chart.destroy();
-chart = new Chart(ctx, {
-type: 'line',
-data: { labels: abast.map(a => a.data.split('-').reverse().slice(0,2).join('/')), datasets: [{ label: 'Km/L', data: abast.map(a => a.kml), borderColor: '#22c55e', tension: 0.3 }] },
-options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-});
-}
-function showTab(id, e) {
-document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-document.getElementById(id).style.display = 'flex';
-e.target.classList.add('active');
-}
-window.onload = () => { if(localStorage.getItem('loggedIn') === 'true') { loginSuccess(); } };
-</script>
+</dialog>
+<script>const SAMPLE_STATIONS=[{id:1,nome:"Posto Petrobras - Centro",endereco:"Rua das Flores, 123",cidade:"São Paulo/SP"},{id:2,nome:"Auto Posto Ipiranga",endereco:"Av. Brigadeiro Faria Lima, 456",cidade:"São Paulo/SP"},{id:3,nome:"Shell Highway",endereco:"Rod. Anhanguera, km 20",cidade:"Jundiaí/SP"}];const SAMPLE_FUELINGS=[{id:1,veiculoId:1,motoristaId:1,postoId:1,data:"2024-04-10",litros:52.3,valor:312.45,km:152300},{id:2,veiculoId:1,motoristaId:1,postoId:2,data:"2024-04-20",litros:48.7,valor:290.80,km:154200},{id:3,veiculoId:2,motoristaId:2,postoId:3,data:"2024-04-15",litros:60.0,valor:358.20,km:98000}];let data={users:JSON.parse(localStorage.getItem('users'))||[],drivers:JSON.parse(localStorage.getItem('drivers'))||[],vehicles:JSON.parse(localStorage.getItem('vehicles'))||[],stations:JSON.parse(localStorage.getItem('stations'))||SAMPLE_STATIONS,fuelings:JSON.parse(localStorage.getItem('fuelings'))||SAMPLE_FUELINGS};let currentEntity='';let currentId=0;const modal=document.getElementById('modal');const editForm=document.getElementById('editForm');const schemas={users:[{name:'nome',type:'text',placeholder:'Nome do Usuário'},{name:'email',type:'email',placeholder:'Email'}],drivers:[{name:'nome',type:'text',placeholder:'Nome do Motorista'},{name:'cpf',type:'text',placeholder:'CPF'},{name:'cnh',type:'text',placeholder:'CNH'}],vehicles:[{name:'placa',type:'text',placeholder:'Placa'},{name:'modelo',type:'text',placeholder:'Modelo'},{name:'ano',type:'number',placeholder:'Ano'},{name:'kmAtual',type:'number',placeholder:'KM Atual'}],stations:[{name:'nome',type:'text',placeholder:'Nome do Posto'},{name:'endereco',type:'text',placeholder:'Endereço'},{name:'cidade',type:'text',placeholder:'Cidade'}],fuelings:[{name:'veiculoId',type:'select',ref:'vehicles',display:'placa'},{name:'motoristaId',type:'select',ref:'drivers',display:'nome'},{name:'postoId',type:'select',ref:'stations',display:'nome'},{name:'data',type:'date',placeholder:'Data do Abastecimento'},{name:'litros',type:'number',step:'0.01',placeholder:'Litros'},{name:'valor',type:'number',step:'0.01',placeholder:'Valor (R$)'},{name:'km',type:'number',placeholder:'Quilometragem'}]};const tableColumns={users:['nome','email'],drivers:['nome','cpf','cnh'],vehicles:['placa','modelo','ano','kmAtual'],stations:['nome','endereco','cidade'],fuelings:['veiculoId','motoristaId','postoId','data','litros','valor','km']};const foreignKeys={fuelings:{veiculoId:{ref:'vehicles',display:'placa'},motoristaId:{ref:'drivers',display:'nome'},postoId:{ref:'stations',display:'nome'}}};function checkSubscription(){const expiryDate=new Date('2027-05-01T00:00:00');return new Date()<=expiryDate;}function saveEntity(entity){localStorage.setItem(entity,JSON.stringify(data[entity]));}function nextId(entity){const ids=data[entity].map(item=>item.id);return ids.length?Math.max(...ids)+1:1;}function generateForm(entity,item={}){let html='';schemas[entity].forEach(field=>{const value=item[field.name]||'';if(field.type==='select'){let options='<option value="">Selecione...</option>';data[field.ref].forEach(refItem=>{const selected=refItem.id==value?'selected':'';const label=refItem[field.display]||refItem.id;options+=`<option value="${refItem.id}" ${selected}>${label}</option>`;});html+=`<label>${field.placeholder||field.name}:<select name="${field.name}">${options}</select></label>`;}else{let inputAttrs=`type="${field.type}" name="${field.name}" placeholder="${field.placeholder||''}" value="${value}"`;if(field.step)inputAttrs+=` step="${field.step}"`;html+=`<label>${field.placeholder||field.name}:<input ${inputAttrs} /></label>`;}});html+='<button type="submit">Salvar</button>';return html;}function showModal(entity,id){currentEntity=entity;currentId=id;const item=id?data[entity].find(i=>i.id===id)||{}:{};editForm.innerHTML=generateForm(entity,item);modal.showModal();}function handleSubmit(e){e.preventDefault();const formData=new FormData(editForm);const newItem=Object.fromEntries(formData);newItem.id=currentId||nextId(currentEntity);if(currentId){const index=data[currentEntity].findIndex(i=>i.id===currentId);if(index!==-1){data[currentEntity][index]=newItem;}}else{data[currentEntity].push(newItem);}saveEntity(currentEntity);renderTable(currentEntity);modal.close();}function renderTable(entity){const tableId=`${entity}-table`;const tbody=document.getElementById(tableId).querySelector('tbody');const cols=tableColumns[entity];tbody.innerHTML=data[entity].map(item=>{let cells=cols.map(col=>{let cellValue=item[col]||'';if(foreignKeys[entity]&&foreignKeys[entity][col]){const fk=foreignKeys[entity][col];const refItem=data[fk.ref].find(i=>i.id===parseInt(item[col]));cellValue=refItem?refItem[fk.display]:'N/A';}return cellValue;});return`<tr><td>${cells.join('</td><td>')}</td><td><button class="edit-btn" onclick="editItem('${entity}',${item.id})">Editar</button><button class="delete-btn" onclick="deleteItem('${entity}',${item.id})">Excluir</button></td></tr>`;}).join('');}function deleteItem(entity,id){if(!confirm('Tem certeza que deseja excluir este registro?'))return;data[entity]=data[entity].filter(i=>i.id!==id);saveEntity(entity);renderTable(entity);}function editItem(entity,id){showModal(entity,id);}function sair(){if(confirm('Deseja sair do sistema Fleet Audit?')){window.close();}}document.addEventListener('DOMContentLoaded',function(){if(!checkSubscription()){const overlay=document.createElement('div');overlay.id='lockOverlay';overlay.style.cssText='position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 2em; text-align: center; z-index: 10000; padding: 20px;';overlay.innerHTML='<h2>Sistema Bloqueado</h2><p>Sua assinatura expirou em Maio de 2027.</p><p>Entre em contato para renovação.</p>';document.body.appendChild(overlay);return;}['users','drivers','vehicles','stations','fuelings'].forEach(renderTable);document.querySelectorAll('.add-btn').forEach(btn=>{btn.addEventListener('click',function(){editItem(this.dataset.entity,0);});});document.querySelectorAll('.sair-btn').forEach(btn=>{btn.addEventListener('click',sair);});document.getElementById('closeModal').addEventListener('click',()=>modal.close());editForm.addEventListener('submit',handleSubmit);});</script>
 </body>
 </html>
