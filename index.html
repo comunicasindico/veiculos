@@ -1,1 +1,149 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sistema Fleet Audit Neto V3</title><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script><style>body{margin:0;padding:20px;background:linear-gradient(135deg,#0f0f0f,#1a1a1a);color:#eee;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}.container{max-width:1400px;margin:0 auto;}.header{text-align:center;margin-bottom:20px;color:#fff;font-size:1.5em;font-weight:bold;}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;}.card{background:#1e1e1e;padding:20px;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.5);}.card h3{margin-top:0;color:#4dabf7;}.input-group input{width:100%;margin:5px 0;padding:10px;background:#333;color:#fff;border:1px solid #555;border-radius:4px;box-sizing:border-box;}.btn{width:100%;margin:5px 0;padding:10px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:1em;}.btn:hover{background:#0056b3;}table{width:100%;border-collapse:collapse;margin-top:10px;}th,td{padding:8px;border:1px solid #444;text-align:center;background:#2a2a2a;}th{background:#333;}#login{display:flex;align-items:center;justify-content:center;min-height:100vh;}.login-card{max-width:400px;width:100%;}#video{width:100%;max-width:300px;height:auto;border-radius:4px;}#chart{width:100%;height:200px;}.hidden{display:none;}@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-10px);}75%{transform:translateX(10px);}}.alert-low{background-color:#ff4444 !important;animation:shake 0.82s cubic-bezier(.36,.07,.19,.97) both;transform:translate3d(0,0,0);backface-visibility:hidden;perspective:1000px;}#qrResult,#ocrResult{margin-top:10px;padding:10px;background:#333;border-radius:4px;max-height:100px;overflow-y:auto;}</style></head><body><div id="login" class="screen"><div class="login-card card"><h2>Sistema Fleet Audit Neto V3</h2><p>Perícia de Dados e Auditoria de Frota</p><div class="input-group"><input id="user" type="text" placeholder="Usuário" value="neto"></div><div class="input-group"><input id="pass" type="password" placeholder="Senha" value="1234"></div><button id="loginBtn" class="btn">Entrar</button><p style="font-size:0.9em;color:#aaa;">Assinatura ativa até Maio 2027</p></div></div><div id="dashboard" class="hidden"><div class="container"><div class="header">Sistema Fleet Audit Neto V3 - Admin: Neto<br>Assinatura Ativa até Maio 2027</div><div class="grid"><div class="card"><h3>Novo Abastecimento</h3><div class="input-group"><input id="placaIn" placeholder="Placa (ex: ABC-1234)"></div><div class="input-group"><input id="kmIn" type="number" placeholder="Km Atual"></div><div class="input-group"><input id="litrosIn" type="number" step="0.01" placeholder="Litros"></div><div class="input-group"><input id="valorIn" type="number" step="0.01" placeholder="Valor R$"></div><button id="addBtn" class="btn">Adicionar & Saneamento Km</button></div><div class="card"><h3>Cálculos Automáticos</h3><p>Km/L Real: <strong><span id="kmlReal">-</span></strong></p><p>Custo Médio por Km: <strong><span id="avgCustoKm">-</span></strong></p><p>Total R$: <strong><span id="totalR">-</span></strong></p></div><div class="card"><h3>Gráfico Misto (Custo Mensal / Km/L)</h3><canvas id="chart"></canvas></div><div class="card"><h3>Tabela Veículos (*_veiculos)</h3><table><thead><tr><th>Placa</th><th>Modelo</th><th>Km Total</th></tr></thead><tbody id="veicBody"></tbody></table></div><div class="card"><h3>Abastecimentos (Auditoria)</h3><table><thead><tr><th>Placa</th><th>Km</th><th>Litros</th><th>Valor R$</th><th>Data</th><th>Km/L</th><th>Custo/Km</th></tr></thead><tbody id="absBody"></tbody></table></div><div class="card"><h3>Módulo OCR (Tesseract) - Cupons</h3><input type="file" id="ocrFile" accept="image/*"><button id="ocrBtn" class="btn">Processar Imagem</button><div id="ocrResult"></div></div><div class="card"><h3>Módulo QRCode (jsQR) - Ativos</h3><button id="startCam" class="btn">Iniciar Câmera</button><video id="video" class="hidden"></video><div id="qrResult"></div></div></div></div><script>let veiculos=[],abastecimentos=[],myChart;const doc=document;function loadData(){try{veiculos=JSON.parse(localStorage.getItem('veiculos')||'[]');abastecimentos=JSON.parse(localStorage.getItem('abastecimentos')||'[]');}catch(e){veiculos=[];abastecimentos=[];}renderTable();updateCalcs();updateChart();}function saveData(){localStorage.setItem('veiculos',JSON.stringify(veiculos));localStorage.setItem('abastecimentos',JSON.stringify(abastecimentos));}function getPrevKm(placa){const sorted=abastecimentos.filter(a=>a.placa===placa).sort((a,b)=>new Date(b.data)-new Date(a.data));return sorted.length>0?sorted[0].km:0;}function renderVeiculos(){doc.getElementById('veicBody').innerHTML=veiculos.map(v=>`<tr><td>${v.placa}</td><td>${v.modelo||'?'}</td><td>${v.km_total||0}</td></tr>`).join('');}function renderTable(){const tbody=doc.getElementById('absBody');tbody.innerHTML=abastecimentos.map(a=>`<tr class="${parseFloat(a.kml)<8?'alert-low':''}"><td>${a.placa}</td><td>${a.km}</td><td>${a.litros}</td><td>${a.valor.toFixed(2)}</td><td>${a.data}</td><td>${a.kml}</td><td>${a.custoKm}</td></tr>`).join('');renderVeiculos();}function updateCalcs(){if(abastecimentos.length===0){doc.getElementById('kmlReal').textContent='-';doc.getElementById('avgCustoKm').textContent='-';doc.getElementById('totalR').textContent='-';return;}const totalR=abastecimentos.reduce((s,a)=>s+a.valor,0).toFixed(2);const avgCustoKm=(abastecimentos.reduce((s,a)=>s+parseFloat(a.custoKm),0)/abastecimentos.length).toFixed(4);const lastKml=abastecimentos[abastecimentos.length-1].kml;doc.getElementById('kmlReal').textContent=lastKml;doc.getElementById('avgCustoKm').textContent=avgCustoKm;doc.getElementById('totalR').textContent=totalR;}function updateChart(){let months={};abastecimentos.forEach(a=>{const m=a.data.slice(0,7);if(!months[m]){months[m]={custo:0,kml:[],n:0;} }months[m].custo+=a.valor;months[m].kml.push(parseFloat(a.kml));months[m].n++;});const labels=Object.keys(months).sort();const dataCusto=labels.map(m=>months[m].custo);const dataKml=labels.map(m=>months[m].kml.reduce((s,v)=>s+v,0)/months[m].n);if(myChart){myChart.destroy();}const ctx=doc.getElementById('chart').getContext('2d');myChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{type:'bar',label:'Custo Mensal (R$)',data:dataCusto,backgroundColor:'rgba(255,99,132,0.8)',borderColor:'rgba(255,99,132,1)',borderWidth:1,},{type:'line',label:'Desempenho Km/L',data:dataKml,borderColor:'rgba(75,192,192,1)',backgroundColor:'rgba(75,192,192,0.2)',tension:0.1,}]},options:{responsive:true,scales:{y:{beginAtZero:true},},plugins:{legend:{position:'top',},},},});}doc.getElementById('loginBtn').onclick=()=>{const user=doc.getElementById('user').value;const pass=doc.getElementById('pass').value;const now=new Date();const exp=new Date(2027,4,31);if(user==='neto'&&pass==='1234'&&now<=exp){doc.getElementById('login').classList.add('hidden');doc.getElementById('dashboard').classList.remove('hidden');loadData();}else{alert('Acesso negado ou assinatura expirada (Maio 2027).');}};doc.getElementById('addBtn').onclick=()=>{const placa=doc.getElementById('placaIn').value.trim().toUpperCase();const km=parseFloat(doc.getElementById('kmIn').value);const litros=parseFloat(doc.getElementById('litrosIn').value);const valor=parseFloat(doc.getElementById('valorIn').value);const data=new Date().toISOString().slice(0,10);if(!placa||!km||!litros||!valor||isNaN(km)||isNaN(litros)||isNaN(valor)){alert('Preencha todos os campos corretamente.');return;}const prevKm=getPrevKm(placa);if(km<=prevKm){alert('Quilometragem inválida! Km deve ser maior que anterior ('+prevKm+'). Saneamento necessário.');return;}const delta=km-prevKm;const kml=(delta/litros).toFixed(2);const custoKm=(valor/delta).toFixed(4);abastecimentos.push({id:Date.now(),placa,km,litros,valor,data,kml,custoKm});let v=veiculos.find(vv=>vv.placa===placa);if(!v){veiculos.push({id:Date.now(),placa,modelo:'?',km_total:km});}else{v.km_total=km;}saveData();doc.getElementById('placaIn').value='';doc.getElementById('kmIn').value='';doc.getElementById('litrosIn').value='';doc.getElementById('valorIn').value='';renderTable();updateCalcs();updateChart();};doc.getElementById('ocrBtn').onclick=async()=>{const file=doc.getElementById('ocrFile').files[0];if(!file){alert('Selecione uma imagem.');return;}try{const{data:{text}}=await Tesseract.recognize(file,'por',{logger:m=>m});doc.getElementById('ocrResult').textContent=text;const nums=text.match(/\d+(?:[.,]\d+)?/g)?.map(n=>parseFloat(n.replace(',','.')))||[];if(nums.length>=2){doc.getElementById('litrosIn').value=nums[0]||'';doc.getElementById('valorIn').value=nums[1]||'';}if(nums.length>=3){doc.getElementById('kmIn').value=nums[2]||'';}}catch(e){alert('Erro no OCR: '+e.message);}};let scanInterval;doc.getElementById('startCam').onclick=async()=>{try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:640},height:{ideal:480}}});const video=doc.getElementById('video');video.srcObject=stream;video.classList.remove('hidden');video.play();scanInterval=setInterval(()=>{if(video.readyState===video.HAVE_ENOUGH_DATA){const canvas=doc.getElementById('canvasQR')||(()=>{const c=doc.createElement('canvas');c.id='canvasQR';c.style.display='none';doc.getElementById('dashboard').appendChild(c);return c;})();canvas.width=video.videoWidth;canvas.height=video.videoHeight;const ctx=canvas.getContext('2d');ctx.drawImage(video,0,0);const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);const code=jsQR(imageData.data,imageData.width,imageData.height);if(code){doc.getElementById('placaIn').value=code.data;doc.getElementById('qrResult').textContent='QR Lido: '+code.data;stream.getTracks().forEach(track=>track.stop());clearInterval(scanInterval);video.classList.add('hidden');}}},500);}catch(e){alert('Erro câmera: '+e.message);}};window.onbeforeunload=()=>{if(myChart)myChart.destroy();};</script></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema VEÍCULO</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<style>
+body {margin:0;font-family:Arial,sans-serif;background:#121212;color:#e0e0e0;}
+.header {background:#1f1f1f;padding:20px;text-align:center;}
+.kpi {display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;padding:20px;}
+.kpi-card {background:#2a2a2a;padding:20px;border-radius:8px;text-align:center;}
+.kpi-highlight {font-size:2em;color:#ff6b6b;font-weight:bold;}
+.chart-container {padding:20px;background:#1f1f1f;}
+table {width:100%;border-collapse:collapse;margin:10px 0;}
+th,td {padding:10px;border:1px solid #444;text-align:left;}
+th {background:#333;}
+tr.low-kml {animation:shake 0.5s infinite;border-left:5px solid #ff4444;background:#331111;}
+@keyframes shake {0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.tabs {display:flex;gap:10px;padding:10px;background:#2a2a2a;}
+.tab-btn {padding:10px 20px;background:#333;color:#fff;border:none;cursor:pointer;border-radius:4px;}
+.tab-btn.active,.tab-btn:hover {background:#555;}
+.tab-content {display:none;padding:20px;background:#1f1f1f;}
+.tab-content.active {display:block;}
+form {display:grid;gap:10px;max-width:600px;padding:20px;background:#2a2a2a;border-radius:8px;}
+input,select,button {padding:10px;background:#333;color:#e0e0e0;border:1px solid #444;border-radius:4px;}
+label {display:flex;flex-direction:column;font-weight:bold;}
+button {background:#4a90e2;cursor:pointer;}
+button:hover {background:#357abd;}
+#login {position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:1000;}
+#login-form {background:#2a2a2a;padding:40px;border-radius:10px;text-align:center;}
+.ocr-section,.qr-section {padding:20px;background:#333;margin:20px 0;border-radius:8px;}
+</style>
+</head>
+<body>
+<div id="login">
+<div id="login-form">
+<h2>Login Admin - Neto</h2>
+<input type="text" id="user" placeholder="Usuário: Neto">
+<input type="password" id="pass" placeholder="Senha: admin">
+<button onclick="login()">Entrar</button>
+</div>
+</div>
+<div id="main" style="display:none;">
+<header class="header">
+<h1>Sistema VEÍCULO</h1>
+<p>Auditoria de Frota</p>
+<p><strong>Pagamento PIX: 69 984311978</strong></p>
+<p>Validade da Assinatura: 31/05/2027</p>
+</header>
+<div class="kpi" id="kpis"></div>
+<div class="chart-container">
+<canvas id="chart" width="800" height="400"></canvas>
+</div>
+<div class="tabs">
+<button class="tab-btn active" data-tab="abastecimento" onclick="showTab(event)">Abastecimentos</button>
+<button class="tab-btn" data-tab="usuarios" onclick="showTab(event)">Usuarios_Veiculos</button>
+<button class="tab-btn" data-tab="motoristas" onclick="showTab(event)">Motoristas_Veiculos</button>
+<button class="tab-btn" data-tab="veiculos" onclick="showTab(event)">Veiculo_Veiculos</button>
+<button class="tab-btn" data-tab="postos" onclick="showTab(event)">Postos_Veiculos</button>
+</div>
+<div id="tab-abastecimento" class="tab-content active">
+<form id="form-abast">
+<label>Data:<input type="date" id="data" required></label>
+<label>Usuario ID:<select id="usuario_id"></select></label>
+<label>Motorista ID:<select id="motorista_id"></select></label>
+<label>Veiculo ID:<select id="veiculo_id"></select></label>
+<label>Posto ID:<select id="posto_id"></select></label>
+<label>Litros:<input type="number" id="litros" step="0.01" required></label>
+<label>Km Atual:<input type="number" id="km_atual" required></label>
+<label>Custo (R$):<input type="number" id="custo" step="0.01" required></label>
+<button type="button" onclick="addAbastecimento()">Adicionar Abastecimento</button>
+</form>
+<div class="ocr-section">
+<h3>OCR - Ler Recibo (Litros e Custo)</h3>
+<input type="file" id="ocr-file" accept="image/*">
+<button onclick="processOCR()">Processar OCR</button>
+</div>
+<div class="qr-section">
+<h3>QR Code - Ler Posto</h3>
+<input type="file" id="qr-file" accept="image/*">
+<button onclick="processQR()">Processar QR</button>
+</div>
+<table id="table-abast">
+<thead><tr><th>ID</th><th>Data</th><th>Usu.</th><th>Mot.</th><th>Veic.</th><th>Posto</th><th>Litros</th><th>Km Atual</th><th>Km Ant.</th><th>Km/L</th><th>Custo</th><th>Custo/Km</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+<div id="tab-usuarios" class="tab-content">
+<form id="form-usuarios">
+<label>ID:<input type="number" id="u_id"></label>
+<label>Nome:<input type="text" id="u_nome"></label>
+<label>Veiculo ID:<input type="number" id="u_veic_id"></label>
+<button type="button" onclick="addGeneric('usuarios_veiculos', ['u_id','u_nome','u_veic_id'], ['id','nome','veiculo_id'])">Adicionar</button>
+</form>
+<table id="table-usuarios"><thead><tr><th>ID</th><th>Nome</th><th>Veiculo ID</th></tr></thead><tbody></tbody></table>
+</div>
+<div id="tab-motoristas" class="tab-content">
+<form id="form-motoristas">
+<label>ID:<input type="number" id="m_id"></label>
+<label>Nome:<input type="text" id="m_nome"></label>
+<label>Veiculo ID:<input type="number" id="m_veic_id"></label>
+<button type="button" onclick="addGeneric('motoristas_veiculos', ['m_id','m_nome','m_veic_id'], ['id','nome','veiculo_id'])">Adicionar</button>
+</form>
+<table id="table-motoristas"><thead><tr><th>ID</th><th>Nome</th><th>Veiculo ID</th></tr></thead><tbody></tbody></table>
+</div>
+<div id="tab-veiculos" class="tab-content">
+<form id="form-veiculos">
+<label>ID:<input type="number" id="v_id"></label>
+<label>Placa/Modelo:<input type="text" id="v_nome"></label>
+<button type="button" onclick="addGeneric('veiculo_veiculos', ['v_id','v_nome'], ['id','nome'])">Adicionar</button>
+</form>
+<table id="table-veiculos"><thead><tr><th>ID</th><th>Placa/Modelo</th></tr></thead><tbody></tbody></table>
+</div>
+<div id="tab-postos" class="tab-content">
+<form id="form-postos">
+<label>ID:<input type="number" id="p_id"></label>
+<label>Nome:<input type="text" id="p_nome"></label>
+<button type="button" onclick="addGeneric('postos_veiculos', ['p_id','p_nome'], ['id','nome'])">Adicionar</button>
+</form>
+<table id="table-postos"><thead><tr><th>ID</th><th>Nome</th></tr></thead><tbody></tbody></table>
+</div>
+</div>
+<script>
+let data = {usuarios_veiculos:[],motoristas_veiculos:[],veiculo_veiculos:[],postos_veiculos:[],abastecimento_veiculos:[]};
+let chart;
+function init() {checkLicense();loadData();populateSelects();if(localStorage.getItem('loggedIn')==='true'){loginSuccess();}}
+function checkLicense() {const exp=new Date('2027-05-31');if(new Date()>exp){document.body.innerHTML='<h1 style="color:red;text-align:center;padding:100px;font-size:2em;">Sistema Expirado! Contate Neto.</h1>';}}
+function login() {const user=document.getElementById('user').value;const pass=document.getElementById('pass').value;if(user==='Neto'&&pass==='admin'){localStorage.setItem('loggedIn','true');loginSuccess();}else{alert('Credenciais inválidas! Use Neto / admin');}}
+function loginSuccess() {document.getElementById('login').style.display='none';document.getElementById('main').style.display='block';updateKpis();updateChart();updateTables();}
+function loadData() {Object.keys(data).forEach(key=>{const str=localStorage.getItem(key);if(str) data[key]=JSON.parse(str);});if(data.usuarios_veiculos.length===0){data.usuarios_veiculos=[{id:1,nome:'Neto Admin',veiculo_id:1}];saveData('usuarios_veiculos');}if(data.motoristas_veiculos.length===0){data.motoristas_veiculos=[{id:1,nome:'João Silva',veiculo_id:1}];saveData('motoristas_veiculos');}if(data.veiculo_veiculos.length===0){data.veiculo_veiculos=[{id:1,nome:'ABC-1234'}];saveData('veiculo_veiculos');}if(data.postos_veiculos.length===0){data.postos_veiculos=[{id:1,nome:'Posto Central'}];saveData('postos_veiculos');}}
+function saveData(key) {localStorage.setItem(key,JSON.stringify(data[key]));}
+function populateSelects() {document.getElementById('usuario_id').innerHTML=data.usuarios_veiculos.map(u=>`<option value="${u.id}">${u.nome}</option>`).join('');document.getElementById('motorista_id').innerHTML=data.motoristas_veiculos.map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');document.getElementById('veiculo_id').innerHTML=data.veiculo_veiculos.map(v=>`<option value="${v.id}">${v.nome}</option>`).join('');document.getElementById('posto_id').innerHTML=data.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');}
+function addAbastecimento() {const dataVal=document.getElementById('data').value;const usuario_id=parseInt(document.getElementById('usuario_id').value);const motorista_id=parseInt(document.getElementById('motorista_id').value);const veiculo_id=parseInt(document.getElementById('veiculo_id').value);const posto_id=parseInt(document.getElementById('posto_id').value);const litros=parseFloat(document.getElementById('litros').value);const km_atual=parseFloat(document.getElementById('km_atual').value);const custo=parseFloat(document.getElementById('custo').value);const last=data.abastecimento_veiculos.filter(a=>a.veiculo_id===veiculo_id).sort((a,b)=>new Date(a.data)-new Date(b.data)).slice(-1)[0];const km_anterior=last?last.km_atual:0;const kml=(km_atual-km_anterior)/litros;const custo_km=custo/(km_atual-km_anterior);const newRec={id:Date.now(),data:dataVal,usuario_id,motorista_id,veiculo_id,posto_id,litros,km_atual,km_anterior,kml,custo,custo_km};data.abastecimento_veiculos.push(newRec);saveData('abastecimento_veiculos');updateAbastTable();updateKpis();updateChart();document.getElementById('form-abast').reset();}
+function processOCR() {const file=document.getElementById('ocr-file').files[0];if(!file){alert('Selecione imagem do recibo');return;}Tesseract.recognize(file,'por',{logger:m=>m}).then(({data:{text}})=>{const litrosMatch=text.match(/litro[s?]\s*[\: ]*([0-9,\.]+(?:\s*l)?)/i);const custoMatch=text.match(/(?:total|valor|r\$|custo)\s*[\: ]*([0-9,.\s]+(?:\,\d{2})?)/i);if(litrosMatch){document.getElementById('litros').value=litrosMatch[1].replace(',','.');}if(custoMatch){document.getElementById('custo').value=custoMatch[1].replace('.','').replace(',','.');}alert('Dados extraídos! Verifique os campos.');});}
+function processQR() {const file=document.getElementById('qr-file').files[0];if(!file){alert('Selecione imagem QR');return;}const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');const ctx=canvas.getContext('2d');canvas.width=img.width;canvas.height=img.height;ctx.drawImage(img,0,0);const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);const code=jsQR(imageData.data,imageData.width,imageData.height);if(code){document.getElementById('posto_id').value=code.data;alert(`QR Posto ID: ${code.data}`);}else{alert('QR não encontrado');}};img.src=URL.createObjectURL(file);}
+function addGeneric(table,fields,maps) {const newObj={};fields.forEach((f,i)=>{const val=document.getElementById(f).value;if(val)newObj[maps[i]]=isNaN(val)?val:parseFloat(val)||parseInt(val);});if(newObj.id){data[table].push(newObj);saveData(table);updateGenericTable(table);document.getElementById(`form-${table.replace('_','-')}`).reset();populateSelects();}}
+function updateKpis() {let total_km=0;let total_custo=0;let total_litros=0;let sum_kml=0;let count=0;data.abastecimento_veiculos.forEach(a=>{const dk=a.km_atual-a.km_anterior;total_km+=dk;total_custo+=a.custo;total_litros+=a.litros;sum_kml+=a.kml;count++;});const avg_kml=count?sum_kml/count:0;const avg_custo_km=total_km?total_custo/total_km:0;document.getElementById('kpis').innerHTML=`<div class="kpi-card"><h3>Total Km Rodado</h3><div class="kpi-highlight">${total_km.toFixed(0)}</div></div><div class="kpi-card"><h3>Média Km/L</h3><div class="kpi-highlight" style="${avg_kml<8?'color:#ff4444;animation:shake 1s infinite;':''}">${avg_kml.toFixed(2)}</div></div><div class="kpi-card"><h3><strong>Custo Médio / Km</strong></h3><div class="kpi-highlight">R$ ${avg_custo_km.toFixed(4)}</div></div><div class="kpi-card"><h3>Total Custo</h3><div class="kpi-highlight">R$ ${total_custo.toFixed(2)}</div></div><div class="kpi-card"><h3>Total Litros</h3><div class="kpi-highlight">${total_litros.toFixed(2)} L</div></div>`;}
+function updateChart() {const monthly={};data.abastecimento_veiculos.forEach(a=>{const month=a.data.slice(0,7);if(!monthly[month]){monthly[month]={custo:0,kml:[],count:0;} }monthly[month].custo+=a.custo;monthly[month].kml.push(a.kml);monthly[month].count++;});const labels=Object.keys(monthly).sort();const custos=labels.map(m=>monthly[m].custo);const efics=labels.map(m=>monthly[m].kml.reduce((s,v)=>s+v,0)/monthly[m].count);const ctx=document.getElementById('chart').getContext('2d');if(chart)chart.destroy();chart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{type:'bar',label:'Custos Mensais (R$)',data:custos,backgroundColor:'rgba(255,107,107,0.8)',borderColor:'rgb(255,107,107)',yAxisID:'y'},{type:'line',label:'Eficiência Média Km/L',data:efics,borderColor:'rgba(78,205,196,1)',backgroundColor:'rgba(78,205,196,0.2)',yAxisID:'y1'}]},options:{responsive:true,scales:{y:{type:'linear',display:true,position:'left',beginAtZero:true},y1:{type:'linear',display:true,position:'right',beginAtZero:true,grid:{drawOnChartArea:false},},}}});}
+function updateTables() {updateAbastTable();updateGenericTable('usuarios_veiculos');updateGenericTable('motoristas_veiculos');updateGenericTable('veiculo_veiculos');updateGenericTable('postos_veiculos');}
+function updateAbastTable() {const tbody=document.querySelector('#table-abast tbody');tbody.innerHTML='';data.abastecimento_veiculos.sort((a,b)=>new Date(b.data)-new Date(a.data)).forEach(a=>{const row=tbody.insertRow();row.className=a.kml<8?'low-kml':'';row.innerHTML=`<td>${a.id}</td><td>${a.data}</td><td>${a.usuario_id}</td><td>${a.motorista_id}</td><td>${a.veiculo_id}</td><td>${a.posto_id}</td><td>${a.litros.toFixed(2)}</td><td>${a.km_atual.toFixed(0)}</td><td>${a.km_anterior.toFixed(0)}</td><td style="${a.kml<8?'color:#ff4444;font-weight:bold;':''}">${a.kml.toFixed(2)}</td><td>R$ ${a.custo.toFixed(2)}</td><td>R$ ${a.custo_km.toFixed(4)}</td>`;});}
+function updateGenericTable(table) {const id=table.replace('_','-');const tbody=document.querySelector(`#table-${id} tbody`);const headers=Object.keys(data[table][0]||{});tbody.innerHTML='';data[table].forEach(item=>{const row=tbody.insertRow();Object.values(item).forEach(val=>{const cell=row.insertCell();cell.textContent=val;});});}
+function showTab(event) {document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));event.target.classList.add('active');const tabName=event.target.dataset.tab;document.getElementById(`tab-${tabName}`).classList.add('active');}
+init();
+</script>
+</body>
+</html>
