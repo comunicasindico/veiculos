@@ -125,6 +125,7 @@ box-shadow:0 0 0 1px #22c55e inset;
 <button class="tab-btn" onclick="showTab('tab-abast', event)">⛽ Abastecimentos</button>
 <button class="tab-btn" onclick="showTab('tab-veic', event)">🚗 Veículos</button>
 <button class="tab-btn" onclick="showTab('tab-posto', event)">🏪 Postos</button>
+<button class="tab-btn" onclick="showTab('tab-admin',event)">🛠️ Admin</button>
 </div>
   
 <div id="tab-dash" class="container tab-content">
@@ -209,6 +210,21 @@ box-shadow:0 0 0 1px #22c55e inset;
 <table id="tbl-posto"><thead><tr><th>Nome</th><th>CNPJ</th><th>Cidade</th><th>UF</th><th>CEP</th></tr></thead><tbody></tbody></table>
 </div>
 </div>
+
+<div id="tab-admin" class="container tab-content" style="display:none;">
+<div class="card">
+<h3>👤 Motoristas</h3>
+<table id="tbl-motoristas"></table>
+</div>
+<div class="card">
+<h3>🚗 Veículos</h3>
+<table id="tbl-veic-admin"></table>
+</div>
+<div class="card">
+<h3>🏪 Postos</h3>
+<table id="tbl-posto-admin"></table>
+</div>
+</div>
   
 </div>
 
@@ -216,6 +232,12 @@ box-shadow:0 0 0 1px #22c55e inset;
 
 
 <script>
+
+let USER=null
+let NIVEL=2
+let MOTORISTA_ID=null
+let VEICULO_ATIVO=null
+
 const SUPABASE_URL = "https://gspdlrenyrzbkxlvyugc.supabase.co"
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
@@ -229,19 +251,40 @@ abastecimento_veiculos: []
 }
 
 
-function login(){
-const u=document.getElementById('user').value.toLowerCase()
-const p=document.getElementById('pass').value
-if(u==='neto' && p==='1234'){
-localStorage.setItem("logado","1")
+async function login(){
+let u=document.getElementById('user').value.toLowerCase().trim()
+let p=document.getElementById('pass').value.trim()
+// 🔥 ADMIN FIXO
+if(u==='admin' && p==='admin123'){
+USER='ADMIN'
+NIVEL=1
 document.getElementById('login-screen').style.display='none'
 document.getElementById('app').style.display='flex'
-let topBtn=document.getElementById('top-create')
-if(topBtn)topBtn.style.display='none'
 carregarBanco()
-}else{
-alert('Acesso Negado.')
+return
 }
+// 🔥 MOTORISTA (via banco)
+let {data,error}=await db
+.from("motoristas")
+.select("*")
+.ilike("nome",u)
+.limit(1)
+let m=data && data.length?data[0]:null
+if(error || !m){
+alert("Motorista não encontrado")
+return
+}
+// 🔥 senha simples (pode evoluir depois)
+if(p!=="1234"){
+alert("Senha inválida")
+return
+}
+USER=m.nome
+NIVEL=2
+MOTORISTA_ID=m.id
+document.getElementById('login-screen').style.display='none'
+document.getElementById('app').style.display='flex'
+carregarBanco()
 }
 
 async function carregarBanco(){
@@ -251,7 +294,14 @@ let {data:abast,error:e3}=await db.from("abastecimento_veiculos").select("*, pos
 if(e1)console.error("ERRO VEIC:",e1)
 if(e2)console.error("ERRO POSTOS:",e2)
 if(e3)console.error("ERRO ABAST:",e3)
-data.veiculo_veiculos=(veic||[]).map(v=>({
+
+// 🔥 PATCH 015 - FILTRO VEÍCULO POR PERFIL
+data.veiculo_veiculos=(veic||[])
+.filter(v=>{
+if(NIVEL===1)return true
+return v.motorista_id===MOTORISTA_ID
+})
+.map(v=>({
 id:v.id,
 placa:v.placa||"-",
 modelo:v.modelo||"",
@@ -259,8 +309,16 @@ marca:v.marca||"",
 ano:v.ano||"",
 cor:v.cor||"",
 renavam:v.renavam||"",
-km_atual:Number(v.km_atual||0)
+km_atual:Number(v.km_atual||0),
+motorista_id:v.motorista_id||null
 }))
+
+// 🔥 PATCH 018 - DEFINIR VEÍCULO ATIVO
+if(NIVEL===2 && data.veiculo_veiculos.length){
+VEICULO_ATIVO=data.veiculo_veiculos[0].id
+}
+
+// 🔥 POSTOS NORMAL
 data.postos_veiculos=(postos||[])
 .map(p=>({
 id:p.id,
@@ -268,13 +326,21 @@ nome:(p.nome_posto||"-").toUpperCase().trim(),
 cnpj:p.cnpj||""
 }))
 .sort((a,b)=>a.nome.localeCompare(b.nome))
+
 let sel2=document.getElementById("cad_posto_select")
 if(sel2){
 sel2.innerHTML=`<option value="" disabled selected>Escolha/Selecione um Posto aqui</option>`+
 data.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("")
-}
 sel2.value=""
-data.abastecimento_veiculos=(abast||[]).map(a=>{
+}
+
+// 🔥 PATCH 016 - FILTRO ABASTECIMENTO
+data.abastecimento_veiculos=(abast||[])
+.filter(a=>{
+if(NIVEL===1)return false
+return a.veiculo_id===VEICULO_ATIVO
+})
+.map(a=>{
 let dataFmt=a.data_abastecimento?new Date(a.data_abastecimento).toLocaleDateString("pt-BR"):"-"
 return{
 id:a.id,
@@ -286,6 +352,8 @@ total:Number(a.valor_total||0),
 tanque:(a.tanque||'cheio')
 }
 })
+
+// 🔥 DATAS FILTRO
 let datasOrdenadas=(abast||[])
 .map(a=>a.data_abastecimento)
 .filter(d=>d)
@@ -301,9 +369,22 @@ ini.value=datasOrdenadas[0]
 if(fim && !fim.value && datasOrdenadas.length){
 fim.value=datasOrdenadas[datasOrdenadas.length-1]
 }
+
+// 🔥 PATCH 017 - CONTROLE DE TABS
+let tabAbast=document.querySelector('[onclick*="tab-abast"]')
+if(tabAbast){
+tabAbast.style.display=(NIVEL===1?'none':'block')
+}
+
+// 🔥 RENDER
 renderTables()
 updateDash()
 renderChart()
+
+// 🔥 ADMIN EXTRA
+if(NIVEL===1 && typeof renderAdmin==="function"){
+renderAdmin()
+}
 }
   
 function toggleEditMode(){
@@ -546,7 +627,10 @@ document.getElementById(id).style.display = 'flex'; e.target.classList.add('acti
 }
 
 async function salvarAbastecimento(){
-
+if(NIVEL===1){
+alert("Admin não lança abastecimento")
+return
+}
 let dataVal=document.getElementById("cad_data").value
 
 let postoSelect=document.getElementById("cad_posto_select")
@@ -626,7 +710,7 @@ return
 // 🔥 PAYLOAD
 let payload={
 empresa_id:EMPRESA,
-veiculo_id:veiculoId,
+veiculo_id:VEICULO_ATIVO,
 posto_id:postoId,
 data_abastecimento:dataVal,
 litros:litros,
@@ -833,6 +917,45 @@ let {error}=await db.from("postos_veiculos").update(payload).eq("id",id)
 if(error)console.error(error)
 }
 
+function renderAdmin(){
+
+if(NIVEL!==1)return
+
+let tblM=document.getElementById("tbl-motoristas")
+let tblV=document.getElementById("tbl-veic-admin")
+let tblP=document.getElementById("tbl-posto-admin")
+
+// MOTORISTAS
+db.from("motoristas").select("*").then(r=>{
+if(!tblM)return
+tblM.innerHTML=r.data.map(m=>`
+<tr>
+<td>${m.nome}</td>
+<td>${m.cpf||"-"}</td>
+</tr>`).join('')
+})
+
+// VEÍCULOS
+db.from("veiculo_veiculos").select("*").then(r=>{
+if(!tblV)return
+tblV.innerHTML=r.data.map(v=>`
+<tr>
+<td>${v.placa}</td>
+<td>${v.modelo}</td>
+<td>${v.motorista_id||"-"}</td>
+</tr>`).join('')
+})
+
+// POSTOS
+if(tblP){
+tblP.innerHTML=data.postos_veiculos.map(p=>`
+<tr><td>${p.nome}</td></tr>`).join('')
+}
+
+}
+
+
+  
 function logout(){
 localStorage.removeItem("logado")
 location.reload()
