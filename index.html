@@ -178,6 +178,21 @@ data.abastecimento_veiculos=(abast||[]).map(a=>{
 let dataFmt=a.data_abastecimento?new Date(a.data_abastecimento).toLocaleDateString("pt-BR"):"-"
 return{id:a.id,data:dataFmt,posto:a.postos_veiculos?.nome_posto||"-",litros:Number(a.litros||0),km:Number(a.quilometragem||0),total:Number(a.valor_total||0)}
 })
+let datasOrdenadas=(abast||[])
+.map(a=>a.data_abastecimento)
+.filter(d=>d)
+.sort()
+
+let ini=document.getElementById("filtro_inicio")
+let fim=document.getElementById("filtro_fim")
+
+if(ini && !ini.value && datasOrdenadas.length){
+ini.value=datasOrdenadas[0]
+}
+
+if(fim && !fim.value && datasOrdenadas.length){
+fim.value=datasOrdenadas[datasOrdenadas.length-1]
+}
 renderTables()
 updateDash()
 renderChart()
@@ -202,7 +217,7 @@ document.getElementById('kpi-custokm').innerText=Number(custoKm).toLocaleString(
 document.getElementById('kpi-kml').innerText='--'
 document.getElementById('kpi-custokm').innerText='--'
 }
-let el=document.getElementById('kpi-km-atual');if(el)el.innerText=kmAtual.toLocaleString("pt-BR")
+let el=document.getElementById('kpi-km-atual');if(el)el.innerText=kmAtual.toLocaleString("pt-BR",{minimumFractionDigits:0})
 }
 
 function renderTables(){
@@ -227,10 +242,74 @@ let chartRef
 function renderChart(){
 const ctx=document.getElementById('mainChart').getContext('2d')
 if(chartRef)chartRef.destroy()
-let labels=data.abastecimento_veiculos.map(a=>a.data)
-let valores=data.abastecimento_veiculos.map(a=>a.total)
-let litros=data.abastecimento_veiculos.map(a=>a.litros)
-chartRef=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'R$',data:valores,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.2)',fill:true,tension:0.4},{label:'Litros',data:litros,borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.2)',fill:true,tension:0.4}]},options:{plugins:{legend:{display:true}}}})
+
+let arr=data.abastecimento_veiculos.slice().reverse()
+
+let labels=arr.map(a=>a.data)
+let valores=arr.map(a=>Number(a.total||0))
+let litros=arr.map(a=>Number(a.litros||0))
+
+let kmPerc=[]
+for(let i=0;i<arr.length;i++){
+if(i===0){kmPerc.push(0);continue}
+kmPerc.push(arr[i].km-arr[i-1].km)
+}
+
+let kml=kmPerc.map((km,i)=>{
+if(!litros[i])return 0
+return km/litros[i]
+})
+
+chartRef=new Chart(ctx,{
+type:'bar',
+data:{
+labels:labels,
+datasets:[
+{
+label:'R$',
+data:valores,
+yAxisID:'y',
+backgroundColor:'rgba(34,197,94,0.6)'
+},
+{
+label:'Litros',
+data:litros,
+yAxisID:'y1',
+backgroundColor:'rgba(96,165,250,0.6)'
+},
+{
+label:'KM/L',
+data:kml,
+type:'line',
+yAxisID:'y2',
+borderColor:'#facc15',
+backgroundColor:'#facc15',
+tension:0.4
+}
+]
+},
+options:{
+responsive:true,
+interaction:{mode:'index',intersect:false},
+plugins:{
+legend:{display:true},
+tooltip:{
+callbacks:{
+label:function(ctx){
+if(ctx.dataset.label==='R$')return fMoeda(ctx.raw)
+if(ctx.dataset.label==='Litros')return ctx.raw+" L"
+if(ctx.dataset.label==='KM/L')return ctx.raw.toFixed(2)+" km/l"
+}
+}
+}
+},
+scales:{
+y:{position:'left'},
+y1:{position:'right',grid:{drawOnChartArea:false}},
+y2:{position:'right',display:false}
+}
+}
+})
 }
   
 function showTab(id, e) {
