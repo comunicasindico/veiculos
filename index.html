@@ -160,7 +160,13 @@ box-shadow:0 0 0 1px #22c55e inset;
 <span id="kpi-litros" class="kpi-val">--</span>
 </div>
 </div>
-  
+
+<div id="ia-box" style="background:#020617;border:1px solid #334155;border-radius:12px;padding:14px;margin-bottom:12px">
+<div style="font-size:14px;color:#22c55e;font-weight:600">🤖 IA VEÍCULO MASTER</div>
+<div id="ia-output" style="font-size:12px;color:#cbd5f5;margin-top:6px">Aguardando análise...</div>
+<button onclick="rodarIA()" style="margin-top:8px;background:#22c55e;border:none;padding:6px 10px;border-radius:6px;color:#000;font-weight:600">ANALISAR AGORA</button>
+</div>
+
 <div class="card chart-pro">
 <canvas id="mainChart"></canvas>
 </div>
@@ -308,6 +314,7 @@ let sel2=document.getElementById("cad_posto_select")
 if(sel2){sel2.innerHTML=`<option value="" disabled selected>Escolha/Selecione um Posto aqui</option>`+store.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("");sel2.value=""}
 store.abastecimento_veiculos=(abast||[]).filter(a=>NIVEL_LOCAL===1||a.veiculo_id===VEICULO_ATIVO).map(a=>({id:a.id,data:isoToBR(a.data_abastecimento),posto:(a.postos_veiculos?.nome_posto||"-").toUpperCase(),litros:Number(a.litros||0),km:Number(a.quilometragem||0),total:Number(a.valor_total||0),tanque:(a.tanque||'cheio')}))
 renderTables();updateDash();renderChart();if(NIVEL_LOCAL===1&&typeof renderAdmin==="function"){renderAdmin()}
+setTimeout(()=>rodarIA(),500)
 }
 function updateDash(){
 let total=0,kmAtual=0,litrosTotalGeral=0
@@ -342,7 +349,39 @@ if(localStorage.getItem("logado")==="1"){document.getElementById('login-screen')
 let campo=document.getElementById("cad_data");if(campo&&!campo.value)campo.value=hojeISO()
 })
 setInterval(()=>{if(localStorage.getItem("logado")==="1"&&!isEditMode){carregarBanco()}},15000)
+function rodarIA(){
+let arr=store.abastecimento_veiculos
+if(!arr||arr.length<3){
+document.getElementById("ia-output").innerText="Poucos dados para análise"
+return
+}
+let total=0,litros=0,kmTotal=0,alerts=[]
+arr.sort((a,b)=>brToISO(a.data).localeCompare(brToISO(b.data)))
+for(let i=1;i<arr.length;i++){
+let atual=arr[i]
+let anterior=arr[i-1]
+total+=Number(atual.total||0)
+litros+=Number(atual.litros||0)
+if(atual.km&&anterior.km&&atual.km>anterior.km){
+kmTotal+=atual.km-anterior.km
+}
+}
+let kml=kmTotal>0?(kmTotal/litros):0
+let mediaValor=total/arr.length
+let ultimo=arr[arr.length-1]
+if(kml<7)alerts.push("⚠️ Consumo muito alto (km/l baixo)")
+if(ultimo.total>mediaValor*1.3)alerts.push("⚠️ Último abastecimento acima da média")
+if(litros/arr.length>60)alerts.push("⚠️ Volume médio elevado")
+let texto=`Consumo médio: ${kml.toFixed(2)} km/l\nGasto médio: ${mediaValor.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}\n`
+if(alerts.length){
+texto+="\nALERTAS:\n"+alerts.join("\n")
+}else{
+texto+="\nSituação saudável ✅"
+}
+document.getElementById("ia-output").innerText=texto
+}
 
+  
 
 </script>
 </body>
