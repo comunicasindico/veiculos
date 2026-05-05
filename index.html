@@ -257,6 +257,22 @@ box-shadow:0 0 0 1px #22c55e inset;
 
 
 <script>
+function hojeISO(){
+let d=new Date()
+d.setMinutes(d.getMinutes()-d.getTimezoneOffset())
+return d.toISOString().split("T")[0]
+}
+function isoToBR(iso){
+if(!iso)return "-"
+let d=iso.split("T")[0].split("-")
+return d[2]+"/"+d[1]+"/"+d[0]
+}
+function brToISO(br){
+if(!br)return null
+let p=br.split("/")
+return p[2]+"-"+p[1]+"-"+p[0]
+}
+
 if(!window.data){
 window.data={
 veiculo_veiculos:[],
@@ -371,12 +387,7 @@ data.abastecimento_veiculos=(abast||[]).filter(a=>{
 if(NIVEL===1)return true
 return a.veiculo_id===VEICULO_ATIVO
 }).map(a=>{
-let dataFmt="-"
-if(a.data_abastecimento){
-let d=a.data_abastecimento.split("T")[0]
-let p=d.split("-")
-dataFmt=p[2]+"/"+p[1]+"/"+p[0]
-}
+let dataFmt=isoToBR(a.data_abastecimento)
 return{
 id:a.id,
 data:dataFmt,
@@ -644,7 +655,7 @@ if(NIVEL===1){
 alert("Admin não lança abastecimento")
 return
 }
-let dataVal=document.getElementById("cad_data").value
+let dataVal=document.getElementById("cad_data").value||hojeISO()
 if(dataVal){
 let partes=dataVal.split("-")
 dataVal=partes[0]+"-"+partes[1]+"-"+partes[2]
@@ -767,7 +778,7 @@ let editId=null
 function editarAbast(id){
 let a=data.abastecimento_veiculos.find(x=>x.id===id);if(!a)return
 editId=id
-document.getElementById("cad_data").value=new Date(a.data.split("/").reverse().join("-")).toISOString().split("T")[0]
+document.getElementById("cad_data").value=brToISO(a.data)
 let p=data.postos_veiculos.find(p=>p.nome===a.posto)
 if(p){
 let sel=document.getElementById("cad_posto_select")
@@ -832,7 +843,7 @@ let {data:abast}=await db
 .order("data_abastecimento",{ascending:false})
 data.abastecimento_veiculos=(abast||[]).map(a=>({
 id:a.id,
-data:fData(a.data_abastecimento),
+data:isoToBR(a.data_abastecimento),
 posto:a.postos_veiculos?.nome_posto||"-",
 litros:a.litros,
 km:a.quilometragem,
