@@ -37,7 +37,7 @@ th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border)
 th { background: var(--border); color: var(--accent); position: sticky; top: 0; }
 @media (max-width: 768px) { body { overflow: auto; } #app { height: auto; } }
 .top-header button{min-width:110px;height:36px;}
-
+th{resize:horizontal;overflow:auto;min-width:80px}
 
 </style>
 </head>
@@ -73,6 +73,7 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
   
 <div id="tab-dash" class="container tab-content">
 <div class="kpi-grid">
+<div class="card">Km Atual <span id="kpi-km-atual" class="kpi-val">--</span></div>
 <div class="card">Km/L Médio <span id="kpi-kml" class="kpi-val">--</span></div>
 <div class="card">Custo/Km <span id="kpi-custokm" class="kpi-val">--</span></div>
 <div class="card">Gasto Total <span id="kpi-total" class="kpi-val">--</span></div>
@@ -85,7 +86,8 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
 <div class="card">
 <h3>Novo Abastecimento</h3>
 <input type="date" id="cad_data">
-<select id="cad_posto"></select>
+<input list="postosList" id="cad_posto_nome" placeholder="Digite ou escolha posto">
+<datalist id="postosList"></datalist>
 <input type="number" id="cad_litros" placeholder="Litros">
 <input type="number" id="cad_valor" placeholder="Valor Total">
 <input type="number" id="cad_km" placeholder="KM Atual">
@@ -106,12 +108,12 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
   
 <div id="tab-veic" class="container tab-content" style="display:none;">
 <div class="card table-wrapper">
-<table id="tbl-veic"><thead><tr><th>ID</th><th>Placa</th><th>Modelo</th><th class="actions-cell">Ações</th></tr></thead><tbody></tbody></table>
+<table id="tbl-veic"><thead><tr><th>Placa</th><th>Modelo</th><th>Marca</th><th>Ano</th><th>Cor</th><th>KM</th><th>Renavam</th></tr></thead><tbody></tbody></table>
 </div>
 </div>
 <div id="tab-posto" class="container tab-content" style="display:none;">
 <div class="card table-wrapper">
-<table id="tbl-posto"><thead><tr><th>ID</th><th>Nome</th><th>CNPJ</th><th class="actions-cell">Ações</th></tr></thead><tbody></tbody></table>
+<table id="tbl-posto"><thead><tr><th>Nome</th><th>CNPJ</th><th>Cidade</th><th>UF</th><th>CEP</th></tr></thead><tbody></tbody></table>
 </div>
 </div>
   
@@ -175,27 +177,20 @@ document.body.classList.toggle('editing', isEditMode);
 }
 
 function updateDash(){
-let total=0
-let litros=0
-data.abastecimento_veiculos.forEach(a=>{
-total+=Number(a.total||0)
-litros+=Number(a.litros||0)
-})
-document.getElementById('kpi-total').innerText='R$ '+total.toFixed(2)
+let total=0,litros=0,kmAtual=0
+data.abastecimento_veiculos.forEach(a=>{total+=Number(a.total||0);litros+=Number(a.litros||0);if(a.km>kmAtual)kmAtual=a.km})
+document.getElementById('kpi-total').innerText=total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
 if(data.abastecimento_veiculos.length>1){
-let arr=data.abastecimento_veiculos.slice().reverse()
-let kmTotal=0
-for(let i=1;i<arr.length;i++){
-kmTotal+=(arr[i].km-arr[i-1].km)
-}
-let kml=kmTotal/litros
-let custoKm=total/kmTotal
+let arr=data.abastecimento_veiculos.slice().reverse(),kmTotal=0
+for(let i=1;i<arr.length;i++){kmTotal+=(arr[i].km-arr[i-1].km)}
+let kml=kmTotal/litros,custoKm=total/kmTotal
 document.getElementById('kpi-kml').innerText=kml.toFixed(2)
-document.getElementById('kpi-custokm').innerText='R$ '+custoKm.toFixed(3)
+document.getElementById('kpi-custokm').innerText=Number(custoKm).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
 }else{
 document.getElementById('kpi-kml').innerText='--'
 document.getElementById('kpi-custokm').innerText='--'
 }
+let el=document.getElementById('kpi-km-atual');if(el)el.innerText=kmAtual.toLocaleString("pt-BR")
 }
 
 function renderTables(){
@@ -211,34 +206,18 @@ abBody.innerHTML=data.abastecimento_veiculos.map(a=>`<tr>
 <button class="btn-mini" style="background:var(--danger)" onclick="excluirAbast('${a.id}')">🗑️</button>
 </td>
 </tr>`).join('')
-document.querySelector('#tbl-veic tbody').innerHTML=data.veiculo_veiculos.map(v=>`<tr><td>${v.id.substring(0,8)}</td><td>${v.placa}</td><td>${v.modelo}</td><td class="actions-cell"><button class="btn-mini">✏️</button></td></tr>`).join('')
-document.querySelector('#tbl-posto tbody').innerHTML=data.postos_veiculos.map(p=>`<tr><td>${p.id.substring(0,8)}</td><td>${p.nome}</td><td>${fCNPJ(p.cnpj)}</td><td class="actions-cell"><button class="btn-mini">✏️</button></td></tr>`).join('')
+document.querySelector('#tbl-veic tbody').innerHTML=data.veiculo_veiculos.map(v=>`<tr><td>${v.placa}</td><td>${v.modelo}</td><td>${v.marca||"-"}</td><td>${v.ano||"-"}</td><td>${v.cor||"-"}</td><td>${(v.km_atual||0).toLocaleString("pt-BR")}</td><td>${v.renavam||"-"}</td></tr>`).join('')
+document.querySelector('#tbl-posto tbody').innerHTML=data.postos_veiculos.map(p=>`<tr><td>${p.nome}</td><td>${fCNPJ(p.cnpj)}</td><td>${p.cidade||"-"}</td><td>${p.uf||"-"}</td><td>${p.cep||"-"}</td></tr>`).join('')
 }
 
 let chartRef
 function renderChart(){
 const ctx=document.getElementById('mainChart').getContext('2d')
-if(chartRef){
-chartRef.destroy()
-}
+if(chartRef)chartRef.destroy()
 let labels=data.abastecimento_veiculos.map(a=>a.data)
 let valores=data.abastecimento_veiculos.map(a=>a.total)
-chartRef=new Chart(ctx,{
-type:'line',
-data:{
-labels:labels,
-datasets:[{
-data:valores,
-borderColor:'#22c55e',
-backgroundColor:'rgba(34,197,94,0.2)',
-fill:true,
-tension:0.4
-}]
-},
-options:{
-plugins:{legend:{display:false}}
-}
-})
+let litros=data.abastecimento_veiculos.map(a=>a.litros)
+chartRef=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'R$',data:valores,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.2)',fill:true,tension:0.4},{label:'Litros',data:litros,borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.2)',fill:true,tension:0.4}]},options:{plugins:{legend:{display:true}}}})
 }
   
 function showTab(id, e) {
