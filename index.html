@@ -3,433 +3,286 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>VEÍCULOS - Controle Total</title>
+<title>VEÍCULOS MASTER - Controle</title>
 <link rel="icon" href="data:,">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root { --bg: #0f172a; --card: #1e293b; --accent: #22c55e; --danger: #ef4444; --border: #334155; --text: #f8fafc; }
-* { box-sizing: border-box; }
-body{
-margin:0;
-font-family:'Segoe UI',sans-serif;
-color:var(--text);
-height:100vh;
-width:100vw;
-overflow:hidden;
-background:
-radial-gradient(circle at 20% 30%,rgba(34,197,94,0.15),transparent 40%),
-radial-gradient(circle at 80% 70%,rgba(96,165,250,0.15),transparent 40%),
-linear-gradient(135deg,#020617,#0f172a,#020617);
-}
-#login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://raw.githubusercontent.com/comunicasindico/veiculos/main/img/bcveiculos.png') no-repeat center center fixed; background-size: cover; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-.login-box { width: 380px; background: rgba(15, 23, 42, 0.9); padding: 35px; border-radius: 20px; text-align: center; border: 1px solid var(--border); backdrop-filter: blur(10px); }
-.login-box h2 { color: var(--accent); margin-bottom: 25px; font-size: 24px; text-transform: uppercase; }
-.btn-create { background: var(--danger) !important; color: #fff !important; margin-bottom: 10px !important; }
-#app { display: none; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-.top-header { background: var(--card); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); }
-.btn-edit-mode { background: #4a90e2; color: #fff; width: auto !important; padding: 8px 15px !important; }
-.container { flex: 1; display: flex; flex-direction: column; padding: 15px; overflow-y: auto; gap: 15px; }
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;}
-.card{
-cursor:pointer;
-background:rgba(30,41,59,0.55);
-padding:15px;
-border-radius:16px;
-border:1px solid rgba(255,255,255,0.05);
-box-shadow:0 8px 30px rgba(0,0,0,0.5);
-backdrop-filter:blur(12px);
-transition:all .25s ease;
-}
-.card:hover{
-transform:translateY(-3px);
-box-shadow:0 12px 40px rgba(0,0,0,0.7);
-}
-.kpi-val { font-size: 2em; font-weight: bold; color: var(--accent); display: block; margin-top: 5px; }
-.tabs { display: flex; gap: 8px; overflow-x: auto; padding: 10px; background: var(--card); border-bottom: 1px solid var(--border); }
-.tab-btn { flex: 1; min-width: 130px; padding: 10px; background: #0f172a; color: #fff; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
-.tab-btn.active { background: var(--accent); color: #000; font-weight: bold; }
-input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid var(--border); background: #0f172a; color: #fff; font-size: 15px; }
-button { background: var(--accent); color: #000; font-weight: bold; cursor: pointer; border: none; }
-.actions-cell { display: none; gap: 5px; justify-content: center; }
-.editing .actions-cell{display:flex !important;}
-.btn-mini { padding: 4px 8px; font-size: 11px; width: auto; margin: 0; }
-.btn-sair { background: var(--danger); color: #fff !important; width: auto !important; padding: 8px 15px !important; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
-th { background: var(--border); color: var(--accent); position: sticky; top: 0; }
-@media (max-width: 768px) { body { overflow: auto; } #app { height: auto; } }
-.top-header button{min-width:110px;height:36px;}
-th{resize:horizontal;overflow:auto;min-width:80px}
-.card{position:relative;overflow:hidden;}
-.chart-container{position:relative;width:100%;height:100%;}
-#mainChart{width:100% !important;height:100% !important;}
-.container{overflow-x:hidden;}
-.chart-pro{height:55vh;min-height:320px;max-height:650px;padding:10px;}
-.chart-pro canvas{width:100% !important;height:100% !important;}
-#top-create{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:10000;}
-#top-create button{
-background:#ef4444;
-color:#fff;
-padding:20px 40px;
-font-size:18px;
-border-radius:14px;
-font-weight:bold;
-cursor:pointer;
-box-shadow:0 4px 15px rgba(0,0,0,0.4);
-transition:.2s;
-}
-#top-create button:hover{transform:scale(1.05);}
-#tbl-veic td[contenteditable="true"]{
-background:rgba(255,255,255,0.02);
-cursor:text;
-transition:.2s;
-}
-#tbl-veic td[contenteditable="true"]:focus{
-outline:none;
-background:rgba(34,197,94,0.15);
-box-shadow:0 0 0 1px #22c55e inset;
-}                   
-  
+:root { --bg: #020617; --card: #0f172a; --accent: #22c55e; --danger: #ef4444; --border: #1e293b; --text: #f8fafc; --text-dim: #94a3b8; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', sans-serif; }
+body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; background-image: radial-gradient(circle at 50% -20%, #1e293b, #020617); }
+#login-screen { position: fixed; inset: 0; background: linear-gradient(rgba(2,6,23,0.8), rgba(2,6,23,0.8)), url('https://raw.githubusercontent.com/comunicasindico/veiculos/main/img/bcveiculos.png') no-repeat center center/cover; display: flex; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); }
+.login-box { width: 400px; background: rgba(15, 23, 42, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; }
+.login-box h2 { color: var(--accent); font-size: 28px; margin-bottom: 8px; letter-spacing: -1px; }
+.login-box p { color: var(--text-dim); font-size: 14px; margin-bottom: 30px; }
+input, select { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid var(--border); background: #1e293b; color: #fff; outline: none; transition: 0.2s; }
+input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(34,197,94,0.2); }
+button { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-primary { background: var(--accent); color: #052e16; }
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+#app { display: none; height: 100vh; flex-direction: column; }
+.top-header { background: var(--card); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+.header-info { display: flex; align-items: center; gap: 15px; }
+.badge { background: #1e293b; padding: 4px 12px; border-radius: 20px; font-size: 12px; color: var(--accent); border: 1px solid var(--accent); }
+.tabs { display: flex; gap: 4px; padding: 8px 16px; background: var(--card); overflow-x: auto; border-bottom: 1px solid var(--border); }
+.tab-btn { background: transparent; color: var(--text-dim); padding: 10px 20px; border-radius: 8px; border: none; font-size: 14px; white-space: nowrap; width: auto; }
+.tab-btn:hover { background: #1e293b; color: #fff; }
+.tab-btn.active { background: rgba(34,197,94,0.1); color: var(--accent); }
+.main-container { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; position: relative; transition: 0.3s; }
+.card:hover { border-color: #334155; transform: translateY(-2px); }
+.kpi-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; }
+.kpi-value { font-size: 24px; font-weight: 700; color: var(--text); display: block; margin-top: 8px; }
+.accent-val { color: var(--accent); }
+.chart-container { height: 400px; width: 100%; margin-top: 20px; }
+.table-card { overflow: hidden; padding: 0; }
+.table-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.table-wrapper { overflow-x: auto; max-height: 500px; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th { background: #1e293b; padding: 16px; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; position: sticky; top: 0; }
+td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+tr:hover { background: rgba(255,255,255,0.02); }
+#form-abast { display: none; background: #1e293b; padding: 20px; border-radius: 16px; margin-bottom: 20px; }
+.grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.btn-sair { background: var(--danger); color: white; width: auto; padding: 8px 16px; font-size: 12px; }
+.ia-box { background: linear-gradient(135deg, #064e3b, #020617); border: 1px solid var(--accent); padding: 20px; border-radius: 16px; }
 </style>
 </head>
 <body>
-
-<div id="top-create">
-<button onclick="alert('Administrador')">CRIAR CONTA</button>
-</div>
-  
 <div id="login-screen">
 <div class="login-box">
-<h2>VEÍCULOS<br><span style="font-size: 14px; color: #fff;">Controle Total</span></h2>
-<input type="text" id="user" placeholder="Usuário">
+<h2>VEÍCULOS MASTER</h2>
+<p>Sistema de Gestão e Auditoria</p>
+<input type="text" id="user" placeholder="Usuário (Seu Nome)">
 <input type="password" id="pass" placeholder="Senha">
-
-<button onclick="login()">ACESSAR O PAINEL</button>
-<p style="font-size: 11px; color: #94a3b8; margin-top: 15px;">PIX: 69984311978 | bemprotegido.net</p>
+<button class="btn-primary" onclick="login()">ACESSAR PAINEL</button>
+<div style="margin-top:20px; font-size:10px; color:var(--text-dim)">Manoel Fernandes Neto | Especialista em Controle</div>
 </div>
 </div>
-  
 <div id="app">
 <div class="top-header">
-<span id="header-title">APP: MANOEL FERNANDES NETO</span>
-<div style="display:flex;gap:10px;">
-<div id="acoes-header"></div>
+<div class="header-info">
+<h1 style="font-size:18px; color:var(--accent)">VEÍCULOS MASTER</h1>
+<div id="user-badge" class="badge">AUDITOR</div>
+</div>
 <button class="btn-sair" onclick="logout()">SAIR</button>
 </div>
-</div>
-  
 <div class="tabs">
-<button class="tab-btn" onclick="showTab('tab-admin',event)">🛠️ Administração Veicular</button>
 <button class="tab-btn active" onclick="showTab('tab-dash', event)">📊 Dashboard</button>
 <button class="tab-btn" onclick="showTab('tab-veic', event)">🚗 Veículos</button>
-<button class="tab-btn" onclick="showTab('tab-motorista', event)">👤 Motoristas</button>
 <button class="tab-btn" onclick="showTab('tab-posto', event)">🏪 Postos</button>
+<button class="tab-btn" onclick="showTab('tab-motorista', event)">👤 Motoristas</button>
 <button class="tab-btn" onclick="showTab('tab-abast', event)">⛽ Abastecimentos</button>
 </div>
-  
-<div id="tab-dash" class="container tab-content">
-<div style="font-size:18px;font-weight:bold;color:#22c55e;margin-bottom:10px;">📊 Dashboard Geral</div>
-
+<div id="tab-dash" class="main-container">
 <div class="kpi-grid">
-<div class="card" onclick="abrirCard('motoristas')">👤 Motoristas</div>
-<div class="card" onclick="abrirCard('veiculos')">🚗 Veículos</div>
-<div class="card" onclick="abrirCard('postos')">🏪 Postos</div>
+<div class="card"><span class="kpi-label">Km Total Rodado</span><span id="kpi-km" class="kpi-value">0</span></div>
+<div class="card"><span class="kpi-label">Média Geral (Km/L)</span><span id="kpi-kml" class="kpi-value accent-val">0.00</span></div>
+<div class="card"><span class="kpi-label">Gasto Total</span><span id="kpi-total" class="kpi-value">R$ 0,00</span></div>
+<div class="card"><span class="kpi-label">Custo por Km</span><span id="kpi-custokm" class="kpi-value">R$ 0,00</span></div>
 </div>
-
-<div class="kpi-grid">
-<div class="card">Km Atual <span id="kpi-km-atual" class="kpi-val">--</span></div>
-<div class="card">Km/L Médio <span id="kpi-kml" class="kpi-val">--</span></div>
-<div class="card">Custo/Km <span id="kpi-custokm" class="kpi-val">--</span></div>
-
-<div class="card">
-<div style="display:flex;justify-content:space-between;align-items:center;">
-<span>Gasto Total</span>
-<button onclick="event.stopPropagation();toggleValor('kpi-total')" style="width:28px;height:28px;font-size:11px;">👁️</button>
+<div class="ia-box">
+<h3 style="color:var(--accent); margin-bottom:10px; font-size:14px">🤖 INSIGHTS DA AUDITORIA (IA)</h3>
+<div id="ia-output" style="font-size:13px; line-height:1.6">Analisando base de dados...</div>
 </div>
-<span id="kpi-total" class="kpi-val">--</span>
-</div>
-
-<div class="card">
-<div style="display:flex;justify-content:space-between;align-items:center;">
-<span>Litros Total</span>
-<button onclick="event.stopPropagation();toggleValor('kpi-litros')" style="width:28px;height:28px;font-size:11px;">👁️</button>
-</div>
-<span id="kpi-litros" class="kpi-val">--</span>
-</div>
-</div>
-
-<div id="ia-box" style="background:#020617;border:1px solid #334155;border-radius:12px;padding:14px;margin-bottom:12px">
-<div style="font-size:14px;color:#22c55e;font-weight:600">🤖 IA VEÍCULO MASTER</div>
-<div id="ia-output" style="font-size:12px;color:#cbd5f5;margin-top:6px">Aguardando análise...</div>
-<button onclick="rodarIA()" style="margin-top:8px;background:#22c55e;border:none;padding:6px 10px;border-radius:6px;color:#000;font-weight:600">ANALISAR AGORA</button>
-</div>
-
-<div class="card chart-pro">
+<div class="card chart-container">
 <canvas id="mainChart"></canvas>
 </div>
-  
 </div>
-  
-<div id="tab-abast" class="container tab-content" style="display:none;">
-<div style="font-size:18px;font-weight:bold;color:#22c55e;margin-bottom:10px;">⛽ Controle de Abastecimentos</div>
-<!-- 🔥 FORMULÁRIO DE CADASTRO -->
-<button onclick="toggleNovoAbast()" style="margin-bottom:10px;">➕ NOVO ABASTECIMENTO</button>
-
-<div id="box-novo-abast" class="card" style="display:none;">
-<h3>Novo Abastecimento</h3>
-<input type="date" id="cad_data">
-<select id="cad_posto_select"></select>
-<input type="text" id="cad_posto_nome" placeholder="Ou digite novo posto">
-<input type="number" id="cad_litros" placeholder="Litros">
-<input type="number" id="cad_valor" placeholder="Valor Total">
-<input type="number" id="cad_km" placeholder="KM Atual">
-<select id="cad_tanque">
-<option value="cheio" selected>Tanque Cheio</option>
-<option value="parcial">Tanque Parcial</option>
-</select>
-<div style="display:flex;gap:10px;">
-<button onclick="salvarAbastecimento()">SALVAR</button>
-<button onclick="atualizarAbast()">ATUALIZAR</button>
-<button onclick="limparForm()">LIMPAR</button>
+<div id="tab-abast" class="main-container" style="display:none">
+<div class="table-header">
+<h2>Histórico de Abastecimentos</h2>
+<button class="btn-primary" style="width:auto" onclick="toggleForm()">+ NOVO REGISTRO</button>
 </div>
+<div id="form-abast">
+<div class="grid-form">
+<div><label style="font-size:12px">Data</label><input type="date" id="f_data"></div>
+<div><label style="font-size:12px">Posto</label><select id="f_posto"></select></div>
+<div><label style="font-size:12px">Veículo</label><select id="f_veic"></select></div>
+<div><label style="font-size:12px">Litros</label><input type="number" id="f_litros" step="0.01"></div>
+<div><label style="font-size:12px">Valor Total</label><input type="number" id="f_valor" step="0.01"></div>
+<div><label style="font-size:12px">Km Atual</label><input type="number" id="f_km"></div>
 </div>
-
-<div style="display:flex;gap:10px;">
-<input type="date" id="filtro_inicio">
-<input type="date" id="filtro_fim">
-<button onclick="filtrarPeriodo()">FILTRAR</button>
-<button onclick="carregarBanco()">LIMPAR</button>
+<button class="btn-primary" style="margin-top:15px" onclick="salvarAbast()">SALVAR ABASTECIMENTO</button>
 </div>
-
-<div class="card table-wrapper">
+<div class="card table-card">
+<div class="table-wrapper">
 <table id="tbl-abast">
-<thead><tr><th>Data</th><th>Posto</th><th>Litros</th><th>Km Atual</th><th>Total</th><th>Tanque</th><th class="actions-cell">Ações</th></tr></thead>
+<thead><tr><th>Data</th><th>Posto</th><th>Veículo</th><th>Litros</th><th>Km</th><th>Total</th><th>Tanque</th></tr></thead>
 <tbody></tbody>
 </table>
 </div>
 </div>
-  
-<div id="tab-veic" class="container tab-content" style="display:none;">
-<div style="font-size:18px;font-weight:bold;color:#22c55e;margin-bottom:10px;">🚗 Cadastro de Veículos</div>
-<div class="card table-wrapper">
-<table id="tbl-veic"><thead><tr><th>Placa</th><th>Modelo</th><th>Marca</th><th>Ano</th><th>Cor</th><th>KM</th><th>Renavam</th></tr></thead><tbody></tbody></table>
+</div>
+<div id="tab-veic" class="main-container" style="display:none">
+<div class="card table-card">
+<div class="table-header"><h2>Frota de Veículos</h2></div>
+<div class="table-wrapper"><table id="tbl-veic"><thead><tr><th>Placa</th><th>Modelo</th><th>Marca</th><th>Ano</th><th>KM Atual</th></tr></thead><tbody></tbody></table></div>
 </div>
 </div>
-  
-<div id="tab-posto" class="container tab-content" style="display:none;">
-<div style="font-size:18px;font-weight:bold;color:#22c55e;margin-bottom:10px;">🏪 Cadastro de Postos</div>
-<div class="card table-wrapper">
-<table id="tbl-posto"><thead><tr><th>Nome</th><th>CNPJ</th><th>Cidade</th><th>UF</th><th>CEP</th></tr></thead><tbody></tbody></table>
+<div id="tab-posto" class="main-container" style="display:none">
+<div class="card table-card">
+<div class="table-header"><h2>Rede de Postos</h2></div>
+<div class="table-wrapper"><table id="tbl-posto"><thead><tr><th>Nome do Posto</th><th>CNPJ</th><th>Localidade</th></tr></thead><tbody></tbody></table></div>
 </div>
 </div>
-
-<div id="tab-motorista" class="container tab-content" style="display:none;">
-<div style="font-size:18px;font-weight:bold;color:#22c55e;margin-bottom:10px;">👤 Motoristas</div>
-<div class="card">
-<table id="tbl-motorista">
-<thead>
-<tr>
-<th>Nome</th>
-<th>Usuário</th>
-<th>ID</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
+<div id="tab-motorista" class="main-container" style="display:none">
+<div class="card table-card">
+<div class="table-header"><h2>Corpo Técnico / Motoristas</h2></div>
+<div class="table-wrapper"><table id="tbl-motorista"><thead><tr><th>Nome</th><th>Documento</th><th>Status</th></tr></thead><tbody></tbody></table></div>
 </div>
 </div>
-
-<div id="tab-admin" class="container tab-content" style="display:none;">
-<div class="card">
-<h3>👤 Motoristas</h3>
-<table id="tbl-motoristas">
-<thead><tr><th>Nome</th><th>CPF</th></tr></thead>
-<tbody></tbody>
-</table>
 </div>
-<div class="card">
-<h3>🚗 Veículos</h3>
-<table id="tbl-veic-admin">
-<thead><tr><th>Placa</th><th>Modelo</th><th>Motorista</th></tr></thead>
-<tbody></tbody>
-</table>
-</div>
-<div class="card">
-<h3>🏪 Postos</h3>
-<table id="tbl-posto-admin">
-<thead><tr><th>Nome</th></tr></thead>
-<tbody></tbody>
-</table>
-</div>
-</div>
-  
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-
 <script>
-function hojeISO(){let d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().split("T")[0]}
-function isoToBR(iso){if(!iso)return "-";let d=iso.split("T")[0].split("-");return d[2]+"/"+d[1]+"/"+d[0]}
-function brToISO(br){if(!br)return null;let p=br.split("/");return p[2]+"-"+p[1]+"-"+p[0]}
-if(!window.data){window.data={veiculo_veiculos:[],postos_veiculos:[],abastecimento_veiculos:[],motoristas_veiculos:[]}}
-let store=window.data
-let USER=null
-let NIVEL=2
-let MOTORISTA_ID=null
-let VEICULO_ATIVO=null
-const SUPABASE_URL="https://gspdlrenyrzbkxlvyugc.supabase.co"
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
-const EMPRESA="64e10505-0992-48b6-a461-616c609cbc03"
-let isEditMode=false
-async function login(){
-let u=document.getElementById('user').value.toLowerCase().trim()
-let p=document.getElementById('pass').value.trim()
-if(u==='admin'&&p==='admin123'){USER='ADMIN';NIVEL=1;document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='flex';carregarBanco();setTimeout(()=>showTab('tab-admin',{target:document.querySelector('[onclick*="tab-admin"]')}),200);return}
-let {data:res,error}=await db.from("motoristas_veiculos").select("*").ilike("nome",u).limit(1)
-let m=res&&res.length?res[0]:null
-if(error||!m){alert("Motorista não encontrado");return}
-if(p!=="1234"){alert("Senha inválida");return}
-USER=m.nome;NIVEL=2;MOTORISTA_ID=m.id;VEICULO_ATIVO=null
-document.getElementById('login-screen').style.display='none'
-document.getElementById('app').style.display='flex'
-localStorage.setItem("logado","1")
-localStorage.setItem("nivel","2")
-localStorage.setItem("empresa",EMPRESA)
-localStorage.setItem("usuario_nome",USER)
-carregarBanco()
+const SUPABASE_URL = "https://gspdlrenyrzbkxlvyugc.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI";
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const EMPRESA_ID = "64e10505-0992-48b6-a461-616c609cbc03";
+let state = { user: null, nivel: 2, motoristaId: null, veiculoId: null, data: { veiculos: [], postos: [], abastecimentos: [], motoristas: [] } };
+let chartInstance = null;
+async function login() {
+const u = document.getElementById('user').value.trim();
+const p = document.getElementById('pass').value.trim();
+if(u.toLowerCase()==='admin' && p==='admin123') {
+state.user = "Administrador"; state.nivel = 1;
+} else {
+const { data, error } = await db.from("motoristas_veiculos").select("*").ilike("nome", u).single();
+if(error || p !== "1234") return alert("Acesso Negado. Verifique usuário e senha.");
+state.user = data.nome; state.motoristaId = data.id; state.nivel = 2;
 }
-
-async function carregarBanco(){
-USER=localStorage.getItem("usuario_nome")||USER
-let NIVEL_LOCAL=parseInt(localStorage.getItem("nivel")||0)
-let EMP=localStorage.getItem("empresa")||EMPRESA
-let {data:motoristas}=await db.from("motoristas_veiculos").select("*").eq("empresa_id",EMP)
-store.motoristas_veiculos=Array.isArray(motoristas)?motoristas:[]
-if(NIVEL_LOCAL===2){let m=store.motoristas_veiculos.find(x=>x.nome.toLowerCase()===USER.toLowerCase());if(m){MOTORISTA_ID=m.id}}
-let {data:veic,error:e1}=await db.from("veiculo_veiculos").select("*").eq("empresa_id",EMP)
-let {data:postos,error:e2}=await db.from("postos_veiculos").select("*").eq("empresa_id",EMP)
-let {data:abast,error:e3}=await db.from("abastecimento_veiculos").select("*, postos_veiculos(nome_posto)").eq("empresa_id",EMP).order("data_abastecimento",{ascending:false})
-if(e1)console.error(e1)
-if(e2)console.error(e2)
-if(e3)console.error(e3)
-store.veiculo_veiculos=(veic||[]).filter(v=>NIVEL_LOCAL===1||v.motorista_id===MOTORISTA_ID).map(v=>({id:v.id,placa:v.placa||"-",modelo:v.modelo||"",marca:v.marca||"",ano:v.ano||"",cor:v.cor||"",renavam:v.renavam||"",km_atual:Number(v.km_atual||0),motorista_id:v.motorista_id||null}))
-if(NIVEL_LOCAL===2&&store.veiculo_veiculos.length){VEICULO_ATIVO=store.veiculo_veiculos[0].id}
-store.postos_veiculos=(postos||[]).map(p=>({id:p.id,nome:(p.nome_posto||"-").toUpperCase().trim(),cnpj:p.cnpj||""})).sort((a,b)=>a.nome.localeCompare(b.nome))
-let sel2=document.getElementById("cad_posto_select")
-if(sel2){sel2.innerHTML=`<option value="" disabled selected>Escolha/Selecione um Posto aqui</option>`+store.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("");sel2.value=""}
-store.abastecimento_veiculos=(abast||[]).filter(a=>NIVEL_LOCAL===1||a.veiculo_id===VEICULO_ATIVO).map(a=>({id:a.id,data:isoToBR(a.data_abastecimento),posto:(a.postos_veiculos?.nome_posto||"-").toUpperCase(),litros:Number(a.litros||0),km:Number(a.quilometragem||0),total:Number(a.valor_total||0),tanque:(a.tanque||'cheio')}))
-renderTables();updateDash();renderChart();if(NIVEL_LOCAL===1&&typeof renderAdmin==="function"){renderAdmin()}
-setTimeout(()=>rodarIA(),500)
+document.getElementById('login-screen').style.display = 'none';
+document.getElementById('app').style.display = 'flex';
+document.getElementById('user-badge').innerText = state.nivel === 1 ? "AUDITOR MASTER" : "MOTORISTA";
+initApp();
 }
-  
-function updateDash(){
-let total=0,kmAtual=0,litrosTotalGeral=0
-let arr=store.abastecimento_veiculos.filter(a=>a.data).sort((a,b)=>brToISO(a.data).localeCompare(brToISO(b.data)))
-arr.forEach(a=>{total+=a.total;litrosTotalGeral+=a.litros;if(a.km>kmAtual)kmAtual=a.km})
-let elLitros=document.getElementById('kpi-litros');if(elLitros)elLitros.innerText=litrosTotalGeral.toLocaleString("pt-BR",{minimumFractionDigits:2})+" L"
-document.getElementById('kpi-total').innerText=total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-let kmTotal=0,litrosTotal=0
-for(let i=1;i<arr.length;i++){let atual=arr[i],anterior=arr[i-1];if(atual.tanque==="cheio"&&atual.km>anterior.km){let kmRodado=atual.km-anterior.km;let litrosAc=0;for(let j=i;j>=0;j--){litrosAc+=arr[j].litros;if(arr[j].tanque==="cheio"&&j!==i)break}kmTotal+=kmRodado;litrosTotal+=litrosAc}}
-if(kmTotal>0&&litrosTotal>0){let kml=kmTotal/litrosTotal;let custoKm=total/kmTotal;document.getElementById('kpi-kml').innerText=kml.toFixed(2);document.getElementById('kpi-custokm').innerText=custoKm.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}else{document.getElementById('kpi-kml').innerText='--';document.getElementById('kpi-custokm').innerText='--'}
-let el=document.getElementById('kpi-km-atual');if(el)el.innerText=kmAtual.toLocaleString("pt-BR")
+async function initApp() {
+await fetchData();
+renderAll();
 }
-function renderTables(){
-const abBody=document.querySelector('#tbl-abast tbody')
-if(abBody)abBody.innerHTML=store.abastecimento_veiculos.map(a=>`<tr><td>${a.data}</td><td>${a.posto}</td><td>${a.litros.toFixed(2)}L</td><td>${a.km}</td><td>${fMoeda(a.total)}</td><td>${a.tanque||'-'}</td></tr>`).join('')
-const tbv=document.querySelector('#tbl-veic tbody')
-if(tbv)tbv.innerHTML=store.veiculo_veiculos.map(v=>`<tr><td>${v.placa}</td><td>${v.modelo}</td><td>${v.marca}</td><td>${v.ano}</td></tr>`).join('')
-}
-let chartRef
-function renderChart(){
-const canvas=document.getElementById('mainChart');if(!canvas)return
-const ctx=canvas.getContext('2d');if(chartRef)chartRef.destroy()
-let arr=store.abastecimento_veiculos.filter(a=>a.data).sort((a,b)=>brToISO(a.data).localeCompare(brToISO(b.data)))
-if(!arr.length)return
-chartRef=new Chart(ctx,{type:'line',data:{labels:arr.map(a=>a.data),datasets:[{label:'R$',data:arr.map(a=>a.total),borderColor:'#22c55e'}]},options:{responsive:true}})
-}
-function fMoeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
-function showTab(id,e){document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById(id).style.display='flex';if(e&&e.target)e.target.classList.add('active')}
-function logout(){localStorage.removeItem("logado");location.reload()}
-window.addEventListener("load",()=>{
-if(localStorage.getItem("logado")==="1"){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='flex';carregarBanco()}
-let campo=document.getElementById("cad_data");if(campo&&!campo.value)campo.value=hojeISO()
-})
-setInterval(()=>{if(localStorage.getItem("logado")==="1"&&!isEditMode){carregarBanco()}},15000)
-function rodarIA(){
-let arr=store.abastecimento_veiculos
-if(!arr||arr.length<3){
-document.getElementById("ia-output").innerText="Poucos dados para análise"
-return
-}
-let total=0,litros=0,kmTotal=0,alerts=[]
-arr.sort((a,b)=>brToISO(a.data).localeCompare(brToISO(b.data)))
-for(let i=1;i<arr.length;i++){
-let atual=arr[i]
-let anterior=arr[i-1]
-total+=Number(atual.total||0)
-litros+=Number(atual.litros||0)
-if(atual.km&&anterior.km&&atual.km>anterior.km){
-kmTotal+=atual.km-anterior.km
+async function fetchData() {
+const [v, p, a, m] = await Promise.all([
+db.from("veiculo_veiculos").select("*").eq("empresa_id", EMPRESA_ID),
+db.from("postos_veiculos").select("*").eq("empresa_id", EMPRESA_ID),
+db.from("abastecimento_veiculos").select("*, postos_veiculos(nome_posto), veiculo_veiculos(placa)").eq("empresa_id", EMPRESA_ID).order("data_abastecimento", {ascending: false}),
+db.from("motoristas_veiculos").select("*").eq("empresa_id", EMPRESA_ID)
+]);
+state.data.veiculos = v.data || [];
+state.data.postos = p.data || [];
+state.data.abastecimentos = a.data || [];
+state.data.motoristas = m.data || [];
+if(state.nivel === 2) {
+const veicUser = state.data.veiculos.find(x => x.motorista_id === state.motoristaId);
+state.veiculoId = veicUser ? veicUser.id : null;
+state.data.abastecimentos = state.data.abastecimentos.filter(x => x.veiculo_id === state.veiculoId);
 }
 }
-let kml=kmTotal>0?(kmTotal/litros):0
-let mediaValor=total/arr.length
-let ultimo=arr[arr.length-1]
-if(kml<7)alerts.push("⚠️ Consumo muito alto (km/l baixo)")
-if(ultimo.total>mediaValor*1.3)alerts.push("⚠️ Último abastecimento acima da média")
-if(litros/arr.length>60)alerts.push("⚠️ Volume médio elevado")
-let texto=`Consumo médio: ${kml.toFixed(2)} km/l\nGasto médio: ${mediaValor.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}\n`
-if(alerts.length){
-texto+="\nALERTAS:\n"+alerts.join("\n")
-}else{
-texto+="\nSituação saudável ✅"
+function renderAll() {
+renderDash();
+renderTable('tbl-abast', state.data.abastecimentos, row => `
+<td>${new Date(row.data_abastecimento).toLocaleDateString('pt-BR')}</td>
+<td>${row.postos_veiculos?.nome_posto || 'N/A'}</td>
+<td>${row.veiculo_veiculos?.placa || 'N/A'}</td>
+<td>${row.litros}L</td>
+<td>${row.quilometragem}</td>
+<td>${fMoeda(row.valor_total)}</td>
+<td>${row.tanque}</td>
+`);
+renderTable('tbl-veic', state.data.veiculos, row => `
+<td><b>${row.placa}</b></td><td>${row.modelo}</td><td>${row.marca}</td><td>${row.ano}</td><td>${row.km_atual}</td>
+`);
+renderTable('tbl-posto', state.data.postos, row => `
+<td>${row.nome_posto}</td><td>${row.cnpj || '-'}</td><td>${row.cidade || 'Rondônia'}</td>
+`);
+renderTable('tbl-motorista', state.data.motoristas, row => `
+<td>${row.nome}</td><td>${row.cpf || '-'}</td><td><span class="badge">ATIVO</span></td>
+`);
+populateSelects();
 }
-document.getElementById("ia-output").innerText=texto
+function renderTable(id, data, rowFn) {
+const tbody = document.querySelector(`#${id} tbody`);
+if(!tbody) return;
+tbody.innerHTML = data.map(row => `<tr>${rowFn(row)}</tr>`).join('');
 }
-function renderAdmin(){
-if(NIVEL!==1)return
-
-let tbM=document.querySelector('#tbl-motoristas tbody')
-let tbV=document.querySelector('#tbl-veic-admin tbody')
-let tbP=document.querySelector('#tbl-posto-admin tbody')
-// MOTORISTAS
-db.from("motoristas_veiculos").select("*").then(r=>{
-if(tbM){
-tbM.innerHTML=(r.data||[]).map(m=>`
-<tr>
-<td>${m.nome}</td>
-<td>${m.cpf||"-"}</td>
-</tr>`).join('')
+function renderDash() {
+let totalGasto = 0, totalLitros = 0, kmInicial = 0, kmFinal = 0;
+const ab = [...state.data.abastecimentos].sort((a,b) => new Date(a.data_abastecimento) - new Date(b.data_abastecimento));
+if(ab.length > 0) {
+kmInicial = ab[0].quilometragem;
+kmFinal = ab[ab.length-1].quilometragem;
+ab.forEach(x => { totalGasto += x.valor_total; totalLitros += x.litros; });
 }
-})
-// VEÍCULOS
-db.from("veiculo_veiculos").select("*").then(r=>{
-if(tbV){
-tbV.innerHTML=(r.data||[]).map(v=>`
-<tr>
-<td>${v.placa||"-"}</td>
-<td>${v.modelo||"-"}</td>
-<td>${v.motorista_id||"-"}</td>
-</tr>`).join('')
+const kmRodado = kmFinal - kmInicial;
+const kml = totalLitros > 0 ? (kmRodado / totalLitros) : 0;
+const custoKm = kmRodado > 0 ? (totalGasto / kmRodado) : 0;
+document.getElementById('kpi-km').innerText = kmRodado.toLocaleString();
+document.getElementById('kpi-total').innerText = fMoeda(totalGasto);
+document.getElementById('kpi-kml').innerText = kml.toFixed(2);
+document.getElementById('kpi-custokm').innerText = fMoeda(custoKm);
+renderChart(ab);
+runAuditIA(kml, custoKm, ab);
 }
-})
-// POSTOS
-db.from("postos_veiculos").select("*").then(r=>{
-if(tbP){
-tbP.innerHTML=(r.data||[]).map(p=>`
-<tr>
-<td>${p.nome_posto||"-"}</td>
-</tr>`).join('')
+function renderChart(data) {
+const ctx = document.getElementById('mainChart').getContext('2d');
+if(chartInstance) chartInstance.destroy();
+const sorted = [...data].reverse();
+chartInstance = new Chart(ctx, {
+type: 'line',
+data: {
+labels: sorted.map(x => new Date(x.data_abastecimento).toLocaleDateString('pt-BR')),
+datasets: [{
+label: 'Custo Abastecimento (R$)',
+data: sorted.map(x => x.valor_total),
+borderColor: '#22c55e',
+backgroundColor: 'rgba(34,197,94,0.1)',
+fill: true,
+tension: 0.4
+}]
+},
+options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+});
 }
-})
+function runAuditIA(kml, custoKm, data) {
+let msg = "Análise concluída. ";
+if(kml < 8 && kml > 0) msg += "⚠️ Alerta: Consumo de combustível acima da média técnica. Sugerido revisão de bicos. ";
+if(custoKm > 1.5) msg += "🚨 Alerta: Custo por Km elevado. Verifique rotas e preços dos postos. ";
+if(data.length > 0 && data[0].valor_total > 500) msg += "ℹ️ Nota: Grande volume detectado no último abastecimento.";
+document.getElementById('ia-output').innerText = msg || "Frota operando dentro dos parâmetros de normalidade.";
 }
-  
-
+function populateSelects() {
+const pSel = document.getElementById('f_posto');
+const vSel = document.getElementById('f_veic');
+if(pSel) pSel.innerHTML = state.data.postos.map(p => `<option value="${p.id}">${p.nome_posto}</option>`).join('');
+if(vSel) vSel.innerHTML = state.data.veiculos.map(v => `<option value="${v.id}">${v.placa} - ${v.modelo}</option>`).join('');
+document.getElementById('f_data').value = new Date().toISOString().split('T')[0];
+}
+async function salvarAbast() {
+const payload = {
+empresa_id: EMPRESA_ID,
+data_abastecimento: document.getElementById('f_data').value,
+veiculo_id: document.getElementById('f_veic').value,
+posto_id: document.getElementById('f_posto').value,
+litros: parseFloat(document.getElementById('f_litros').value),
+valor_total: parseFloat(document.getElementById('f_valor').value),
+quilometragem: parseInt(document.getElementById('f_km').value),
+tanque: "cheio"
+};
+const { error } = await db.from("abastecimento_veiculos").insert([payload]);
+if(error) alert("Erro ao salvar: " + error.message);
+else { alert("Abastecimento registrado com sucesso!"); toggleForm(); initApp(); }
+}
+function showTab(id, e) {
+document.querySelectorAll('.main-container').forEach(t => t.style.display = 'none');
+document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+document.getElementById(id).style.display = 'flex';
+e.target.classList.add('active');
+}
+function toggleForm() { 
+const f = document.getElementById('form-abast'); 
+f.style.display = f.style.display === 'block' ? 'none' : 'block'; 
+}
+function fMoeda(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function logout() { location.reload(); }
 </script>
 </body>
 </html>
