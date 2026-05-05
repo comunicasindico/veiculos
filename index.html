@@ -374,23 +374,32 @@ let valor=Number(a.total||0)
 let litros=Number(a.litros||0)
 
 const ctx=document.getElementById('mainChart').getContext('2d')
-if(chartRef)chartRef.destroy()
+
+if(chartRef) chartRef.destroy()
 
 chartRef=new Chart(ctx,{
 type:'bar',
 data:{
 labels:['Valor R$','Litros'],
-datasets:[{
+datasets:[
+{
+label:'Dados',
 data:[valor,litros]
-}]
+}
+]
 },
 options:{
+responsive:true,
 plugins:{
+legend:{display:false},
 tooltip:{
 callbacks:{
 label:function(ctx){
-if(ctx.dataIndex===0)return fMoeda(ctx.raw)
+if(ctx.dataIndex===0){
+return fMoeda(ctx.raw)
+}
 return ctx.raw+" L"
+}
 }
 }
 }
