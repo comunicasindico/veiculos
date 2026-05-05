@@ -147,15 +147,19 @@ carregarBanco()
 
 
 
-function login() {
-const u = document.getElementById('user').value.toLowerCase();
-const p = document.getElementById('pass').value;
-if(u === 'neto' && p === '1234') {
-document.getElementById('login-screen').style.display = 'none';
-document.getElementById('app').style.display = 'flex';
-renderTables(); updateDash(); renderChart();
-} else { alert('Acesso Negado.'); }
+function login(){
+const u=document.getElementById('user').value.toLowerCase()
+const p=document.getElementById('pass').value
+if(u==='neto' && p==='1234'){
+localStorage.setItem("logado","1")
+document.getElementById('login-screen').style.display='none'
+document.getElementById('app').style.display='flex'
+carregarBanco()
+}else{
+alert('Acesso Negado.')
 }
+}
+  
 function toggleEditMode() {
 isEditMode = !isEditMode;
 document.body.classList.toggle('editing', isEditMode);
@@ -221,6 +225,15 @@ document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none')
 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 document.getElementById(id).style.display = 'flex'; e.target.classList.add('active');
 }
+
+window.addEventListener("load",()=>{
+if(localStorage.getItem("logado")==="1"){
+document.getElementById('login-screen').style.display='none'
+document.getElementById('app').style.display='flex'
+carregarBanco()
+}
+})
+  
 </script>
 </body>
 </html>
