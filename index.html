@@ -222,56 +222,62 @@ function updateDash(){
 let total=0
 let kmAtual=0
 
-data.abastecimento_veiculos.forEach(a=>{
+// 🔥 ORDENAR POR DATA REAL
+let arr=data.abastecimento_veiculos
+.filter(a=>a.data)
+.sort((a,b)=>{
+let da=new Date(a.data.split("/").reverse().join("-"))
+let db=new Date(b.data.split("/").reverse().join("-"))
+return da-db
+})
+
+// 🔥 KPIs básicos
+arr.forEach(a=>{
 total+=Number(a.total||0)
-if(a.km>kmAtual)kmAtual=a.km
+if(a.km && a.km>kmAtual)kmAtual=a.km
 })
 
 document.getElementById('kpi-total').innerText=
 total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
 
-let arr=data.abastecimento_veiculos
-.filter(a=>a.km>0)
-.sort((a,b)=>a.km-b.km)
-
-let kmAnterior=null
-let litrosAcum=0
-let valorAcum=0
-
+// 🔥 CÁLCULO REAL (COM PARCIAL)
 let kmTotal=0
-let litrosValidos=0
-let valorValido=0
+let litrosTotal=0
 
-arr.forEach(a=>{
+for(let i=1;i<arr.length;i++){
 
-litrosAcum+=Number(a.litros||0)
-valorAcum+=Number(a.total||0)
+let atual=arr[i]
+let anterior=arr[i-1]
 
-if(a.tanque==="cheio"){
+// só calcula quando chega em tanque cheio
+if(atual.tanque==="cheio" && atual.km && anterior.km){
 
-if(kmAnterior!==null){
-
-let kmRodado=a.km-kmAnterior
+let kmRodado=atual.km - anterior.km
 
 if(kmRodado>0){
+
+// 🔥 soma litros desde o último ponto até aqui
+let litrosAcumulados=0
+
+for(let j=i;j>=0;j--){
+litrosAcumulados+=Number(arr[j].litros||0)
+if(arr[j].tanque==="cheio" && j!==i)break
+}
+
 kmTotal+=kmRodado
-litrosValidos+=litrosAcum
-valorValido+=valorAcum
+litrosTotal+=litrosAcumulados
+
+}
+
 }
 
 }
 
-kmAnterior=a.km
-litrosAcum=0
-valorAcum=0
-}
+// 🔥 RESULTADOS
+if(kmTotal>0 && litrosTotal>0){
 
-})
-
-if(kmTotal>0 && litrosValidos>0){
-
-let kml=kmTotal/litrosValidos
-let custoKm=valorValido/kmTotal
+let kml=kmTotal/litrosTotal
+let custoKm=total/kmTotal
 
 document.getElementById('kpi-kml').innerText=kml.toFixed(2)
 
@@ -280,13 +286,16 @@ custoKm.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
 
 }else{
 
-document.getElementById('kpi-kml').innerText='0.00'
-document.getElementById('kpi-custokm').innerText='R$ 0,00'
+document.getElementById('kpi-kml').innerText='--'
+document.getElementById('kpi-custokm').innerText='--'
 
 }
 
+// 🔥 KM ATUAL FORMATADO
 let el=document.getElementById('kpi-km-atual')
-if(el)el.innerText=kmAtual.toLocaleString("pt-BR")
+if(el){
+el.innerText=kmAtual.toLocaleString("pt-BR")
+}
 
 }
 
