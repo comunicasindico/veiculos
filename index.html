@@ -72,6 +72,7 @@ th{resize:horizontal;overflow:auto;min-width:80px}
 </div>
   
 <div id="tab-dash" class="container tab-content">
+<div style="font-size:18px;font-weight:bold;color:#22c55e;margin-bottom:10px;">📊 Dashboard Geral</div>
 <div class="kpi-grid">
 <div class="card">Km Atual <span id="kpi-km-atual" class="kpi-val">--</span></div>
 <div class="card">Km/L Médio <span id="kpi-kml" class="kpi-val">--</span></div>
@@ -82,6 +83,7 @@ th{resize:horizontal;overflow:auto;min-width:80px}
 </div>
   
 <div id="tab-abast" class="container tab-content" style="display:none;">
+<div style="font-size:18px;font-weight:bold;color:#22c55e;margin-bottom:10px;">⛽ Controle de Abastecimentos</div>
 <!-- 🔥 FORMULÁRIO DE CADASTRO -->
 <div class="card">
 <h3>Novo Abastecimento</h3>
@@ -107,11 +109,14 @@ th{resize:horizontal;overflow:auto;min-width:80px}
 </div>
   
 <div id="tab-veic" class="container tab-content" style="display:none;">
+<div style="font-size:18px;font-weight:bold;color:#22c55e;margin-bottom:10px;">🚗 Cadastro de Veículos</div>
 <div class="card table-wrapper">
 <table id="tbl-veic"><thead><tr><th>Placa</th><th>Modelo</th><th>Marca</th><th>Ano</th><th>Cor</th><th>KM</th><th>Renavam</th></tr></thead><tbody></tbody></table>
 </div>
 </div>
+  
 <div id="tab-posto" class="container tab-content" style="display:none;">
+<div style="font-size:18px;font-weight:bold;color:#22c55e;margin-bottom:10px;">🏪 Cadastro de Postos</div>
 <div class="card table-wrapper">
 <table id="tbl-posto"><thead><tr><th>Nome</th><th>CNPJ</th><th>Cidade</th><th>UF</th><th>CEP</th></tr></thead><tbody></tbody></table>
 </div>
@@ -158,6 +163,10 @@ if(e2)console.error("ERRO POSTOS:",e2)
 if(e3)console.error("ERRO ABAST:",e3)
 data.veiculo_veiculos=Array.isArray(veic)?veic:[]
 data.postos_veiculos=(postos||[]).map(p=>({id:p.id,nome:p.nome_posto||"-",cnpj:p.cnpj||""}))
+let dl=document.getElementById("postosList")
+if(dl){
+dl.innerHTML=data.postos_veiculos.map(p=>`<option value="${p.nome}">`).join("")
+}
 let sel=document.getElementById("cad_posto")
 if(sel){
 sel.innerHTML=data.postos_veiculos.length?data.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join(""):`<option value="">Sem postos</option>`
@@ -228,7 +237,13 @@ document.getElementById(id).style.display = 'flex'; e.target.classList.add('acti
 
 async function salvarAbastecimento(){
 let dataVal=document.getElementById("cad_data").value
-let posto=document.getElementById("cad_posto").value
+let nomePosto=document.getElementById("cad_posto_nome").value
+let postoObj=data.postos_veiculos.find(p=>p.nome===nomePosto)
+let postoId=postoObj?postoObj.id:null
+if(!postoId){
+let {data:newPosto}=await db.from("postos_veiculos").insert({empresa_id:EMPRESA,nome_posto:nomePosto}).select().single()
+postoId=newPosto.id
+}
 let litros=parseFloat(document.getElementById("cad_litros").value||0)
 let valor=parseFloat(document.getElementById("cad_valor").value||0)
 let km=parseFloat(document.getElementById("cad_km").value||0)
@@ -239,7 +254,7 @@ return
 let payload={
 empresa_id:EMPRESA,
 veiculo_id:data.veiculo_veiculos[0]?.id,
-posto_id:posto,
+posto_id:postoId,
 data_abastecimento:dataVal,
 litros:litros,
 valor_total:valor,
