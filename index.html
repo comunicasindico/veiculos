@@ -250,7 +250,7 @@ document.getElementById(id).style.display = 'flex'; e.target.classList.add('acti
 async function salvarAbastecimento(){
 let dataVal=document.getElementById("cad_data").value
 let postoSelect=document.getElementById("cad_posto_select")?document.getElementById("cad_posto_select").value:null
-let nomeDigitado=document.getElementById("cad_posto_nome").value.trim()
+let nomeDigitado=(document.getElementById("cad_posto_nome")?.value||"").trim()
 let postoId=postoSelect
 if(nomeDigitado){
 let postoExistente=data.postos_veiculos.find(p=>p.nome.toLowerCase()===nomeDigitado.toLowerCase())
@@ -299,18 +299,46 @@ function editarAbast(id){
 let a=data.abastecimento_veiculos.find(x=>x.id===id);if(!a)return
 editId=id
 document.getElementById("cad_data").value=new Date(a.data.split("/").reverse().join("-")).toISOString().split("T")[0]
-let p=data.postos_veiculos.find(p=>p.nome===a.posto);if(p)document.getElementById("cad_posto").value=p.id
+let p=data.postos_veiculos.find(p=>p.nome===a.posto)
+if(p){
+let sel=document.getElementById("cad_posto_select")
+if(sel)sel.value=p.id
+document.getElementById("cad_posto_nome").value=""
+}else{
+document.getElementById("cad_posto_nome").value=a.posto
+}
 document.getElementById("cad_litros").value=a.litros
 document.getElementById("cad_valor").value=a.total
 document.getElementById("cad_km").value=a.km
 }
 async function atualizarAbast(){
 if(!editId)return alert("Selecione um registro")
-let payload={data_abastecimento:document.getElementById("cad_data").value,posto_id:document.getElementById("cad_posto").value,litros:parseFloat(document.getElementById("cad_litros").value||0),valor_total:parseFloat(document.getElementById("cad_valor").value||0),quilometragem:parseFloat(document.getElementById("cad_km").value||0)}
+let postoSelect=document.getElementById("cad_posto_select")?document.getElementById("cad_posto_select").value:null
+let nomeDigitado=(document.getElementById("cad_posto_nome")?.value||"").trim()
+let postoId=postoSelect
+if(nomeDigitado){
+let postoExistente=data.postos_veiculos.find(p=>p.nome.toLowerCase()===nomeDigitado.toLowerCase())
+if(postoExistente){
+postoId=postoExistente.id
+}else{
+let {data:newPosto}=await db.from("postos_veiculos").insert({empresa_id:EMPRESA,nome_posto:nomeDigitado}).select().single()
+postoId=newPosto.id
+}
+}
+let payload={
+data_abastecimento:document.getElementById("cad_data").value,
+posto_id:postoId,
+litros:parseFloat(document.getElementById("cad_litros").value||0),
+valor_total:parseFloat(document.getElementById("cad_valor").value||0),
+quilometragem:parseFloat(document.getElementById("cad_km").value||0)
+}
 let {error}=await db.from("abastecimento_veiculos").update(payload).eq("id",editId)
 if(error){console.error(error);alert("Erro ao atualizar");return}
-editId=null;limparForm();carregarBanco()
+editId=null
+limparForm()
+carregarBanco()
 }
+  
 async function excluirAbast(id){
 if(!confirm("Excluir registro?"))return
 let {error}=await db.from("abastecimento_veiculos").delete().eq("id",id)
