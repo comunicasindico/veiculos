@@ -108,44 +108,6 @@ postos_veiculos: [],
 abastecimento_veiculos: []
 }
 
-async function carregarBanco(){
-
-let {data:veic}=await db
-.from("veiculo_veiculos")
-.select("*")
-.eq("empresa_id",EMPRESA)
-
-let {data:postos}=await db
-.from("postos_veiculos")
-.select("*")
-.eq("empresa_id",EMPRESA)
-
-let {data:abast}=await db
-.from("abastecimento_veiculos")
-.select("*, postos_veiculos(nome_posto)")
-.eq("empresa_id",EMPRESA)
-.order("data_abastecimento",{ascending:false})
-
-data.veiculo_veiculos = veic || []
-data.postos_veiculos = (postos||[]).map(p=>({
-id:p.id,
-nome:p.nome_posto,
-cnpj:p.cnpj
-}))
-
-data.abastecimento_veiculos = (abast||[]).map(a=>({
-id:a.id,
-data:a.data_abastecimento,
-posto:a.postos_veiculos?.nome_posto || "-",
-litros:a.litros,
-km:a.quilometragem,
-total:a.valor_total
-}))
-
-carregarBanco()
-}
-
-
 
 function login(){
 const u=document.getElementById('user').value.toLowerCase()
@@ -158,6 +120,52 @@ carregarBanco()
 }else{
 alert('Acesso Negado.')
 }
+}
+
+async function carregarBanco(){
+
+let {data:veic,error:e1}=await db
+.from("veiculo_veiculos")
+.select("*")
+
+let {data:postos,error:e2}=await db
+.from("postos_veiculos")
+.select("*")
+
+let {data:abast,error:e3}=await db
+.from("abastecimento_veiculos")
+.select("*")
+.order("data_abastecimento",{ascending:false})
+
+console.log("VEIC:",veic,e1)
+console.log("POSTOS:",postos,e2)
+console.log("ABAST:",abast,e3)
+
+data.veiculo_veiculos = veic || []
+data.postos_veiculos = (postos||[]).map(p=>({
+id:p.id,
+nome:p.nome_posto,
+cnpj:p.cnpj
+}))
+
+// 🔥 resolve nome do posto manualmente (SEM JOIN)
+data.abastecimento_veiculos = (abast||[]).map(a=>{
+
+let posto = data.postos_veiculos.find(p=>p.id===a.posto_id)
+
+return{
+id:a.id,
+data:a.data_abastecimento,
+posto:posto?posto.nome:"-",
+litros:a.litros,
+km:a.quilometragem,
+total:a.valor_total
+}
+})
+
+renderTables()
+updateDash()
+renderChart()
 }
   
 function toggleEditMode() {
