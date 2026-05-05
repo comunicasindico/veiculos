@@ -208,22 +208,61 @@ document.body.classList.toggle('editing', isEditMode);
 }
 
 function updateDash(){
-let total=0,litros=0,kmAtual=0
-data.abastecimento_veiculos.forEach(a=>{total+=Number(a.total||0);litros+=Number(a.litros||0);if(a.km>kmAtual)kmAtual=a.km})
+let total=0,kmAtual=0
+
+data.abastecimento_veiculos.forEach(a=>{
+total+=Number(a.total||0)
+if(a.km>kmAtual)kmAtual=a.km
+})
+
 document.getElementById('kpi-total').innerText=total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-if(data.abastecimento_veiculos.length>1){
+
 let arr=data.abastecimento_veiculos
-.filter(a=>a.tanque==="cheio" && a.km>0)
-.sort((a,b)=>a.km - b.km),kmTotal=0
-for(let i=1;i<arr.length;i++){kmTotal+=(arr[i].km-arr[i-1].km)}
-let kml=kmTotal/litros,custoKm=total/kmTotal
+.filter(a=>a.km>0)
+.sort((a,b)=>a.km - b.km)
+
+let kmAnterior=null
+let litrosAcum=0
+let valorAcum=0
+
+let kmTotal=0
+let litrosValidos=0
+let valorValido=0
+
+arr.forEach(a=>{
+litrosAcum+=Number(a.litros||0)
+valorAcum+=Number(a.total||0)
+
+if(a.tanque==="cheio"){
+if(kmAnterior!==null){
+let kmRodado=a.km - kmAnterior
+
+if(kmRodado>0){
+kmTotal+=kmRodado
+litrosValidos+=litrosAcum
+valorValido+=valorAcum
+}
+}
+
+kmAnterior=a.km
+litrosAcum=0
+valorAcum=0
+}
+})
+
+if(kmTotal>0 && litrosValidos>0){
+let kml=kmTotal/litrosValidos
+let custoKm=valorValido/kmTotal
+
 document.getElementById('kpi-kml').innerText=kml.toFixed(2)
-document.getElementById('kpi-custokm').innerText=Number(custoKm).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+document.getElementById('kpi-custokm').innerText=custoKm.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
 }else{
 document.getElementById('kpi-kml').innerText='--'
 document.getElementById('kpi-custokm').innerText='--'
 }
-let el=document.getElementById('kpi-km-atual');if(el)el.innerText=kmAtual.toLocaleString("pt-BR",{minimumFractionDigits:0})
+
+let el=document.getElementById('kpi-km-atual')
+if(el)el.innerText=kmAtual.toLocaleString("pt-BR")
 }
 
 function renderTables(){
