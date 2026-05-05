@@ -63,7 +63,7 @@ td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
 <button class="tab-btn" onclick="showTab('tab-motorista', event)">👤 MOTORISTAS</button>
 </div>
 <div id="tab-dash" class="main-container">
-<div class="card" style="height: 300px;"><canvas id="mainChart"></canvas></div>
+<div class="card" style="height: 350px;"><canvas id="mainChart"></canvas></div>
 </div>
 <div id="tab-abast" class="main-container" style="display:none">
 <div class="table-wrapper"><table id="tbl-abast">
@@ -91,15 +91,13 @@ const SUPABASE_URL = "https://gspdlrenyrzbkxlvyugc.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI";
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const EMPRESA_ID = "64e10505-0992-48b6-a461-616c609cbc03";
-let store = { data: { veiculos: [], postos: [], abastecimentos: [], motoristas: [] } };
-
+let store = { data: { veiculos: [], postos: [], abastecimentos: [], motoristas: [] }, chart: null };
 const clean = (v) => (v === null || v === undefined) ? "" : v;
 const fMoeda = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fMilhar = (v) => Number(v).toLocaleString('pt-BR');
 const fCPF = (v) => clean(v).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 const fCNPJ = (v) => clean(v).replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
 const fTel = (v) => clean(v).replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4");
-
 async function login() {
 document.getElementById('login-screen').style.display = 'none';
 document.getElementById('app').style.display = 'flex';
@@ -120,12 +118,12 @@ renderAll();
 }
 function renderAll() {
 renderTable('tbl-abast', store.data.abastecimentos, r => `
-<td>${new Date(r.data_abastecimento).toLocaleDateString('pt-BR')}</td>
+<td data-col="data_abastecimento">${new Date(r.data_abastecimento).toLocaleDateString('pt-BR')}</td>
 <td>${clean(r.postos_veiculos?.nome_posto)}</td>
 <td>${clean(r.veiculo_veiculos?.placa)}</td>
-<td class="txt-right">${r.litros}</td>
-<td class="txt-right">${fMilhar(r.quilometragem)}</td>
-<td class="txt-right">${fMoeda(r.valor_total)}</td>
+<td class="txt-right" data-col="litros">${r.litros}</td>
+<td class="txt-right" data-col="quilometragem">${fMilhar(r.quilometragem)}</td>
+<td class="txt-right" data-col="valor_total">${fMoeda(r.valor_total)}</td>
 <td class="txt-center">${actions('abastecimento_veiculos', r.id)}</td>
 `);
 renderTable('tbl-veic', store.data.veiculos, r => `
@@ -154,6 +152,7 @@ renderTable('tbl-motorista', store.data.motoristas, r => `
 <td data-col="email">${clean(r.email)}</td>
 <td class="txt-center">${actions('motoristas_veiculos', r.id)}</td>
 `);
+renderChart();
 }
 function actions(tb, id) {
 return `<div class="actions">
@@ -173,7 +172,12 @@ btn.style.background = "#22c55e";
 const updates = {};
 cells.forEach(c => {
 let val = c.innerText.replace(/[R$\.\s-]/g, '').replace(',', '.');
+if (c.dataset.col === 'data_abastecimento') {
+const parts = c.innerText.split('/');
+if(parts.length === 3) updates[c.dataset.col] = `${parts[2]}-${parts[1]}-${parts[0]}`;
+} else {
 updates[c.dataset.col] = isNaN(val) || val === "" ? c.innerText : parseFloat(val);
+}
 c.contentEditable = "false";
 });
 save(table, id, updates);
@@ -183,7 +187,7 @@ btn.style.background = "#3b82f6";
 }
 async function save(table, id, data) {
 const { error } = await db.from(table).update(data).eq('id', id);
-if(!error) console.log('Salvo'); else alert("Erro ao salvar");
+if(!error) { console.log('Salvo'); init(); } else { alert("Erro ao salvar: " + error.message); }
 }
 async function del(table, id) {
 if(confirm("Excluir registro?")) {
@@ -195,14 +199,25 @@ function renderTable(id, data, rowFn) {
 const tbody = document.querySelector(`#${id} tbody`);
 if(tbody) tbody.innerHTML = data.map(r => `<tr>${rowFn(r)}</tr>`).join('');
 }
+function renderChart() {
+const ctx = document.getElementById('mainChart').getContext('2d');
+if (store.chart) store.chart.destroy();
+const last10 = [...store.data.abastecimentos].reverse().slice(-10);
+const labels = last10.map(a => new Date(a.data_abastecimento).toLocaleDateString('pt-BR'));
+const values = last10.map(a => a.valor_total);
+store.chart = new Chart(ctx, {
+type: 'line',
+data: { labels, datasets: [{ label: 'Total Gasto (R$)', data: values, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.4 }] },
+options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#1e293b' } }, x: { grid: { display: false } } } }
+});
+}
 function showTab(id, e) {
 document.querySelectorAll('.main-container').forEach(t => t.style.display = 'none');
 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 document.getElementById(id).style.display = 'flex';
-e.target.classList.add('active');
+if(e) e.target.classList.add('active');
 }
 function logout() { location.reload(); }
-window.onload = login;
 </script>
 </body>
 </html>
