@@ -68,19 +68,35 @@ th{resize:horizontal;overflow:auto;min-width:80px}
 .container{overflow-x:hidden;}
 .chart-pro{height:55vh;min-height:320px;max-height:650px;padding:10px;}
 .chart-pro canvas{width:100% !important;height:100% !important;}
-
+#top-create{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:10000;}
+#top-create button{
+background:#ef4444;
+color:#fff;
+border:none;
+padding:12px 24px;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
+box-shadow:0 4px 15px rgba(0,0,0,0.4);
+transition:.2s;
+}
+#top-create button:hover{transform:scale(1.05);}
 
   
 </style>
 </head>
 <body>
+
+<div id="top-create">
+<button onclick="alert('Auditoria: Contate Admin.')">CRIAR CONTA</button>
+</div>
   
 <div id="login-screen">
 <div class="login-box">
 <h2>VEÍCULOS<br><span style="font-size: 14px; color: #fff;">Controle Total</span></h2>
 <input type="text" id="user" placeholder="Usuário">
 <input type="password" id="pass" placeholder="Senha">
-<button class="btn-create" onclick="alert('Auditoria: Contate Admin.')">CRIAR CONTA</button>
+
 <button onclick="login()">ACESSAR O PAINEL</button>
 <p style="font-size: 11px; color: #94a3b8; margin-top: 15px;">PIX: 69984311978 | bemprotegido.net</p>
 </div>
