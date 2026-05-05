@@ -173,7 +173,13 @@ if(e1)console.error("ERRO VEIC:",e1)
 if(e2)console.error("ERRO POSTOS:",e2)
 if(e3)console.error("ERRO ABAST:",e3)
 data.veiculo_veiculos=Array.isArray(veic)?veic:[]
-data.postos_veiculos=(postos||[]).map(p=>({id:p.id,nome:p.nome_posto||"-",cnpj:p.cnpj||""}))
+data.postos_veiculos=(postos||[])
+.map(p=>({
+id:p.id,
+nome:(p.nome_posto||"-").toUpperCase().trim(),
+cnpj:p.cnpj||""
+}))
+.sort((a,b)=>a.nome.localeCompare(b.nome))
 let sel2=document.getElementById("cad_posto_select")
 if(sel2){
 sel2.innerHTML=data.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("")
@@ -286,76 +292,55 @@ document.querySelector('#tbl-posto tbody').innerHTML=data.postos_veiculos.map(p=
 
 let chartRef
 function renderChart(){
-const ctx=document.getElementById('mainChart').getContext('2d')
+const canvas=document.getElementById('mainChart')
+if(!canvas)return
+const ctx=canvas.getContext('2d')
 if(chartRef)chartRef.destroy()
 
 let arr=data.abastecimento_veiculos
-.filter(a=>a.tanque==="cheio" && a.km>0)
-.sort((a,b)=>a.km - b.km)
+.filter(a=>a.data && a.data!=="-" && a.total>0)
+.sort((a,b)=>{
+let da=new Date(a.data.split("/").reverse().join("-"))
+let db=new Date(b.data.split("/").reverse().join("-"))
+return da-db
+})
+
+if(!arr.length){
+console.warn("Sem dados para gráfico")
+return
+}
 
 let labels=arr.map(a=>a.data)
 let valores=arr.map(a=>Number(a.total||0))
 let litros=arr.map(a=>Number(a.litros||0))
 
-let kmPerc=[]
-for(let i=0;i<arr.length;i++){
-if(i===0){kmPerc.push(0);continue}
-kmPerc.push(arr[i].km-arr[i-1].km)
-}
-
-let kml=kmPerc.map((km,i)=>{
-if(!litros[i])return 0
-return km/litros[i]
-})
-
 chartRef=new Chart(ctx,{
-type:'bar',
+type:'line',
 data:{
 labels:labels,
 datasets:[
 {
 label:'R$',
 data:valores,
-yAxisID:'y',
-backgroundColor:'rgba(34,197,94,0.6)'
+borderColor:'#22c55e',
+backgroundColor:'rgba(34,197,94,0.2)',
+fill:true,
+tension:0.4
 },
 {
 label:'Litros',
 data:litros,
-yAxisID:'y1',
-backgroundColor:'rgba(96,165,250,0.6)'
-},
-{
-label:'KM/L',
-data:kml,
-type:'line',
-yAxisID:'y2',
-borderColor:'#facc15',
-backgroundColor:'#facc15',
+borderColor:'#60a5fa',
+backgroundColor:'rgba(96,165,250,0.2)',
+fill:true,
 tension:0.4
 }
 ]
 },
 options:{
 responsive:true,
-interaction:{mode:'index',intersect:false},
-plugins:{
-legend:{display:true},
-tooltip:{
-callbacks:{
-label:function(ctx){
-if(ctx.dataset.label==='R$')return fMoeda(ctx.raw)
-if(ctx.dataset.label==='Litros')return ctx.raw+" L"
-if(ctx.dataset.label==='KM/L')return ctx.raw.toFixed(2)+" km/l"
-}
-}
-}
-},
-scales:{
-y:{position:'left'},
-y1:{position:'right',grid:{drawOnChartArea:false}},
-y2:{position:'right',display:false}
-}
+maintainAspectRatio:false,
+plugins:{legend:{display:true}}
 }
 })
 }
@@ -544,6 +529,11 @@ return ctx.raw+" L"
 })
 }
 
+function logout(){
+localStorage.removeItem("logado")
+location.reload()
+}
+  
 window.addEventListener("load",()=>{
 if(localStorage.getItem("logado")==="1"){
 document.getElementById('login-screen').style.display='none'
