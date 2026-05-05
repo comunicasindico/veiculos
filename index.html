@@ -953,7 +953,7 @@ let tblV=document.getElementById("tbl-veic-admin")
 let tblP=document.getElementById("tbl-posto-admin")
 
 // MOTORISTAS
-db.from("motoristas").select("*").then(r=>{
+db.from("motoristas_veiculos").select("*").then(r=>{
 if(!tblM)return
 tblM.innerHTML=r.data.map(m=>`
 <tr>
