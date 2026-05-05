@@ -8,6 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
 :root { --bg: #0f172a; --card: #1e293b; --accent: #22c55e; --danger: #ef4444; --border: #334155; --text: #f8fafc; }
 * { box-sizing: border-box; }
@@ -190,7 +191,15 @@ sel2.innerHTML=data.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</o
 }
 data.abastecimento_veiculos=(abast||[]).map(a=>{
 let dataFmt=a.data_abastecimento?new Date(a.data_abastecimento).toLocaleDateString("pt-BR"):"-"
-return{id:a.id,data:dataFmt,posto:a.postos_veiculos?.nome_posto||"-",litros:Number(a.litros||0),km:Number(a.quilometragem||0),total:Number(a.valor_total||0)}
+return{
+id:a.id,
+data:dataFmt,
+posto:(a.postos_veiculos?.nome_posto||"-").toUpperCase(),
+litros:Number(a.litros||0),
+km:Number(a.quilometragem||0),
+total:Number(a.valor_total||0),
+tanque:(a.tanque||'cheio')
+}
 })
 let datasOrdenadas=(abast||[])
 .map(a=>a.data_abastecimento)
@@ -218,10 +227,8 @@ document.body.classList.toggle('editing', isEditMode);
 }
 
 function updateDash(){
-
 let total=0
 let kmAtual=0
-
 // 🔥 ORDENAR POR DATA REAL
 let arr=data.abastecimento_veiculos
 .filter(a=>a.data)
@@ -230,73 +237,50 @@ let da=new Date(a.data.split("/").reverse().join("-"))
 let db=new Date(b.data.split("/").reverse().join("-"))
 return da-db
 })
-
 // 🔥 KPIs básicos
 arr.forEach(a=>{
 total+=Number(a.total||0)
 if(a.km && a.km>kmAtual)kmAtual=a.km
 })
-
 document.getElementById('kpi-total').innerText=
 total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-
 // 🔥 CÁLCULO REAL (COM PARCIAL)
 let kmTotal=0
 let litrosTotal=0
-
 for(let i=1;i<arr.length;i++){
-
 let atual=arr[i]
 let anterior=arr[i-1]
-
 // só calcula quando chega em tanque cheio
-if(atual.tanque==="cheio" && atual.km && anterior.km){
-
+if(atual.tanque==="cheio" && atual.km && anterior.km && atual.km>anterior.km){
 let kmRodado=atual.km - anterior.km
-
 if(kmRodado>0){
-
 // 🔥 soma litros desde o último ponto até aqui
 let litrosAcumulados=0
-
 for(let j=i;j>=0;j--){
 litrosAcumulados+=Number(arr[j].litros||0)
 if(arr[j].tanque==="cheio" && j!==i)break
 }
-
 kmTotal+=kmRodado
 litrosTotal+=litrosAcumulados
-
 }
-
 }
-
 }
-
 // 🔥 RESULTADOS
 if(kmTotal>0 && litrosTotal>0){
-
 let kml=kmTotal/litrosTotal
 let custoKm=total/kmTotal
-
 document.getElementById('kpi-kml').innerText=kml.toFixed(2)
-
 document.getElementById('kpi-custokm').innerText=
 custoKm.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-
 }else{
-
 document.getElementById('kpi-kml').innerText='--'
 document.getElementById('kpi-custokm').innerText='--'
-
 }
-
 // 🔥 KM ATUAL FORMATADO
 let el=document.getElementById('kpi-km-atual')
 if(el){
 el.innerText=kmAtual.toLocaleString("pt-BR")
 }
-
 }
 
 function renderTables(){
@@ -320,13 +304,10 @@ document.querySelector('#tbl-posto tbody').innerHTML=data.postos_veiculos.map(p=
 
 let chartRef
 function renderChart(){
-
 const canvas=document.getElementById('mainChart')
 if(!canvas)return
-
 const ctx=canvas.getContext('2d')
 if(chartRef)chartRef.destroy()
-
 let arr=data.abastecimento_veiculos
 .filter(a=>a.data && a.total>0)
 .sort((a,b)=>{
@@ -334,16 +315,11 @@ let da=new Date(a.data.split("/").reverse().join("-"))
 let db=new Date(b.data.split("/").reverse().join("-"))
 return da-db
 })
-
 if(!arr.length)return
-
 let labels=arr.map(a=>a.data)
 let valores=arr.map(a=>Number(a.total||0))
 let litros=arr.map(a=>Number(a.litros||0))
-
-// 🔥 identificar último
 let lastIndex=arr.length-1
-
 chartRef=new Chart(ctx,{
 type:'line',
 data:{
@@ -379,29 +355,38 @@ legend:{display:true},
 tooltip:{
 callbacks:{
 label:function(ctx){
-
 let idx=ctx.dataIndex
 let atual=arr[idx]
 let anterior=arr[idx-1]
-
 if(ctx.dataset.label==='R$'){
 return "Valor: "+ctx.raw.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
 }
-
 if(anterior && atual.km && anterior.km){
 let kmRodado=atual.km-anterior.km
 let kml=(kmRodado/atual.litros).toFixed(2)
 return "Litros: "+ctx.raw+" L | Km/L: "+kml
 }
-
 return "Litros: "+ctx.raw+" L"
 }
 }
+},
+datalabels:{
+display:(ctx)=>ctx.dataIndex===lastIndex,
+color:'#ffffff',
+anchor:'end',
+align:'top',
+font:{weight:'bold',size:12},
+formatter:(value,ctx)=>{
+if(ctx.dataset.label==='R$'){
+return value.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+}
+return value+" L"
 }
 }
 }
+},
+plugins:[ChartDataLabels]
 })
-
 }
   
 function showTab(id, e) {
