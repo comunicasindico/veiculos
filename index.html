@@ -245,15 +245,24 @@ box-shadow:0 0 0 1px #22c55e inset;
 <div id="tab-admin" class="container tab-content" style="display:none;">
 <div class="card">
 <h3>👤 Motoristas</h3>
-<table id="tbl-motoristas"></table>
+<table id="tbl-motoristas">
+<thead><tr><th>Nome</th><th>CPF</th></tr></thead>
+<tbody></tbody>
+</table>
 </div>
 <div class="card">
 <h3>🚗 Veículos</h3>
-<table id="tbl-veic-admin"></table>
+<table id="tbl-veic-admin">
+<thead><tr><th>Placa</th><th>Modelo</th><th>Motorista</th></tr></thead>
+<tbody></tbody>
+</table>
 </div>
 <div class="card">
 <h3>🏪 Postos</h3>
-<table id="tbl-posto-admin"></table>
+<table id="tbl-posto-admin">
+<thead><tr><th>Nome</th></tr></thead>
+<tbody></tbody>
+</table>
 </div>
 </div>
   
@@ -294,6 +303,7 @@ localStorage.setItem("empresa",EMPRESA)
 localStorage.setItem("usuario_nome",USER)
 carregarBanco()
 }
+
 async function carregarBanco(){
 USER=localStorage.getItem("usuario_nome")||USER
 let NIVEL_LOCAL=parseInt(localStorage.getItem("nivel")||0)
@@ -316,6 +326,7 @@ store.abastecimento_veiculos=(abast||[]).filter(a=>NIVEL_LOCAL===1||a.veiculo_id
 renderTables();updateDash();renderChart();if(NIVEL_LOCAL===1&&typeof renderAdmin==="function"){renderAdmin()}
 setTimeout(()=>rodarIA(),500)
 }
+  
 function updateDash(){
 let total=0,kmAtual=0,litrosTotalGeral=0
 let arr=store.abastecimento_veiculos.filter(a=>a.data).sort((a,b)=>brToISO(a.data).localeCompare(brToISO(b.data)))
@@ -380,7 +391,43 @@ texto+="\nSituação saudável ✅"
 }
 document.getElementById("ia-output").innerText=texto
 }
+function renderAdmin(){
+if(NIVEL!==1)return
 
+let tbM=document.querySelector('#tbl-motoristas tbody')
+let tbV=document.querySelector('#tbl-veic-admin tbody')
+let tbP=document.querySelector('#tbl-posto-admin tbody')
+// MOTORISTAS
+db.from("motoristas_veiculos").select("*").then(r=>{
+if(tbM){
+tbM.innerHTML=(r.data||[]).map(m=>`
+<tr>
+<td>${m.nome}</td>
+<td>${m.cpf||"-"}</td>
+</tr>`).join('')
+}
+})
+// VEÍCULOS
+db.from("veiculo_veiculos").select("*").then(r=>{
+if(tbV){
+tbV.innerHTML=(r.data||[]).map(v=>`
+<tr>
+<td>${v.placa||"-"}</td>
+<td>${v.modelo||"-"}</td>
+<td>${v.motorista_id||"-"}</td>
+</tr>`).join('')
+}
+})
+// POSTOS
+db.from("postos_veiculos").select("*").then(r=>{
+if(tbP){
+tbP.innerHTML=(r.data||[]).map(p=>`
+<tr>
+<td>${p.nome_posto||"-"}</td>
+</tr>`).join('')
+}
+})
+}
   
 
 </script>
