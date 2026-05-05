@@ -174,14 +174,6 @@ let sel2=document.getElementById("cad_posto_select")
 if(sel2){
 sel2.innerHTML=data.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("")
 }
-let dl=document.getElementById("postosList")
-if(dl){
-dl.innerHTML=data.postos_veiculos.map(p=>`<option value="${p.nome}">`).join("")
-}
-let sel=document.getElementById("cad_posto")
-if(sel){
-sel.innerHTML=data.postos_veiculos.length?data.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join(""):`<option value="">Sem postos</option>`
-}
 data.abastecimento_veiculos=(abast||[]).map(a=>{
 let dataFmt=a.data_abastecimento?new Date(a.data_abastecimento).toLocaleDateString("pt-BR"):"-"
 return{id:a.id,data:dataFmt,posto:a.postos_veiculos?.nome_posto||"-",litros:Number(a.litros||0),km:Number(a.quilometragem||0),total:Number(a.valor_total||0)}
