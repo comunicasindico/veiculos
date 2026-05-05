@@ -39,9 +39,10 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
 @media (max-width: 768px) { body { overflow: auto; } #app { height: auto; } }
 .top-header button{min-width:110px;height:36px;}
 th{resize:horizontal;overflow:auto;min-width:80px}
-#mainChart{height:420px !important;max-height:420px;}
-.card canvas{height:420px !important;}
-
+.card{position:relative;overflow:hidden;}
+.chart-container{position:relative;width:100%;height:100%;}
+#mainChart{width:100% !important;height:100% !important;}
+.container{overflow-x:hidden;}
 
   
 </style>
@@ -99,7 +100,11 @@ th{resize:horizontal;overflow:auto;min-width:80px}
 </div>
 </div>
   
-<div class="card"><canvas id="mainChart"></canvas></div>
+<div class="card" style="height:420px;">
+<div class="chart-container">
+<canvas id="mainChart"></canvas>
+</div>
+</div>
 </div>
   
 <div id="tab-abast" class="container tab-content" style="display:none;">
@@ -377,6 +382,11 @@ pointBackgroundColor:ctx=>ctx.dataIndex===lastIndex?'#00ffcc':'#60a5fa'
 options:{
 responsive:true,
 maintainAspectRatio:false,
+layout:{padding:10},
+scales:{
+x:{ticks:{maxRotation:45,minRotation:45}},
+y:{beginAtZero:true}
+},
 plugins:{
 legend:{display:true},
 tooltip:{
