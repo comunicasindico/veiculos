@@ -251,7 +251,16 @@ let {data:abast,error:e3}=await db.from("abastecimento_veiculos").select("*, pos
 if(e1)console.error("ERRO VEIC:",e1)
 if(e2)console.error("ERRO POSTOS:",e2)
 if(e3)console.error("ERRO ABAST:",e3)
-data.veiculo_veiculos=Array.isArray(veic)?veic:[]
+data.veiculo_veiculos=(veic||[]).map(v=>({
+id:v.id,
+placa:v.placa||"-",
+modelo:v.modelo||"",
+marca:v.marca||"",
+ano:v.ano||"",
+cor:v.cor||"",
+renavam:v.renavam||"",
+km_atual:Number(v.km_atual||0)
+}))
 data.postos_veiculos=(postos||[])
 .map(p=>({
 id:p.id,
@@ -812,10 +821,8 @@ let {error}=await db
 .update(payload)
 .eq("id",id)
 if(error){
-console.error("ERRO UPDATE:",error)
-alert("Erro ao salvar alteração")
-}else{
-console.log("✔ salvo:",campo,valor)
+console.error(error)
+alert("Erro ao salvar")
 }
 }
 
