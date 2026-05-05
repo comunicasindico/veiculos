@@ -377,14 +377,19 @@ renderChart()
 function verGrafico(id){
 let a=data.abastecimento_veiculos.find(x=>x.id===id)
 if(!a)return
+
+let valor=Number(a.total||0)
+let litros=Number(a.litros||0)
+
 const ctx=document.getElementById('mainChart').getContext('2d')
 if(chartRef)chartRef.destroy()
+
 chartRef=new Chart(ctx,{
 type:'bar',
 data:{
 labels:['Valor R$','Litros'],
 datasets:[{
-data:[a.total,a.litros]
+data:[valor,litros]
 }]
 },
 options:{
@@ -407,18 +412,18 @@ document.getElementById('login-screen').style.display='none'
 document.getElementById('app').style.display='flex'
 carregarBanco()
 }
-})
-
-setInterval(()=>{
-if(localStorage.getItem("logado")==="1"){
-carregarBanco()
-}
-},10000)
 
 let d=new Date().toISOString().split("T")[0]
 let campo=document.getElementById("cad_data")
 if(campo && !campo.value) campo.value=d
-  
+})
+
+setInterval(()=>{
+if(localStorage.getItem("logado")==="1" && !editId){
+carregarBanco()
+}
+},15000)
+
 </script>
 </body>
 </html>
