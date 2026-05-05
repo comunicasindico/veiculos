@@ -428,9 +428,9 @@ let litrosTotalGeral=0
 let arr=data.abastecimento_veiculos
 .filter(a=>a.data)
 .sort((a,b)=>{
-let da=new Date(a.data.split("/").reverse().join("-"))
-let db=new Date(b.data.split("/").reverse().join("-"))
-return da-db
+let da=brToISO(a.data)
+let db=brToISO(b.data)
+return da.localeCompare(db)
 })
 // 🔥 KPIs básicos
 arr.forEach(a=>{
@@ -547,14 +547,14 @@ if(!canvas)return
 const ctx=canvas.getContext('2d')
 if(chartRef)chartRef.destroy()
 let arr=data.abastecimento_veiculos
-.filter(a=>a.data && a.total>0)
+.filter(a=>a.data && a.data.includes("/") && a.total>0)
 .sort((a,b)=>{
-let da=new Date(a.data.split("/").reverse().join("-"))
-let db=new Date(b.data.split("/").reverse().join("-"))
-return da-db
+let da=brToISO(a.data)
+let db=brToISO(b.data)
+return da.localeCompare(db)
 })
 if(!arr.length)return
-let labels=arr.map(a=>a.data)
+let labels=arr.map(a=>a.data||"-")
 let valores=arr.map(a=>Number(a.total||0))
 let litros=arr.map(a=>Number(a.litros||0))
 let lastIndex=arr.length-1
