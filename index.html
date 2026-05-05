@@ -34,6 +34,7 @@ linear-gradient(135deg,#020617,#0f172a,#020617);
 .container { flex: 1; display: flex; flex-direction: column; padding: 15px; overflow-y: auto; gap: 15px; }
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;}
 .card{
+cursor:pointer;
 background:rgba(30,41,59,0.55);
 padding:15px;
 border-radius:16px;
@@ -121,33 +122,40 @@ box-shadow:0 0 0 1px #22c55e inset;
 </div>
   
 <div class="tabs">
+<button class="tab-btn" onclick="showTab('tab-admin',event)">🛠️ Administração Veicular</button>
 <button class="tab-btn active" onclick="showTab('tab-dash', event)">📊 Dashboard</button>
-<button class="tab-btn" onclick="showTab('tab-abast', event)">⛽ Abastecimentos</button>
 <button class="tab-btn" onclick="showTab('tab-veic', event)">🚗 Veículos</button>
-<button class="tab-btn" onclick="showTab('tab-posto', event)">🏪 Postos</button>
 <button class="tab-btn" onclick="showTab('tab-motorista', event)">👤 Motoristas</button>
-<button class="tab-btn" onclick="showTab('tab-admin',event)">🛠️ Admin</button>
+<button class="tab-btn" onclick="showTab('tab-posto', event)">🏪 Postos</button>
+<button class="tab-btn" onclick="showTab('tab-abast', event)">⛽ Abastecimentos</button>
 </div>
   
 <div id="tab-dash" class="container tab-content">
 <div style="font-size:18px;font-weight:bold;color:#22c55e;margin-bottom:10px;">📊 Dashboard Geral</div>
 
 <div class="kpi-grid">
+<div class="card" onclick="abrirCard('motoristas')">👤 Motoristas</div>
+<div class="card" onclick="abrirCard('veiculos')">🚗 Veículos</div>
+<div class="card" onclick="abrirCard('postos')">🏪 Postos</div>
+</div>
+
+<div class="kpi-grid">
 <div class="card">Km Atual <span id="kpi-km-atual" class="kpi-val">--</span></div>
 <div class="card">Km/L Médio <span id="kpi-kml" class="kpi-val">--</span></div>
 <div class="card">Custo/Km <span id="kpi-custokm" class="kpi-val">--</span></div>
+
 <div class="card">
 <div style="display:flex;justify-content:space-between;align-items:center;">
 <span>Gasto Total</span>
-<button onclick="toggleValor('kpi-total')" style="width:28px;height:28px;font-size:11px;">👁️</button>
+<button onclick="event.stopPropagation();toggleValor('kpi-total')" style="width:28px;height:28px;font-size:11px;">👁️</button>
 </div>
 <span id="kpi-total" class="kpi-val">--</span>
 </div>
-  
+
 <div class="card">
 <div style="display:flex;justify-content:space-between;align-items:center;">
 <span>Litros Total</span>
-<button onclick="toggleValor('kpi-litros')" style="width:28px;height:28px;font-size:11px;">👁️</button>
+<button onclick="event.stopPropagation();toggleValor('kpi-litros')" style="width:28px;height:28px;font-size:11px;">👁️</button>
 </div>
 <span id="kpi-litros" class="kpi-val">--</span>
 </div>
@@ -278,6 +286,7 @@ NIVEL=1
 document.getElementById('login-screen').style.display='none'
 document.getElementById('app').style.display='flex'
 carregarBanco()
+setTimeout(()=>showTab('tab-admin',{target:document.querySelector('[onclick*="tab-admin"]')}),200)
 return
 }
 // 🔥 MOTORISTA (via banco)
@@ -945,6 +954,17 @@ tblP.innerHTML=data.postos_veiculos.map(p=>`
 
 }
 
+function abrirCard(tipo){
+if(tipo==='motoristas'){
+showTab('tab-motorista',{target:document.querySelector('[onclick*="tab-motorista"]')})
+}
+if(tipo==='veiculos'){
+showTab('tab-veic',{target:document.querySelector('[onclick*="tab-veic"]')})
+}
+if(tipo==='postos'){
+showTab('tab-posto',{target:document.querySelector('[onclick*="tab-posto"]')})
+}
+}
 
   
 function logout(){
