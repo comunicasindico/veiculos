@@ -93,6 +93,10 @@ th{resize:horizontal;overflow:auto;min-width:80px}
 <input type="number" id="cad_litros" placeholder="Litros">
 <input type="number" id="cad_valor" placeholder="Valor Total">
 <input type="number" id="cad_km" placeholder="KM Atual">
+<select id="cad_tanque">
+<option value="cheio" selected>Tanque Cheio</option>
+<option value="parcial">Tanque Parcial</option>
+</select>
 <div style="display:flex;gap:10px;">
 <button onclick="salvarAbastecimento()">SALVAR</button>
 <button onclick="atualizarAbast()">ATUALIZAR</button>
@@ -109,7 +113,7 @@ th{resize:horizontal;overflow:auto;min-width:80px}
 
 <div class="card table-wrapper">
 <table id="tbl-abast">
-<thead><tr><th>Data</th><th>Posto</th><th>Litros</th><th>Km Atual</th><th>Total</th><th class="actions-cell">Ações</th></tr></thead>
+<thead><tr><th>Data</th><th>Posto</th><th>Litros</th><th>Km Atual</th><th>Total</th><th>Tanque</th><th class="actions-cell">Ações</th></tr></thead>
 <tbody></tbody>
 </table>
 </div>
@@ -208,7 +212,9 @@ let total=0,litros=0,kmAtual=0
 data.abastecimento_veiculos.forEach(a=>{total+=Number(a.total||0);litros+=Number(a.litros||0);if(a.km>kmAtual)kmAtual=a.km})
 document.getElementById('kpi-total').innerText=total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
 if(data.abastecimento_veiculos.length>1){
-let arr=data.abastecimento_veiculos.slice().reverse(),kmTotal=0
+let arr=data.abastecimento_veiculos
+.filter(a=>a.tanque==="cheio" && a.km>0)
+.sort((a,b)=>a.km - b.km),kmTotal=0
 for(let i=1;i<arr.length;i++){kmTotal+=(arr[i].km-arr[i-1].km)}
 let kml=kmTotal/litros,custoKm=total/kmTotal
 document.getElementById('kpi-kml').innerText=kml.toFixed(2)
@@ -228,6 +234,7 @@ abBody.innerHTML=data.abastecimento_veiculos.map(a=>`<tr>
 <td>${a.litros.toFixed(2)}L</td>
 <td>${a.km}</td>
 <td>${fMoeda(a.total)}</td>
+<td>${a.tanque||'-'}</td>
 <td class="actions-cell">
 <button class="btn-mini" onclick="verGrafico('${a.id}')">📊</button>
 <button class="btn-mini" onclick="editarAbast('${a.id}')">✏️</button>
@@ -243,7 +250,9 @@ function renderChart(){
 const ctx=document.getElementById('mainChart').getContext('2d')
 if(chartRef)chartRef.destroy()
 
-let arr=data.abastecimento_veiculos.slice().reverse()
+let arr=data.abastecimento_veiculos
+.filter(a=>a.tanque==="cheio" && a.km>0)
+.sort((a,b)=>a.km - b.km)
 
 let labels=arr.map(a=>a.data)
 let valores=arr.map(a=>Number(a.total||0))
@@ -322,24 +331,33 @@ async function salvarAbastecimento(){
 let dataVal=document.getElementById("cad_data").value
 let postoSelect=document.getElementById("cad_posto_select")?document.getElementById("cad_posto_select").value:null
 let nomeDigitado=(document.getElementById("cad_posto_nome")?.value||"").trim()
+let tanque=document.getElementById("cad_tanque")?.value||"cheio"
+
 let postoId=postoSelect
+
 if(nomeDigitado){
 let postoExistente=data.postos_veiculos.find(p=>p.nome.toLowerCase()===nomeDigitado.toLowerCase())
 if(postoExistente){
 postoId=postoExistente.id
 }else{
-let {data:newPosto,error:ePosto}=await db.from("postos_veiculos").insert({empresa_id:EMPRESA,nome_posto:nomeDigitado}).select().single()
+let {data:newPosto,error:ePosto}=await db.from("postos_veiculos").insert({
+empresa_id:EMPRESA,
+nome_posto:nomeDigitado
+}).select().single()
 if(ePosto){console.error(ePosto);alert("Erro ao criar posto");return}
 postoId=newPosto.id
 }
 }
+
 let litros=parseFloat(document.getElementById("cad_litros").value||0)
 let valor=parseFloat(document.getElementById("cad_valor").value||0)
 let km=parseFloat(document.getElementById("cad_km").value||0)
+
 if(!dataVal || !postoId || !litros || !valor || !km){
 alert("Preencha todos os campos corretamente")
 return
 }
+
 let payload={
 empresa_id:EMPRESA,
 veiculo_id:data.veiculo_veiculos[0]?.id,
@@ -347,14 +365,15 @@ posto_id:postoId,
 data_abastecimento:dataVal,
 litros:litros,
 valor_total:valor,
-quilometragem:km
+quilometragem:km,
+tanque:tanque
 }
+
 let {error}=await db.from("abastecimento_veiculos").insert(payload)
+
 if(error){console.error(error);alert("Erro ao salvar");return}
-document.getElementById("cad_litros").value=""
-document.getElementById("cad_valor").value=""
-document.getElementById("cad_km").value=""
-document.getElementById("cad_posto_nome").value=""
+
+limparForm()
 carregarBanco()
 alert("Salvo com sucesso")
 }
