@@ -257,81 +257,29 @@ box-shadow:0 0 0 1px #22c55e inset;
 
 
 <script>
-function hojeISO(){
-let d=new Date()
-d.setMinutes(d.getMinutes()-d.getTimezoneOffset())
-return d.toISOString().split("T")[0]
-}
-function isoToBR(iso){
-if(!iso)return "-"
-let d=iso.split("T")[0].split("-")
-return d[2]+"/"+d[1]+"/"+d[0]
-}
-function brToISO(br){
-if(!br)return null
-let p=br.split("/")
-return p[2]+"-"+p[1]+"-"+p[0]
-}
-
-if(!window.data){
-window.data={
-veiculo_veiculos:[],
-postos_veiculos:[],
-abastecimento_veiculos:[],
-motoristas_veiculos:[]
-}
-}
-
+function hojeISO(){let d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().split("T")[0]}
+function isoToBR(iso){if(!iso)return "-";let d=iso.split("T")[0].split("-");return d[2]+"/"+d[1]+"/"+d[0]}
+function brToISO(br){if(!br)return null;let p=br.split("/");return p[2]+"-"+p[1]+"-"+p[0]}
+if(!window.data){window.data={veiculo_veiculos:[],postos_veiculos:[],abastecimento_veiculos:[],motoristas_veiculos:[]}}
+let store=window.data
 let USER=null
 let NIVEL=2
-MOTORISTA_ID = MOTORISTA_ID || null
-VEICULO_ATIVO = VEICULO_ATIVO || null
-
-const SUPABASE_URL = "https://gspdlrenyrzbkxlvyugc.supabase.co"
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-const EMPRESA = "64e10505-0992-48b6-a461-616c609cbc03"
-
-let isEditMode = false;
-let data = {
-veiculo_veiculos: [],
-postos_veiculos: [],
-abastecimento_veiculos: []
-}
-
-
+let MOTORISTA_ID=null
+let VEICULO_ATIVO=null
+const SUPABASE_URL="https://gspdlrenyrzbkxlvyugc.supabase.co"
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+const EMPRESA="64e10505-0992-48b6-a461-616c609cbc03"
+let isEditMode=false
 async function login(){
 let u=document.getElementById('user').value.toLowerCase().trim()
 let p=document.getElementById('pass').value.trim()
-// 🔥 ADMIN FIXO
-if(u==='admin' && p==='admin123'){
-USER='ADMIN'
-NIVEL=1
-document.getElementById('login-screen').style.display='none'
-document.getElementById('app').style.display='flex'
-carregarBanco()
-setTimeout(()=>showTab('tab-admin',{target:document.querySelector('[onclick*="tab-admin"]')}),200)
-return
-}
-// 🔥 MOTORISTA (via banco)
-let {data,error}=await db
-.from("motoristas_veiculos")
-.select("*")
-.ilike("nome",u)
-.limit(1)
-let m=data && data.length?data[0]:null
-if(error || !m){
-alert("Motorista não encontrado")
-return
-}
-// 🔥 senha simples (pode evoluir depois)
-if(p!=="1234"){
-alert("Senha inválida")
-return
-}
-USER=m.nome
-NIVEL=2
-MOTORISTA_ID=m.id
+if(u==='admin'&&p==='admin123'){USER='ADMIN';NIVEL=1;document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='flex';carregarBanco();setTimeout(()=>showTab('tab-admin',{target:document.querySelector('[onclick*="tab-admin"]')}),200);return}
+let {data:res,error}=await db.from("motoristas_veiculos").select("*").ilike("nome",u).limit(1)
+let m=res&&res.length?res[0]:null
+if(error||!m){alert("Motorista não encontrado");return}
+if(p!=="1234"){alert("Senha inválida");return}
+USER=m.nome;NIVEL=2;MOTORISTA_ID=m.id;VEICULO_ATIVO=null
 document.getElementById('login-screen').style.display='none'
 document.getElementById('app').style.display='flex'
 localStorage.setItem("logado","1")
@@ -340,705 +288,61 @@ localStorage.setItem("empresa",EMPRESA)
 localStorage.setItem("usuario_nome",USER)
 carregarBanco()
 }
-
 async function carregarBanco(){
-USER = localStorage.getItem("usuario_nome") || USER
-let UID=localStorage.getItem("uid")
-let NIVEL=parseInt(localStorage.getItem("nivel")||0)
+USER=localStorage.getItem("usuario_nome")||USER
+let NIVEL_LOCAL=parseInt(localStorage.getItem("nivel")||0)
 let EMP=localStorage.getItem("empresa")||EMPRESA
-let MOTORISTA_ID=null
-let VEICULO_ATIVO=null
 let {data:motoristas}=await db.from("motoristas_veiculos").select("*").eq("empresa_id",EMP)
-data.motoristas_veiculos=Array.isArray(motoristas)?motoristas:[]
-if(NIVEL===2){
-let m=data.motoristas_veiculos.find(x=>x.nome.toLowerCase()===USER.toLowerCase())
-if(!m){
-console.warn("Motorista não encontrado no cache")
-}else{
-MOTORISTA_ID=m.id
-}
-}
+store.motoristas_veiculos=Array.isArray(motoristas)?motoristas:[]
+if(NIVEL_LOCAL===2){let m=store.motoristas_veiculos.find(x=>x.nome.toLowerCase()===USER.toLowerCase());if(m){MOTORISTA_ID=m.id}}
 let {data:veic,error:e1}=await db.from("veiculo_veiculos").select("*").eq("empresa_id",EMP)
 let {data:postos,error:e2}=await db.from("postos_veiculos").select("*").eq("empresa_id",EMP)
 let {data:abast,error:e3}=await db.from("abastecimento_veiculos").select("*, postos_veiculos(nome_posto)").eq("empresa_id",EMP).order("data_abastecimento",{ascending:false})
-if(e1)console.error("ERRO VEIC:",e1)
-if(e2)console.error("ERRO POSTOS:",e2)
-if(e3)console.error("ERRO ABAST:",e3)
-data.veiculo_veiculos=(veic||[]).filter(v=>{
-if(NIVEL===1)return true
-return v.motorista_id===MOTORISTA_ID
-}).map(v=>({
-id:v.id,
-placa:v.placa||"-",
-modelo:v.modelo||"",
-marca:v.marca||"",
-ano:v.ano||"",
-cor:v.cor||"",
-renavam:v.renavam||"",
-km_atual:Number(v.km_atual||0),
-motorista_id:v.motorista_id||null
-}))
-if(NIVEL===2 && data.veiculo_veiculos.length){
-VEICULO_ATIVO=data.veiculo_veiculos[0].id
-}
-data.postos_veiculos=(postos||[]).map(p=>({
-id:p.id,
-nome:(p.nome_posto||"-").toUpperCase().trim(),
-cnpj:p.cnpj||""
-})).sort((a,b)=>a.nome.localeCompare(b.nome))
+if(e1)console.error(e1)
+if(e2)console.error(e2)
+if(e3)console.error(e3)
+store.veiculo_veiculos=(veic||[]).filter(v=>NIVEL_LOCAL===1||v.motorista_id===MOTORISTA_ID).map(v=>({id:v.id,placa:v.placa||"-",modelo:v.modelo||"",marca:v.marca||"",ano:v.ano||"",cor:v.cor||"",renavam:v.renavam||"",km_atual:Number(v.km_atual||0),motorista_id:v.motorista_id||null}))
+if(NIVEL_LOCAL===2&&store.veiculo_veiculos.length){VEICULO_ATIVO=store.veiculo_veiculos[0].id}
+store.postos_veiculos=(postos||[]).map(p=>({id:p.id,nome:(p.nome_posto||"-").toUpperCase().trim(),cnpj:p.cnpj||""})).sort((a,b)=>a.nome.localeCompare(b.nome))
 let sel2=document.getElementById("cad_posto_select")
-if(sel2){
-sel2.innerHTML=`<option value="" disabled selected>Escolha/Selecione um Posto aqui</option>`+data.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("")
-sel2.value=""
+if(sel2){sel2.innerHTML=`<option value="" disabled selected>Escolha/Selecione um Posto aqui</option>`+store.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("");sel2.value=""}
+store.abastecimento_veiculos=(abast||[]).filter(a=>NIVEL_LOCAL===1||a.veiculo_id===VEICULO_ATIVO).map(a=>({id:a.id,data:isoToBR(a.data_abastecimento),posto:(a.postos_veiculos?.nome_posto||"-").toUpperCase(),litros:Number(a.litros||0),km:Number(a.quilometragem||0),total:Number(a.valor_total||0),tanque:(a.tanque||'cheio')}))
+renderTables();updateDash();renderChart();if(NIVEL_LOCAL===1&&typeof renderAdmin==="function"){renderAdmin()}
 }
-data.abastecimento_veiculos=(abast||[]).filter(a=>{
-if(NIVEL===1)return true
-return a.veiculo_id===VEICULO_ATIVO
-}).map(a=>{
-let dataFmt=isoToBR(a.data_abastecimento)
-return{
-id:a.id,
-data:dataFmt,
-posto:(a.postos_veiculos?.nome_posto||"-").toUpperCase(),
-litros:Number(a.litros||0),
-km:Number(a.quilometragem||0),
-total:Number(a.valor_total||0),
-tanque:(a.tanque||'cheio')
-}
-})
-let datasOrdenadas=(abast||[]).map(a=>a.data_abastecimento).filter(d=>d).sort()
-let ini=document.getElementById("filtro_inicio")
-let fim=document.getElementById("filtro_fim")
-if(ini && !ini.value && datasOrdenadas.length){ini.value=datasOrdenadas[0]}
-if(fim && !fim.value && datasOrdenadas.length){fim.value=datasOrdenadas[datasOrdenadas.length-1]}
-let tabAbast=document.querySelector('[onclick*="tab-abast"]')
-if(tabAbast){tabAbast.style.display=(NIVEL===1?'none':'block')}
-renderTables()
-updateDash()
-renderChart()
-if(NIVEL===1 && typeof renderAdmin==="function"){renderAdmin()}
-}
-  
-function toggleEditMode(){
-isEditMode=!isEditMode
-if(isEditMode){
-document.body.classList.add('editing')
-}else{
-document.body.classList.remove('editing')
-}
-}
-
 function updateDash(){
-let total=0
-let kmAtual=0
-let litrosTotalGeral=0  
-// 🔥 ORDENAR POR DATA REAL
-let arr=data.abastecimento_veiculos
-.filter(a=>a.data)
-.sort((a,b)=>{
-let da=brToISO(a.data)
-let db=brToISO(b.data)
-return da.localeCompare(db)
-})
-// 🔥 KPIs básicos
-arr.forEach(a=>{
-total+=Number(a.total||0)
-litrosTotalGeral+=Number(a.litros||0)
-if(a.km && a.km>kmAtual)kmAtual=a.km
-})
-
-let elLitros=document.getElementById('kpi-litros')
-if(elLitros){
-elLitros.innerText=litrosTotalGeral.toLocaleString("pt-BR",{minimumFractionDigits:2})+" L"
+let total=0,kmAtual=0,litrosTotalGeral=0
+let arr=store.abastecimento_veiculos.filter(a=>a.data).sort((a,b)=>brToISO(a.data).localeCompare(brToISO(b.data)))
+arr.forEach(a=>{total+=a.total;litrosTotalGeral+=a.litros;if(a.km>kmAtual)kmAtual=a.km})
+let elLitros=document.getElementById('kpi-litros');if(elLitros)elLitros.innerText=litrosTotalGeral.toLocaleString("pt-BR",{minimumFractionDigits:2})+" L"
+document.getElementById('kpi-total').innerText=total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+let kmTotal=0,litrosTotal=0
+for(let i=1;i<arr.length;i++){let atual=arr[i],anterior=arr[i-1];if(atual.tanque==="cheio"&&atual.km>anterior.km){let kmRodado=atual.km-anterior.km;let litrosAc=0;for(let j=i;j>=0;j--){litrosAc+=arr[j].litros;if(arr[j].tanque==="cheio"&&j!==i)break}kmTotal+=kmRodado;litrosTotal+=litrosAc}}
+if(kmTotal>0&&litrosTotal>0){let kml=kmTotal/litrosTotal;let custoKm=total/kmTotal;document.getElementById('kpi-kml').innerText=kml.toFixed(2);document.getElementById('kpi-custokm').innerText=custoKm.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}else{document.getElementById('kpi-kml').innerText='--';document.getElementById('kpi-custokm').innerText='--'}
+let el=document.getElementById('kpi-km-atual');if(el)el.innerText=kmAtual.toLocaleString("pt-BR")
 }
-
-document.getElementById('kpi-total').innerText=
-total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-// 🔥 CÁLCULO REAL (COM PARCIAL)
-let kmTotal=0
-let litrosTotal=0
-for(let i=1;i<arr.length;i++){
-let atual=arr[i]
-let anterior=arr[i-1]
-// só calcula quando chega em tanque cheio
-if(atual.tanque==="cheio" && atual.km && anterior.km && atual.km>anterior.km){
-let kmRodado=atual.km - anterior.km
-if(kmRodado>0){
-// 🔥 soma litros desde o último ponto até aqui
-let litrosAcumulados=0
-for(let j=i;j>=0;j--){
-litrosAcumulados+=Number(arr[j].litros||0)
-if(arr[j].tanque==="cheio" && j!==i)break
-}
-kmTotal+=kmRodado
-litrosTotal+=litrosAcumulados
-}
-}
-}
-// 🔥 RESULTADOS
-if(kmTotal>0 && litrosTotal>0){
-let kml=kmTotal/litrosTotal
-let custoKm=total/kmTotal
-document.getElementById('kpi-kml').innerText=kml.toFixed(2)
-document.getElementById('kpi-custokm').innerText=
-custoKm.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-}else{
-document.getElementById('kpi-kml').innerText='--'
-document.getElementById('kpi-custokm').innerText='--'
-}
-// 🔥 KM ATUAL FORMATADO
-let el=document.getElementById('kpi-km-atual')
-if(el){
-el.innerText=kmAtual.toLocaleString("pt-BR")
-}
-}
-
 function renderTables(){
 const abBody=document.querySelector('#tbl-abast tbody')
-abBody.innerHTML=data.abastecimento_veiculos.map(a=>`<tr>
-<td>${a.data}</td>
-<td>${a.posto}</td>
-<td>${a.litros.toFixed(2)}L</td>
-<td>${a.km}</td>
-<td>${fMoeda(a.total)}</td>
-<td>${a.tanque||'-'}</td>
-<td class="actions-cell">
-<button class="btn-mini" onclick="verGrafico('${a.id}')">📊</button>
-<button class="btn-mini" onclick="editarAbast('${a.id}')">✏️</button>
-<button class="btn-mini" style="background:var(--danger)" onclick="excluirAbast('${a.id}')">🗑️</button>
-</td>
-</tr>`).join('')
-document.querySelector('#tbl-veic tbody').innerHTML=data.veiculo_veiculos.map(v=>`
-<tr>
-<td>${v.placa||"-"}</td>
-
-<td contenteditable="true"
-onblur="updateVeiculo('${v.id}','modelo',this.innerText)">
-${v.modelo||""}
-</td>
-
-<td contenteditable="true"
-onblur="updateVeiculo('${v.id}','marca',this.innerText)">
-${v.marca||""}
-</td>
-
-<td contenteditable="true"
-onblur="updateVeiculo('${v.id}','ano',this.innerText)">
-${v.ano||""}
-</td>
-
-<td contenteditable="true"
-onblur="updateVeiculo('${v.id}','cor',this.innerText)">
-${v.cor||""}
-</td>
-
-<td contenteditable="true"
-onblur="updateVeiculo('${v.id}','km_atual',this.innerText)">
-${(v.km_atual||0).toLocaleString("pt-BR")}
-</td>
-
-<td contenteditable="true"
-onblur="updateVeiculo('${v.id}','renavam',this.innerText)">
-${v.renavam||""}
-</td>
-
-</tr>
-`).join('')
-
-document.querySelector('#tbl-posto tbody').innerHTML=data.postos_veiculos.map(p=>`<tr><td>${p.nome}</td><td>${fCNPJ(p.cnpj)}</td><td>${p.cidade||"-"}</td><td>${p.uf||"-"}</td><td>${p.cep||"-"}</td></tr>`).join('')
+if(abBody)abBody.innerHTML=store.abastecimento_veiculos.map(a=>`<tr><td>${a.data}</td><td>${a.posto}</td><td>${a.litros.toFixed(2)}L</td><td>${a.km}</td><td>${fMoeda(a.total)}</td><td>${a.tanque||'-'}</td></tr>`).join('')
+const tbv=document.querySelector('#tbl-veic tbody')
+if(tbv)tbv.innerHTML=store.veiculo_veiculos.map(v=>`<tr><td>${v.placa}</td><td>${v.modelo}</td><td>${v.marca}</td><td>${v.ano}</td></tr>`).join('')
 }
-
 let chartRef
 function renderChart(){
-const canvas=document.getElementById('mainChart')
-if(!canvas)return
-const ctx=canvas.getContext('2d')
-if(chartRef)chartRef.destroy()
-let arr=data.abastecimento_veiculos
-.filter(a=>a.data && a.data.includes("/") && a.total>0)
-.sort((a,b)=>{
-let da=brToISO(a.data)
-let db=brToISO(b.data)
-return da.localeCompare(db)
-})
+const canvas=document.getElementById('mainChart');if(!canvas)return
+const ctx=canvas.getContext('2d');if(chartRef)chartRef.destroy()
+let arr=store.abastecimento_veiculos.filter(a=>a.data).sort((a,b)=>brToISO(a.data).localeCompare(brToISO(b.data)))
 if(!arr.length)return
-let labels=arr.map(a=>a.data||"-")
-let valores=arr.map(a=>Number(a.total||0))
-let litros=arr.map(a=>Number(a.litros||0))
-let lastIndex=arr.length-1
-chartRef=new Chart(ctx,{
-type:'line',
-data:{
-labels:labels,
-datasets:[
-{
-label:'R$',
-data:valores,
-borderColor:'#22c55e',
-backgroundColor:'rgba(34,197,94,0.15)',
-fill:true,
-tension:0.45,
-borderWidth:3,
-pointRadius:ctx=>ctx.dataIndex===lastIndex?7:3,
-pointHoverRadius:ctx=>ctx.dataIndex===lastIndex?9:5,
-pointBackgroundColor:ctx=>ctx.dataIndex===lastIndex?'#00ffe0':'#22c55e',
-pointBorderColor:'#0f172a',
-pointBorderWidth:2
-},
-{
-label:'Litros',
-data:litros,
-borderColor:'#60a5fa',
-backgroundColor:'rgba(96,165,250,0.15)',
-fill:true,
-tension:0.45,
-borderWidth:3,
-pointRadius:ctx=>ctx.dataIndex===lastIndex?7:3,
-pointHoverRadius:ctx=>ctx.dataIndex===lastIndex?9:5,
-pointBackgroundColor:ctx=>ctx.dataIndex===lastIndex?'#00ffe0':'#60a5fa',
-pointBorderColor:'#0f172a',
-pointBorderWidth:2
+chartRef=new Chart(ctx,{type:'line',data:{labels:arr.map(a=>a.data),datasets:[{label:'R$',data:arr.map(a=>a.total),borderColor:'#22c55e'}]},options:{responsive:true}})
 }
-]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-interaction:{mode:'index',intersect:false},
-plugins:{
-legend:{
-labels:{color:'#cbd5f5',font:{size:12}}
-},
-tooltip:{
-backgroundColor:'#020617',
-borderColor:'#22c55e',
-borderWidth:1,
-titleColor:'#22c55e',
-bodyColor:'#fff',
-callbacks:{
-label:function(ctx){
-let idx=ctx.dataIndex
-let atual=arr[idx]
-let anterior=arr[idx-1]
-if(ctx.dataset.label==='R$'){
-return "R$: "+ctx.raw.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-}
-if(anterior && atual.km && anterior.km){
-let kmRodado=atual.km-anterior.km
-let kml=(kmRodado/atual.litros).toFixed(2)
-return "Litros: "+ctx.raw+" | Km/L: "+kml
-}
-return "Litros: "+ctx.raw
-}
-}
-}
-},
-scales:{
-x:{
-ticks:{color:'#94a3b8'},
-grid:{color:'rgba(148,163,184,0.08)'}
-},
-y:{
-ticks:{color:'#94a3b8'},
-grid:{color:'rgba(148,163,184,0.08)'}
-}
-},
-animation:{
-duration:900,
-easing:'easeOutQuart'
-}
-},
-plugins:[ChartDataLabels]
-})
-}
-  
-function showTab(id, e) {
-document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-document.getElementById(id).style.display = 'flex'; e.target.classList.add('active');
-}
-
-async function salvarAbastecimento(){
-if(NIVEL===1){
-alert("Admin não lança abastecimento")
-return
-}
-let dataVal=document.getElementById("cad_data").value||hojeISO()
-if(dataVal){
-let partes=dataVal.split("-")
-dataVal=partes[0]+"-"+partes[1]+"-"+partes[2]
-}
-let postoSelect=document.getElementById("cad_posto_select")
-?document.getElementById("cad_posto_select").value
-:null
-
-let nomeDigitado=(document.getElementById("cad_posto_nome")?.value||"").trim()
-let nomeNormalizado=nomeDigitado.toUpperCase().trim()
-
-let tanque=document.getElementById("cad_tanque")?.value||"cheio"
-
-let postoId=postoSelect||null
-
-// 🔥 PRIORIDADE: nome digitado
-if(nomeNormalizado){
-
-let postoExistente=data.postos_veiculos.find(
-p=>p.nome===nomeNormalizado
-)
-
-if(postoExistente){
-postoId=postoExistente.id
-}else{
-
-let {data:newPosto,error:ePosto}=await db
-.from("postos_veiculos")
-.insert({
-empresa_id:EMPRESA,
-nome_posto:nomeNormalizado
-})
-.select()
-.single()
-
-if(ePosto){
-console.error(ePosto)
-
-// 🔥 fallback se índice único barrar
-let retry=data.postos_veiculos.find(p=>p.nome===nomeNormalizado)
-
-if(retry){
-postoId=retry.id
-}else{
-alert("Erro ao criar posto")
-return
-}
-
-}else{
-postoId=newPosto.id
-}
-}
-}
-
-// 🔥 VALORES
-let litros=parseFloat(document.getElementById("cad_litros").value||0)
-let valor=parseFloat(document.getElementById("cad_valor").value||0)
-let kmInput=document.getElementById("cad_km").value
-let km=kmInput?parseFloat(kmInput):null
-
-// 🔥 REGRA: parcial pode não ter KM
-if(tanque==="parcial"){
-km=null
-}
-
-// 🔥 VALIDAÇÃO
-if(!dataVal || !postoId || litros<=0 || valor<=0){
-alert("Preencha todos os campos corretamente")
-return
-}
-
-// 🔥 VEÍCULO
-let veiculoId=data.veiculo_veiculos[0]?.id
-if(!veiculoId){
-alert("Nenhum veículo cadastrado")
-return
-}
-
-// 🔥 PAYLOAD
-let payload={
-empresa_id:EMPRESA,
-veiculo_id:VEICULO_ATIVO,
-posto_id:postoId,
-data_abastecimento:dataVal,
-litros:litros,
-valor_total:valor,
-quilometragem:km,
-motorista_id:MOTORISTA_ID,
-tanque:tanque
-}
-
-// 🔥 INSERT
-let {error}=await db.from("abastecimento_veiculos").insert(payload)
-
-if(error){
-console.error(error)
-alert("Erro ao salvar")
-return
-}
-
-// 🔥 LIMPEZA
-document.getElementById("cad_litros").value=""
-document.getElementById("cad_valor").value=""
-document.getElementById("cad_km").value=""
-document.getElementById("cad_posto_nome").value=""
-
-// 🔥 ATUALIZA
-await carregarBanco()
-
-alert("Salvo com sucesso")
-
-}
-
-function fData(d){if(!d)return"-";let x=new Date(d);return x.toLocaleDateString("pt-BR")}
 function fMoeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
-function fCNPJ(v){v=(v||"").replace(/\D/g,"").slice(0,14);return v.replace(/^(\d{2})(\d)/,"$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1/$2").replace(/(\d{4})(\d)/,"$1-$2")}
-function fCPF(v){v=(v||"").replace(/\D/g,"").slice(0,11);return v.replace(/^(\d{3})(\d)/,"$1.$2").replace(/^(\d{3})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1-$2")}
-function fCel(v){v=(v||"").replace(/\D/g,"").slice(0,11);if(v.length<=10)return v.replace(/^(\d{2})(\d)/,"($1) $2").replace(/(\d{4})(\d)/,"$1-$2");return v.replace(/^(\d{2})(\d)/,"($1) $2").replace(/(\d{5})(\d)/,"$1-$2")}
-
-let editId=null
-function editarAbast(id){
-let a=data.abastecimento_veiculos.find(x=>x.id===id);if(!a)return
-editId=id
-document.getElementById("cad_data").value=brToISO(a.data)
-let p=data.postos_veiculos.find(p=>p.nome===a.posto)
-if(p){
-let sel=document.getElementById("cad_posto_select")
-if(sel)sel.value=p.id
-document.getElementById("cad_posto_nome").value=""
-}else{
-document.getElementById("cad_posto_nome").value=a.posto
-}
-document.getElementById("cad_litros").value=a.litros
-document.getElementById("cad_valor").value=a.total
-document.getElementById("cad_km").value=a.km
-}
-async function atualizarAbast(){
-if(!editId)return alert("Selecione um registro")
-let postoSelect=document.getElementById("cad_posto_select")?document.getElementById("cad_posto_select").value:null
-let nomeDigitado=(document.getElementById("cad_posto_nome")?.value||"").trim()
-let postoId=postoSelect
-if(nomeDigitado){
-let postoExistente=data.postos_veiculos.find(p=>p.nome.toLowerCase()===nomeDigitado.toLowerCase())
-if(postoExistente){
-postoId=postoExistente.id
-}else{
-let {data:newPosto}=await db.from("postos_veiculos").insert({empresa_id:EMPRESA,nome_posto:nomeDigitado}).select().single()
-postoId=newPosto.id
-}
-}
-let payload={
-data_abastecimento:document.getElementById("cad_data").value,
-posto_id:postoId,
-litros:parseFloat(document.getElementById("cad_litros").value||0),
-valor_total:parseFloat(document.getElementById("cad_valor").value||0),
-quilometragem:parseFloat(document.getElementById("cad_km").value||0)
-}
-let {error}=await db.from("abastecimento_veiculos").update(payload).eq("id",editId)
-if(error){console.error(error);alert("Erro ao atualizar");return}
-editId=null
-limparForm()
-carregarBanco()
-}
-  
-async function excluirAbast(id){
-if(!confirm("Excluir registro?"))return
-let {error}=await db.from("abastecimento_veiculos").delete().eq("id",id)
-if(error){console.error(error);alert("Erro ao excluir");return}
-carregarBanco()
-}
-function limparForm(){
-document.getElementById("cad_litros").value=""
-document.getElementById("cad_valor").value=""
-document.getElementById("cad_km").value=""
-}
-
-async function filtrarPeriodo(){
-let ini=document.getElementById("filtro_inicio").value
-let fim=document.getElementById("filtro_fim").value
-let {data:abast}=await db
-.from("abastecimento_veiculos")
-.select("*, postos_veiculos(nome_posto)")
-.eq("empresa_id",EMPRESA)
-.gte("data_abastecimento",ini)
-.lte("data_abastecimento",fim)
-.order("data_abastecimento",{ascending:false})
-data.abastecimento_veiculos=(abast||[]).map(a=>({
-id:a.id,
-data:isoToBR(a.data_abastecimento),
-posto:a.postos_veiculos?.nome_posto||"-",
-litros:a.litros,
-km:a.quilometragem,
-total:a.valor_total
-}))
-renderTables()
-updateDash()
-renderChart()
-}
-
-function verGrafico(id){
-let a=data.abastecimento_veiculos.find(x=>x.id===id)
-if(!a)return
-
-let valor=Number(a.total||0)
-let litros=Number(a.litros||0)
-
-const ctx=document.getElementById('mainChart').getContext('2d')
-
-if(chartRef) chartRef.destroy()
-
-chartRef=new Chart(ctx,{
-type:'bar',
-data:{
-labels:['Valor R$','Litros'],
-datasets:[
-{
-label:'Dados',
-data:[valor,litros]
-}
-]
-},
-options:{
-responsive:true,
-plugins:{
-legend:{display:false},
-tooltip:{
-callbacks:{
-label:function(ctx){
-if(ctx.dataIndex===0){
-return fMoeda(ctx.raw)
-}
-return ctx.raw+" L"
-}
-}
-}
-}
-}
-})
-}
-
-let ocultos={}
-function toggleValor(id){
-let el=document.getElementById(id)
-if(!el)return
-if(!ocultos[id]){
-el.dataset.valorReal=el.innerText
-el.innerText="••••••"
-ocultos[id]=true
-}else{
-el.innerText=el.dataset.valorReal||el.innerText
-ocultos[id]=false
-}
-}
-
-function forceReload(){
-carregarBanco()
-setTimeout(()=>renderChart(),300)
-}
-
-function toggleNovoAbast(){
-let el=document.getElementById("box-novo-abast")
-if(!el)return
-el.style.display=el.style.display==="none"?"block":"none"
-}
-
-async function updateVeiculo(id,campo,valor){
-let payload={}
-if(campo==="km_atual" || campo==="ano"){
-payload[campo]=Number(String(valor).replace(/\D/g,''))||0
-}else{
-payload[campo]=valor.trim()
-}
-let {error}=await db
-.from("veiculo_veiculos")
-.update(payload)
-.eq("id",id)
-if(error){
-console.error(error)
-alert("Erro ao salvar")
-}
-}
-
-async function updatePosto(id,campo,valor){
-let payload={}
-payload[campo]=valor
-let {error}=await db.from("postos_veiculos").update(payload).eq("id",id)
-if(error)console.error(error)
-}
-
-function renderAdmin(){
-
-if(NIVEL!==1)return
-
-let tblM=document.getElementById("tbl-motoristas")
-let tblV=document.getElementById("tbl-veic-admin")
-let tblP=document.getElementById("tbl-posto-admin")
-
-// MOTORISTAS
-db.from("motoristas_veiculos").select("*").then(r=>{
-if(!tblM)return
-tblM.innerHTML=r.data.map(m=>`
-<tr>
-<td>${m.nome}</td>
-<td>${m.cpf||"-"}</td>
-</tr>`).join('')
-})
-
-// VEÍCULOS
-db.from("veiculo_veiculos").select("*").then(r=>{
-if(!tblV)return
-tblV.innerHTML=r.data.map(v=>`
-<tr>
-<td>${v.placa}</td>
-<td>${v.modelo}</td>
-<td>${v.motorista_id||"-"}</td>
-</tr>`).join('')
-})
-
-// POSTOS
-if(tblP){
-tblP.innerHTML=data.postos_veiculos.map(p=>`
-<tr><td>${p.nome}</td></tr>`).join('')
-}
-
-}
-
-function abrirCard(tipo){
-if(tipo==='motoristas'){
-showTab('tab-motorista',{target:document.querySelector('[onclick*="tab-motorista"]')})
-}
-if(tipo==='veiculos'){
-showTab('tab-veic',{target:document.querySelector('[onclick*="tab-veic"]')})
-}
-if(tipo==='postos'){
-showTab('tab-posto',{target:document.querySelector('[onclick*="tab-posto"]')})
-}
-}
-
-  
-function logout(){
-localStorage.removeItem("logado")
-location.reload()
-}
-  
+function showTab(id,e){document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById(id).style.display='flex';if(e&&e.target)e.target.classList.add('active')}
+function logout(){localStorage.removeItem("logado");location.reload()}
 window.addEventListener("load",()=>{
-if(localStorage.getItem("logado")==="1"){
-let topBtn=document.getElementById('top-create')
-if(topBtn)topBtn.style.display='none'
-document.getElementById('login-screen').style.display='none'
-document.getElementById('app').style.display='flex'
-carregarBanco()
-}
-
-let hoje=new Date()
-hoje.setMinutes(hoje.getMinutes()-hoje.getTimezoneOffset())
-let d=hoje.toISOString().split("T")[0]
-let campo=document.getElementById("cad_data")
-if(campo && !campo.value) campo.value=d
+if(localStorage.getItem("logado")==="1"){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='flex';carregarBanco()}
+let campo=document.getElementById("cad_data");if(campo&&!campo.value)campo.value=hojeISO()
 })
+setInterval(()=>{if(localStorage.getItem("logado")==="1"&&!isEditMode){carregarBanco()}},15000)
 
-setInterval(()=>{
-if(localStorage.getItem("logado")==="1" && !editId && !isEditMode){
-carregarBanco()
-}
-},15000)
-
-let tbM=document.querySelector('#tbl-motorista tbody')
-if(tbM){
-let lista=(data.motoristas_veiculos||[])
-tbM.innerHTML=lista.map(m=>`<tr>
-<td>${m.nome}</td>
-<td>${m.usuario_id||'-'}</td>
-<td>${m.id}</td>
-</tr>`).join('')
-}
 
 </script>
 </body>
