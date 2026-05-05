@@ -50,6 +50,7 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
 <p style="font-size: 11px; color: #94a3b8; margin-top: 15px;">PIX: 69 984311978 | Auditor: Neto</p>
 </div>
 </div>
+  
 <div id="app">
 <div class="top-header">
 <span id="header-title">APP: MANOEL FERNANDES NETO</span>
@@ -74,6 +75,19 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
 <div class="card"><canvas id="mainChart" height="200"></canvas></div>
 </div>
 <div id="tab-abast" class="container tab-content" style="display:none;">
+<!-- 🔥 FORMULÁRIO DE CADASTRO -->
+<div class="card">
+<h3>Novo Abastecimento</h3>
+
+<input type="date" id="cad_data">
+<select id="cad_posto"></select>
+<input type="number" id="cad_litros" placeholder="Litros">
+<input type="number" id="cad_valor" placeholder="Valor Total">
+<input type="number" id="cad_km" placeholder="KM Atual">
+
+<button onclick="salvarAbastecimento()">SALVAR</button>
+</div>
+
 <div class="card table-wrapper">
 <table id="tbl-abast">
 <thead><tr><th>Data</th><th>Posto</th><th>Litros</th><th>Km Atual</th><th>Total</th><th class="actions-cell">Ações</th></tr></thead>
@@ -124,40 +138,22 @@ alert('Acesso Negado.')
 }
 
 async function carregarBanco(){
-
-let {data:veic,error:e1}=await db
-.from("veiculo_veiculos")
-.select("*")
-.eq("empresa_id",EMPRESA)
-let {data:postos,error:e2}=await db
-.from("postos_veiculos")
-.select("*")
-.eq("empresa_id",EMPRESA)
-let {data:abast,error:e3}=await db
-.from("abastecimento_veiculos")
-.select("*, postos_veiculos(nome_posto)")
-.eq("empresa_id",EMPRESA)
-.order("data_abastecimento",{ascending:false})
-
-console.log("VEIC:",veic,e1)
-console.log("POSTOS:",postos,e2)
-console.log("ABAST:",abast,e3)
-
-data.veiculo_veiculos = veic || []
-data.postos_veiculos = (postos||[]).map(p=>({
-id:p.id,
-nome:p.nome_posto,
-cnpj:p.cnpj
-}))
-data.abastecimento_veiculos = (abast||[]).map(a=>({
-id:a.id,
-data:a.data_abastecimento,
-posto:a.postos_veiculos?.nome_posto || "-",
-litros:a.litros,
-km:a.quilometragem,
-total:a.valor_total
-}))
-
+let {data:veic,error:e1}=await db.from("veiculo_veiculos").select("*").eq("empresa_id",EMPRESA)
+let {data:postos,error:e2}=await db.from("postos_veiculos").select("*").eq("empresa_id",EMPRESA)
+let {data:abast,error:e3}=await db.from("abastecimento_veiculos").select("*, postos_veiculos(nome_posto)").eq("empresa_id",EMPRESA).order("data_abastecimento",{ascending:false})
+if(e1)console.error("ERRO VEIC:",e1)
+if(e2)console.error("ERRO POSTOS:",e2)
+if(e3)console.error("ERRO ABAST:",e3)
+data.veiculo_veiculos=Array.isArray(veic)?veic:[]
+data.postos_veiculos=(postos||[]).map(p=>({id:p.id,nome:p.nome_posto||"-",cnpj:p.cnpj||""}))
+let sel=document.getElementById("cad_posto")
+if(sel){
+sel.innerHTML=data.postos_veiculos.length?data.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join(""):`<option value="">Sem postos</option>`
+}
+data.abastecimento_veiculos=(abast||[]).map(a=>{
+let dataFmt=a.data_abastecimento?new Date(a.data_abastecimento).toLocaleDateString("pt-BR"):"-"
+return{id:a.id,data:dataFmt,posto:a.postos_veiculos?.nome_posto||"-",litros:Number(a.litros||0),km:Number(a.quilometragem||0),total:Number(a.valor_total||0)}
+})
 renderTables()
 updateDash()
 renderChart()
@@ -234,6 +230,42 @@ document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
 document.getElementById(id).style.display = 'flex'; e.target.classList.add('active');
 }
 
+async function salvarAbastecimento(){
+let dataVal=document.getElementById("cad_data").value
+let posto=document.getElementById("cad_posto").value
+let litros=parseFloat(document.getElementById("cad_litros").value||0)
+let valor=parseFloat(document.getElementById("cad_valor").value||0)
+let km=parseFloat(document.getElementById("cad_km").value||0)
+if(!dataVal || !posto || !litros || !valor || !km){
+alert("Preencha todos os campos")
+return
+}
+let payload={
+empresa_id:EMPRESA,
+veiculo_id:data.veiculo_veiculos[0]?.id,
+posto_id:posto,
+data_abastecimento:dataVal,
+litros:litros,
+valor_total:valor,
+quilometragem:km
+}
+let {error}=await db
+.from("abastecimento_veiculos")
+.insert(payload)
+if(error){
+console.error(error)
+alert("Erro ao salvar")
+return
+}
+// limpa campos
+document.getElementById("cad_litros").value=""
+document.getElementById("cad_valor").value=""
+document.getElementById("cad_km").value=""
+// recarrega dados
+carregarBanco()
+alert("Salvo com sucesso")
+}
+  
 window.addEventListener("load",()=>{
 if(localStorage.getItem("logado")==="1"){
 document.getElementById('login-screen').style.display='none'
@@ -247,6 +279,10 @@ if(localStorage.getItem("logado")==="1"){
 carregarBanco()
 }
 },10000)
+
+let d=new Date().toISOString().split("T")[0]
+let campo=document.getElementById("cad_data")
+if(campo && !campo.value) campo.value=d
   
 </script>
 </body>
