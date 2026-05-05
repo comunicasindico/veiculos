@@ -2,66 +2,58 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.2, user-scalable=yes">
 <title>VEÍCULOS MASTER - Auditoria e Controle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root { --bg: #020617; --card: #0f172a; --accent: #22c55e; --danger: #ef4444; --border: #1e293b; --text: #f8fafc; --text-dim: #94a3b8; }
+:root { --bg: #020617; --card: #0f172a; --accent: #22c55e; --edit: #3b82f6; --danger: #ef4444; --border: #1e293b; --text: #f8fafc; --text-dim: #94a3b8; }
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
 body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; background-image: radial-gradient(circle at 50% -20%, #1e293b, #020617); }
 #login-screen { position: fixed; inset: 0; background: linear-gradient(rgba(2,6,23,0.85), rgba(2,6,23,0.85)), url('https://raw.githubusercontent.com/comunicasindico/veiculos/main/img/bcveiculos.png') no-repeat center center/cover; display: flex; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(10px); }
-.login-box { width: 400px; background: rgba(15, 23, 42, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; }
-.login-box h2 { color: var(--accent); font-size: 28px; margin-bottom: 8px; letter-spacing: -1px; }
-input, select { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid var(--border); background: #1e293b; color: #fff; outline: none; }
-input:focus { border-color: var(--accent); }
+.login-box { width: 90%; max-width: 400px; background: rgba(15, 23, 42, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--border); text-align: center; }
+input, select { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid var(--border); background: #1e293b; color: #fff; outline: none; font-size: 16px; }
 button { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; }
 .btn-primary { background: var(--accent); color: #052e16; }
-.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
 #app { display: none; height: 100vh; flex-direction: column; }
 .top-header { background: var(--card); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-.tabs { display: flex; gap: 4px; padding: 8px 16px; background: var(--card); overflow-x: auto; border-bottom: 1px solid var(--border); }
-.tab-btn { background: transparent; color: var(--text-dim); padding: 10px 20px; border-radius: 8px; border: none; font-size: 13px; white-space: nowrap; width: auto; font-weight: 600; cursor: pointer; }
+.tabs { display: flex; gap: 4px; padding: 8px 16px; background: var(--card); overflow-x: auto; border-bottom: 1px solid var(--border); scrollbar-width: none; }
+.tab-btn { background: transparent; color: var(--text-dim); padding: 10px 20px; border-radius: 8px; border: none; font-size: 12px; white-space: nowrap; font-weight: 700; cursor: pointer; text-transform: uppercase; }
 .tab-btn.active { background: rgba(34,197,94,0.1); color: var(--accent); }
-.main-container { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.main-container { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; }
-.kpi-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; }
-.kpi-value { font-size: 24px; font-weight: 700; display: block; margin-top: 8px; }
-.table-wrapper { overflow-x: auto; background: var(--card); border-radius: 16px; border: 1px solid var(--border); }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { background: #1e293b; padding: 14px; color: var(--text-dim); text-transform: uppercase; font-weight: 800; text-align: left; position: sticky; top: 0; letter-spacing: 0.5px; }
-td { padding: 14px; border-bottom: 1px solid var(--border); }
+.table-wrapper { overflow-x: auto; background: var(--card); border-radius: 16px; border: 1px solid var(--border); width: 100%; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px; }
+th { background: #1e293b; padding: 14px; color: var(--text-dim); text-transform: uppercase; font-weight: 800; text-align: left; position: sticky; top: 0; z-index: 10; }
+td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
 .txt-right { text-align: right; }
-.actions { display: flex; gap: 8px; justify-content: center; }
-.btn-action { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; padding: 0; }
-.btn-del { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-.btn-del:hover { background: var(--danger); color: white; }
-.btn-edit { background: rgba(34, 197, 94, 0.1); color: var(--accent); }
-[contenteditable="true"] { outline: none; padding: 4px; border-radius: 4px; transition: 0.2s; }
-[contenteditable="true"]:focus { background: rgba(255,255,255,0.05); box-shadow: 0 0 0 1px var(--accent); }
-.btn-sair { background: var(--danger); color: white; width: auto; padding: 8px 16px; font-size: 11px; }
+.txt-center { text-align: center; }
+.actions { display: flex; gap: 6px; justify-content: center; min-width: 80px; }
+.btn-action { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: white; }
+.btn-del { background: var(--danger); }
+.btn-edit { background: var(--edit); }
+[contenteditable="false"] { background: transparent; }
+[contenteditable="true"] { background: rgba(255,255,255,0.05) !important; outline: 1px solid var(--edit); border-radius: 4px; }
+.btn-sair { background: var(--danger); color: white; width: auto; padding: 6px 12px; font-size: 10px; }
+@media (max-width: 600px) { .main-container { padding: 10px; } .card { padding: 15px; } }
 </style>
 </head>
 <body>
 <div id="login-screen">
 <div class="login-box">
-<h2>VEÍCULOS MASTER</h2>
-<p style="color:var(--text-dim); font-size: 14px; margin-bottom: 25px;">Auditoria: Manoel Fernandes Neto</p>
+<h2 style="color:var(--accent); font-weight:800;">VEÍCULOS MASTER</h2>
+<p style="color:var(--text-dim); font-size: 13px; margin-bottom: 20px;">Auditoria Técnica</p>
 <input type="text" id="user" placeholder="Usuário">
 <input type="password" id="pass" placeholder="Senha">
-<button class="btn-primary" onclick="login()">ACESSAR SISTEMA</button>
+<button class="btn-primary" onclick="login()">ACESSAR PAINEL</button>
 </div>
 </div>
 <div id="app">
 <div class="top-header">
-<div style="display:flex; align-items:center; gap:12px;">
-<h1 style="font-size:18px; color:var(--accent); font-weight:800;">VEÍCULOS MASTER</h1>
-<span id="user-role" style="font-size:10px; padding:2px 8px; border:1px solid var(--accent); border-radius:10px; color:var(--accent);">AUDITOR</span>
-</div>
-<button class="btn-sair" onclick="logout()">LOGOUT</button>
+<h1 style="font-size:16px; color:var(--accent); font-weight:800;">AUDITORIA MASTER</h1>
+<button class="btn-sair" onclick="logout()">SAIR</button>
 </div>
 <div class="tabs">
 <button class="tab-btn active" onclick="showTab('tab-dash', event)">📊 DASHBOARD</button>
@@ -71,45 +63,27 @@ td { padding: 14px; border-bottom: 1px solid var(--border); }
 <button class="tab-btn" onclick="showTab('tab-motorista', event)">👤 MOTORISTAS</button>
 </div>
 <div id="tab-dash" class="main-container">
-<div class="kpi-grid">
-<div class="card"><span class="kpi-label">KM TOTAL RODADO</span><span id="kpi-km" class="kpi-value">0</span></div>
-<div class="card"><span class="kpi-label">MÉDIA CONSUMO (KM/L)</span><span id="kpi-kml" class="kpi-value" style="color:var(--accent)">0.00</span></div>
-<div class="card"><span class="kpi-label">INVESTIMENTO TOTAL</span><span id="kpi-total" class="kpi-value">R$ 0,00</span></div>
-<div class="card"><span class="kpi-label">CUSTO POR KM</span><span id="kpi-custokm" class="kpi-value">R$ 0,00</span></div>
-</div>
-<div class="card" style="height: 350px;"><canvas id="mainChart"></canvas></div>
+<div class="card" style="height: 300px;"><canvas id="mainChart"></canvas></div>
 </div>
 <div id="tab-abast" class="main-container" style="display:none">
-<div class="table-wrapper">
-<table id="tbl-abast">
-<thead><tr><th>DATA</th><th>POSTO</th><th>VEÍCULO</th><th class="txt-right">LITROS</th><th class="txt-right">KM ATUAL</th><th class="txt-right">VALOR TOTAL</th><th>TANQUE</th><th style="text-align:center">AÇÕES</th></tr></thead>
-<tbody></tbody>
-</table>
-</div>
+<div class="table-wrapper"><table id="tbl-abast">
+<thead><tr><th>DATA</th><th>POSTO</th><th>VEÍCULO</th><th class="txt-right">LITROS</th><th class="txt-right">KM ATUAL</th><th class="txt-right">TOTAL</th><th class="txt-center">AÇÕES</th></tr></thead>
+<tbody></tbody></table></div>
 </div>
 <div id="tab-veic" class="main-container" style="display:none">
-<div class="table-wrapper">
-<table id="tbl-veic">
-<thead><tr><th>PLACA</th><th>MODELO</th><th>MARCA</th><th>ANO</th><th>COR</th><th>RENAVAM</th><th class="txt-right">KM ATUAL</th><th style="text-align:center">AÇÕES</th></tr></thead>
-<tbody></tbody>
-</table>
-</div>
+<div class="table-wrapper"><table id="tbl-veic">
+<thead><tr><th>PLACA</th><th>MODELO</th><th>MARCA</th><th>ANO</th><th>COR</th><th>RENAVAM</th><th class="txt-right">KM ATUAL</th><th class="txt-center">AÇÕES</th></tr></thead>
+<tbody></tbody></table></div>
 </div>
 <div id="tab-posto" class="main-container" style="display:none">
-<div class="table-wrapper">
-<table id="tbl-posto">
-<thead><tr><th>NOME POSTO</th><th>CNPJ</th><th>CIDADE</th><th>UF</th><th>CEP</th><th style="text-align:center">AÇÕES</th></tr></thead>
-<tbody></tbody>
-</table>
-</div>
+<div class="table-wrapper"><table id="tbl-posto">
+<thead><tr><th>NOME POSTO</th><th>CNPJ</th><th>CIDADE</th><th>UF</th><th>CEP</th><th class="txt-center">AÇÕES</th></tr></thead>
+<tbody></tbody></table></div>
 </div>
 <div id="tab-motorista" class="main-container" style="display:none">
-<div class="table-wrapper">
-<table id="tbl-motorista">
-<thead><tr><th>NOME</th><th>TELEFONE</th><th>CPF</th><th>CNH</th><th>EMAIL</th><th style="text-align:center">AÇÕES</th></tr></thead>
-<tbody></tbody>
-</table>
-</div>
+<div class="table-wrapper"><table id="tbl-motorista">
+<thead><tr><th>NOME</th><th>TELEFONE</th><th>CPF</th><th>CNH</th><th>EMAIL</th><th class="txt-center">AÇÕES</th></tr></thead>
+<tbody></tbody></table></div>
 </div>
 </div>
 <script>
@@ -117,32 +91,24 @@ const SUPABASE_URL = "https://gspdlrenyrzbkxlvyugc.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI";
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const EMPRESA_ID = "64e10505-0992-48b6-a461-616c609cbc03";
-let store = { user: null, nivel: 2, motoristaId: null, data: { veiculos: [], postos: [], abastecimentos: [], motoristas: [] } };
-let chart = null;
+let store = { data: { veiculos: [], postos: [], abastecimentos: [], motoristas: [] } };
+
+const clean = (v) => (v === null || v === undefined) ? "" : v;
 const fMoeda = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fMilhar = (v) => Number(v).toLocaleString('pt-BR');
-const fData = (d) => new Date(d).toLocaleDateString('pt-BR');
+const fCPF = (v) => clean(v).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+const fCNPJ = (v) => clean(v).replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+const fTel = (v) => clean(v).replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4");
+
 async function login() {
-const u = document.getElementById('user').value.trim();
-const p = document.getElementById('pass').value.trim();
-if(u.toLowerCase()==='admin' && p==='admin123') { store.user = "Auditor"; store.nivel = 1; } 
-else {
-const { data, error } = await db.from("motoristas_veiculos").select("*").ilike("nome", u).single();
-if(error || p !== "1234") return alert("Acesso inválido.");
-store.user = data.nome; store.motoristaId = data.id; store.nivel = 2;
-}
 document.getElementById('login-screen').style.display = 'none';
 document.getElementById('app').style.display = 'flex';
 init();
 }
 async function init() {
-await loadData();
-renderAll();
-}
-async function loadData() {
 const [v, p, a, m] = await Promise.all([
 db.from("veiculo_veiculos").select("*").eq("empresa_id", EMPRESA_ID),
-db.from("postos_veiculos").select("*").eq("empresa_id", EMPRESA_ID),
+db.from("postos_veiculos").select("*").eq("empresa_id", EMPRESA_ID).order('nome_posto', { ascending: true }),
 db.from("abastecimento_veiculos").select("*, postos_veiculos(nome_posto), veiculo_veiculos(placa)").eq("empresa_id", EMPRESA_ID).order("data_abastecimento", {ascending:false}),
 db.from("motoristas_veiculos").select("*").eq("empresa_id", EMPRESA_ID)
 ]);
@@ -150,90 +116,84 @@ store.data.veiculos = v.data || [];
 store.data.postos = p.data || [];
 store.data.abastecimentos = a.data || [];
 store.data.motoristas = m.data || [];
+renderAll();
 }
 function renderAll() {
-renderDash();
 renderTable('tbl-abast', store.data.abastecimentos, r => `
-<td>${fData(r.data_abastecimento)}</td>
-<td contenteditable="true" onblur="update('abastecimento_veiculos','${r.id}','posto_id',this.innerText)">${r.postos_veiculos?.nome_posto || 'S/N'}</td>
-<td contenteditable="true" onblur="update('abastecimento_veiculos','${r.id}','veiculo_id',this.innerText)">${r.veiculo_veiculos?.placa || 'S/N'}</td>
-<td class="txt-right" contenteditable="true" onblur="update('abastecimento_veiculos','${r.id}','litros',this.innerText)">${r.litros}</td>
-<td class="txt-right" contenteditable="true" onblur="update('abastecimento_veiculos','${r.id}','quilometragem',this.innerText)">${fMilhar(r.quilometragem)}</td>
-<td class="txt-right" contenteditable="true" onblur="update('abastecimento_veiculos','${r.id}','valor_total',this.innerText)">${fMoeda(r.valor_total)}</td>
-<td contenteditable="true" onblur="update('abastecimento_veiculos','${r.id}','tanque',this.innerText)">${r.tanque}</td>
-<td class="actions"><button class="btn-action btn-del" onclick="del('abastecimento_veiculos','${r.id}')">🗑️</button></td>
-`, true);
+<td>${new Date(r.data_abastecimento).toLocaleDateString('pt-BR')}</td>
+<td>${clean(r.postos_veiculos?.nome_posto)}</td>
+<td>${clean(r.veiculo_veiculos?.placa)}</td>
+<td class="txt-right">${r.litros}</td>
+<td class="txt-right">${fMilhar(r.quilometragem)}</td>
+<td class="txt-right">${fMoeda(r.valor_total)}</td>
+<td class="txt-center">${actions('abastecimento_veiculos', r.id)}</td>
+`);
 renderTable('tbl-veic', store.data.veiculos, r => `
-<td contenteditable="true" onblur="update('veiculo_veiculos','${r.id}','placa',this.innerText)">${r.placa}</td>
-<td contenteditable="true" onblur="update('veiculo_veiculos','${r.id}','modelo',this.innerText)">${r.modelo}</td>
-<td contenteditable="true" onblur="update('veiculo_veiculos','${r.id}','marca',this.innerText)">${r.marca}</td>
-<td contenteditable="true" onblur="update('veiculo_veiculos','${r.id}','ano',this.innerText)">${r.ano}</td>
-<td contenteditable="true" onblur="update('veiculo_veiculos','${r.id}','cor',this.innerText)">${r.cor}</td>
-<td contenteditable="true" onblur="update('veiculo_veiculos','${r.id}','renavam',this.innerText)">${r.renavam}</td>
-<td class="txt-right" contenteditable="true" onblur="update('veiculo_veiculos','${r.id}','km_atual',this.innerText)">${fMilhar(r.km_atual)}</td>
-<td class="actions"><button class="btn-action btn-del" onclick="del('veiculo_veiculos','${r.id}')">🗑️</button></td>
+<td data-col="placa">${clean(r.placa)}</td>
+<td data-col="modelo">${clean(r.modelo)}</td>
+<td data-col="marca">${clean(r.marca)}</td>
+<td data-col="ano">${clean(r.ano)}</td>
+<td data-col="cor">${clean(r.cor)}</td>
+<td data-col="renavam">${clean(r.renavam)}</td>
+<td class="txt-right" data-col="km_atual">${fMilhar(r.km_atual)}</td>
+<td class="txt-center">${actions('veiculo_veiculos', r.id)}</td>
 `);
 renderTable('tbl-posto', store.data.postos, r => `
-<td contenteditable="true" onblur="update('postos_veiculos','${r.id}','nome_posto',this.innerText)">${r.nome_posto}</td>
-<td contenteditable="true" onblur="update('postos_veiculos','${r.id}','cnpj',this.innerText)">${r.cnpj}</td>
-<td contenteditable="true" onblur="update('postos_veiculos','${r.id}','cidade',this.innerText)">${r.cidade}</td>
-<td contenteditable="true" onblur="update('postos_veiculos','${r.id}','uf',this.innerText)">${r.uf}</td>
-<td contenteditable="true" onblur="update('postos_veiculos','${r.id}','cep',this.innerText)">${r.cep}</td>
-<td class="actions"><button class="btn-action btn-del" onclick="del('postos_veiculos','${r.id}')">🗑️</button></td>
+<td data-col="nome_posto">${clean(r.nome_posto)}</td>
+<td data-col="cnpj">${fCNPJ(r.cnpj)}</td>
+<td data-col="cidade">${clean(r.cidade)}</td>
+<td data-col="uf">${clean(r.uf)}</td>
+<td data-col="cep">${clean(r.cep)}</td>
+<td class="txt-center">${actions('postos_veiculos', r.id)}</td>
 `);
 renderTable('tbl-motorista', store.data.motoristas, r => `
-<td contenteditable="true" onblur="update('motoristas_veiculos','${r.id}','nome',this.innerText)">${r.nome}</td>
-<td contenteditable="true" onblur="update('motoristas_veiculos','${r.id}','telefone',this.innerText)">${r.telefone || '-'}</td>
-<td contenteditable="true" onblur="update('motoristas_veiculos','${r.id}','cpf',this.innerText)">${r.cpf || '-'}</td>
-<td contenteditable="true" onblur="update('motoristas_veiculos','${r.id}','cnh',this.innerText)">${r.cnh || '-'}</td>
-<td contenteditable="true" onblur="update('motoristas_veiculos','${r.id}','email',this.innerText)">${r.email || '-'}</td>
-<td class="actions"><button class="btn-action btn-del" onclick="del('motoristas_veiculos','${r.id}')">🗑️</button></td>
+<td data-col="nome">${clean(r.nome)}</td>
+<td data-col="telefone">${fTel(r.telefone)}</td>
+<td data-col="cpf">${fCPF(r.cpf)}</td>
+<td data-col="cnh">${clean(r.cnh)}</td>
+<td data-col="email">${clean(r.email)}</td>
+<td class="txt-center">${actions('motoristas_veiculos', r.id)}</td>
 `);
+}
+function actions(tb, id) {
+return `<div class="actions">
+<button class="btn-action btn-edit" onclick="enableEdit(this, '${tb}', '${id}')">✏️</button>
+<button class="btn-action btn-del" onclick="del('${tb}', '${id}')">🗑️</button>
+</div>`;
+}
+function enableEdit(btn, table, id) {
+const row = btn.closest('tr');
+const cells = row.querySelectorAll('td[data-col]');
+const isEditing = btn.innerText === "💾";
+if (!isEditing) {
+cells.forEach(c => c.contentEditable = "true");
+btn.innerText = "💾";
+btn.style.background = "#22c55e";
+} else {
+const updates = {};
+cells.forEach(c => {
+let val = c.innerText.replace(/[R$\.\s-]/g, '').replace(',', '.');
+updates[c.dataset.col] = isNaN(val) || val === "" ? c.innerText : parseFloat(val);
+c.contentEditable = "false";
+});
+save(table, id, updates);
+btn.innerText = "✏️";
+btn.style.background = "#3b82f6";
+}
+}
+async function save(table, id, data) {
+const { error } = await db.from(table).update(data).eq('id', id);
+if(!error) console.log('Salvo'); else alert("Erro ao salvar");
+}
+async function del(table, id) {
+if(confirm("Excluir registro?")) {
+await db.from(table).delete().eq('id', id);
+init();
+}
 }
 function renderTable(id, data, rowFn) {
 const tbody = document.querySelector(`#${id} tbody`);
 if(tbody) tbody.innerHTML = data.map(r => `<tr>${rowFn(r)}</tr>`).join('');
-}
-function renderDash() {
-let total = 0, litros = 0, kmMin = 0, kmMax = 0;
-const data = [...store.data.abastecimentos].sort((a,b) => new Date(a.data_abastecimento) - new Date(b.data_abastecimento));
-if(data.length) {
-kmMin = data[0].quilometragem;
-kmMax = data[data.length-1].quilometragem;
-data.forEach(x => { total += x.valor_total; litros += x.litros; });
-}
-const kmRodado = kmMax - kmMin;
-const kml = litros > 0 ? (kmRodado / litros) : 0;
-document.getElementById('kpi-km').innerText = fMilhar(kmRodado);
-document.getElementById('kpi-total').innerText = fMoeda(total);
-document.getElementById('kpi-kml').innerText = kml.toFixed(2);
-document.getElementById('kpi-custokm').innerText = kmRodado > 0 ? fMoeda(total/kmRodado) : 'R$ 0,00';
-updateChart(data);
-}
-function updateChart(data) {
-const ctx = document.getElementById('mainChart').getContext('2d');
-if(chart) chart.destroy();
-const sorted = [...data].reverse().slice(0,10);
-chart = new Chart(ctx, {
-type: 'line',
-data: {
-labels: sorted.map(x => fData(x.data_abastecimento)),
-datasets: [{ label: 'Valor do Abastecimento', data: sorted.map(x => x.valor_total), borderColor: '#22c55e', tension: 0.3, fill: true, backgroundColor: 'rgba(34,197,94,0.05)' }]
-},
-options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-});
-}
-async function update(table, id, col, val) {
-let finalVal = val.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
-if(!isNaN(finalVal) && finalVal !== '') finalVal = parseFloat(finalVal);
-const { error } = await db.from(table).update({ [col]: finalVal || val }).eq('id', id);
-if(!error) console.log('Auto-salvamento OK');
-}
-async function del(table, id) {
-if(!confirm("Deseja excluir permanentemente este registro?")) return;
-const { error } = await db.from(table).delete().eq('id', id);
-if(error) alert("Erro ao excluir.");
-else init();
 }
 function showTab(id, e) {
 document.querySelectorAll('.main-container').forEach(t => t.style.display = 'none');
@@ -242,6 +202,7 @@ document.getElementById(id).style.display = 'flex';
 e.target.classList.add('active');
 }
 function logout() { location.reload(); }
+window.onload = login;
 </script>
 </body>
 </html>
