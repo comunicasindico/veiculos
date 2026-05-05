@@ -257,6 +257,14 @@ box-shadow:0 0 0 1px #22c55e inset;
 
 
 <script>
+if(!window.data){
+window.data={
+veiculo_veiculos:[],
+postos_veiculos:[],
+abastecimento_veiculos:[],
+motoristas_veiculos:[]
+}
+}
 
 let USER=null
 let NIVEL=2
@@ -291,7 +299,7 @@ return
 }
 // 🔥 MOTORISTA (via banco)
 let {data,error}=await db
-.from("motoristas")
+.from("motoristas_veiculos")
 .select("*")
 .ilike("nome",u)
 .limit(1)
@@ -320,7 +328,7 @@ let EMP=localStorage.getItem("empresa")||EMPRESA
 let MOTORISTA_ID=null
 let VEICULO_ATIVO=null
 let {data:motoristas}=await db.from("motoristas_veiculos").select("*").eq("empresa_id",EMP)
-data.motoristas_veiculos=motoristas||[]
+data.motoristas_veiculos=Array.isArray(motoristas)?motoristas:[]
 if(NIVEL===2){
 let m=data.motoristas_veiculos.find(x=>x.usuario_id===UID)
 if(!m){alert("Motorista não encontrado");return}
@@ -363,7 +371,12 @@ data.abastecimento_veiculos=(abast||[]).filter(a=>{
 if(NIVEL===1)return true
 return a.veiculo_id===VEICULO_ATIVO
 }).map(a=>{
-let dataFmt=a.data_abastecimento?new Date(a.data_abastecimento).toLocaleDateString("pt-BR"):"-"
+let dataFmt="-"
+if(a.data_abastecimento){
+let d=a.data_abastecimento.split("T")[0]
+let p=d.split("-")
+dataFmt=p[2]+"/"+p[1]+"/"+p[0]
+}
 return{
 id:a.id,
 data:dataFmt,
@@ -632,7 +645,10 @@ alert("Admin não lança abastecimento")
 return
 }
 let dataVal=document.getElementById("cad_data").value
-
+if(dataVal){
+let partes=dataVal.split("-")
+dataVal=partes[0]+"-"+partes[1]+"-"+partes[2]
+}
 let postoSelect=document.getElementById("cad_posto_select")
 ?document.getElementById("cad_posto_select").value
 :null
@@ -981,7 +997,9 @@ document.getElementById('app').style.display='flex'
 carregarBanco()
 }
 
-let d=new Date().toISOString().split("T")[0]
+let hoje=new Date()
+hoje.setMinutes(hoje.getMinutes()-hoje.getTimezoneOffset())
+let d=hoje.toISOString().split("T")[0]
 let campo=document.getElementById("cad_data")
 if(campo && !campo.value) campo.value=d
 })
@@ -994,7 +1012,8 @@ carregarBanco()
 
 let tbM=document.querySelector('#tbl-motorista tbody')
 if(tbM){
-tbM.innerHTML=data.motoristas_veiculos.map(m=>`<tr>
+let lista=(data.motoristas_veiculos||[])
+tbM.innerHTML=lista.map(m=>`<tr>
 <td>${m.nome}</td>
 <td>${m.usuario_id||'-'}</td>
 <td>${m.id}</td>
