@@ -36,6 +36,7 @@ table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
 th { background: var(--border); color: var(--accent); position: sticky; top: 0; }
 @media (max-width: 768px) { body { overflow: auto; } #app { height: auto; } }
+
 </style>
 </head>
 <body>
@@ -90,20 +91,62 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
 </div>
 </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
 <script>
+const SUPABASE_URL = "https://gspdlrenyrzbkxlvyugc.supabase.co"
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI"
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+const EMPRESA = "64e10505-0992-48b6-a461-616c609cbc03"
+
 let isEditMode = false;
 let data = {
-veiculo_veiculos: [{id:'58fdc6af-0156-40b7-a628-4799ffab108a', placa:'TIGGO8', modelo:'Chery Tiggo 8'}],
-postos_veiculos: [
-{id:'11ee0d59-f467-4592-a2c2-703443739374', nome:'Posto Simon Ltda', cnpj:'15.636.643/0001-01'},
-{id:'19e5eda2-8ff2-41e7-ba3c-2371e2f93e71', nome:'AutoPosto Santa Marta', cnpj:'33.899.213/0001-56'}
-],
-abastecimento_veiculos: [
-{id:'02061ec1-aa1b-4f54-be0a-9c7b20ac02ba', data:'2026-03-16', posto:'Posto Premier', litros:42.09, km:5336, total:268.96},
-{id:'0da08a23-7adb-446a-bcaf-911a06637e09', data:'2025-09-20', posto:'Gas Station Tubarao', litros:44.88, km:200, total:309.19},
-{id:'13d0044c-e463-4433-88f3-8cb4c10fdc09', data:'2026-01-05', posto:'Rede São Marcos', litros:37.82, km:3050, total:221.25}
-]
-};
+veiculo_veiculos: [],
+postos_veiculos: [],
+abastecimento_veiculos: []
+}
+
+async function carregarBanco(){
+
+let {data:veic}=await db
+.from("veiculo_veiculos")
+.select("*")
+.eq("empresa_id",EMPRESA)
+
+let {data:postos}=await db
+.from("postos_veiculos")
+.select("*")
+.eq("empresa_id",EMPRESA)
+
+let {data:abast}=await db
+.from("abastecimento_veiculos")
+.select("*, postos_veiculos(nome_posto)")
+.eq("empresa_id",EMPRESA)
+.order("data_abastecimento",{ascending:false})
+
+data.veiculo_veiculos = veic || []
+data.postos_veiculos = (postos||[]).map(p=>({
+id:p.id,
+nome:p.nome_posto,
+cnpj:p.cnpj
+}))
+
+data.abastecimento_veiculos = (abast||[]).map(a=>({
+id:a.id,
+data:a.data_abastecimento,
+posto:a.postos_veiculos?.nome_posto || "-",
+litros:a.litros,
+km:a.quilometragem,
+total:a.valor_total
+}))
+
+carregarBanco()
+}
+
+
+
 function login() {
 const u = document.getElementById('user').value.toLowerCase();
 const p = document.getElementById('pass').value;
@@ -117,12 +160,31 @@ function toggleEditMode() {
 isEditMode = !isEditMode;
 document.body.classList.toggle('editing', isEditMode);
 }
-function updateDash() {
-const totalVal = data.abastecimento_veiculos.reduce((s, a) => s + a.total, 0);
-document.getElementById('kpi-total').innerText = 'R$ ' + totalVal.toFixed(2);
-document.getElementById('kpi-kml').innerText = '8.45';
-document.getElementById('kpi-custokm').innerText = 'R$ 0.680';
+
+function updateDash(){
+let total=0
+let litros=0
+data.abastecimento_veiculos.forEach(a=>{
+total+=Number(a.total||0)
+litros+=Number(a.litros||0)
+})
+document.getElementById('kpi-total').innerText='R$ '+total.toFixed(2)
+if(data.abastecimento_veiculos.length>1){
+let arr=data.abastecimento_veiculos.slice().reverse()
+let kmTotal=0
+for(let i=1;i<arr.length;i++){
+kmTotal+=(arr[i].km-arr[i-1].km)
 }
+let kml=kmTotal/litros
+let custoKm=total/kmTotal
+document.getElementById('kpi-kml').innerText=kml.toFixed(2)
+document.getElementById('kpi-custokm').innerText='R$ '+custoKm.toFixed(3)
+}else{
+document.getElementById('kpi-kml').innerText='--'
+document.getElementById('kpi-custokm').innerText='--'
+}
+}
+
 function renderTables() {
 const abBody = document.querySelector('#tbl-abast tbody');
 abBody.innerHTML = data.abastecimento_veiculos.map(a => `<tr>
@@ -131,10 +193,29 @@ abBody.innerHTML = data.abastecimento_veiculos.map(a => `<tr>
 document.querySelector('#tbl-veic tbody').innerHTML = data.veiculo_veiculos.map(v => `<tr><td>${v.id.substring(0,8)}</td><td>${v.placa}</td><td>${v.modelo}</td><td class="actions-cell"><button class="btn-mini">✏️</button></td></tr>`).join('');
 document.querySelector('#tbl-posto tbody').innerHTML = data.postos_veiculos.map(p => `<tr><td>${p.id.substring(0,8)}</td><td>${p.nome}</td><td>${p.cnpj}</td><td class="actions-cell"><button class="btn-mini">✏️</button></td></tr>`).join('');
 }
-function renderChart() {
-const ctx = document.getElementById('mainChart').getContext('2d');
-new Chart(ctx, { type: 'bar', data: { labels: ['Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev', 'Mar'], datasets: [{ label: 'Gasto Mensal R$', data: [309, 238, 292, 234, 265, 157, 268], backgroundColor: '#22c55e' }] }, options: { responsive: true, maintainAspectRatio: false } });
+
+function renderChart(){
+const ctx=document.getElementById('mainChart').getContext('2d')
+let labels=data.abastecimento_veiculos.map(a=>a.data)
+let valores=data.abastecimento_veiculos.map(a=>a.total)
+new Chart(ctx,{
+type:'line',
+data:{
+labels:labels,
+datasets:[{
+data:valores,
+borderColor:'#22c55e',
+backgroundColor:'rgba(34,197,94,0.2)',
+fill:true,
+tension:0.4
+}]
+},
+options:{
+plugins:{legend:{display:false}}
 }
+})
+}
+  
 function showTab(id, e) {
 document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
