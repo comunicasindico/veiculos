@@ -352,39 +352,87 @@ document.getElementById(id).style.display = 'flex'; e.target.classList.add('acti
 }
 
 async function salvarAbastecimento(){
+
 let dataVal=document.getElementById("cad_data").value
-let postoSelect=document.getElementById("cad_posto_select")?document.getElementById("cad_posto_select").value:null
+
+let postoSelect=document.getElementById("cad_posto_select")
+?document.getElementById("cad_posto_select").value
+:null
+
 let nomeDigitado=(document.getElementById("cad_posto_nome")?.value||"").trim()
+let nomeNormalizado=nomeDigitado.toUpperCase().trim()
+
 let tanque=document.getElementById("cad_tanque")?.value||"cheio"
 
-let postoId=postoSelect
+let postoId=postoSelect||null
 
-if(nomeDigitado){
-let postoExistente=data.postos_veiculos.find(p=>p.nome.toLowerCase()===nomeDigitado.toLowerCase())
+// 🔥 PRIORIDADE: nome digitado
+if(nomeNormalizado){
+
+let postoExistente=data.postos_veiculos.find(
+p=>p.nome===nomeNormalizado
+)
+
 if(postoExistente){
 postoId=postoExistente.id
 }else{
-let {data:newPosto,error:ePosto}=await db.from("postos_veiculos").insert({
+
+let {data:newPosto,error:ePosto}=await db
+.from("postos_veiculos")
+.insert({
 empresa_id:EMPRESA,
-nome_posto:nomeDigitado
-}).select().single()
-if(ePosto){console.error(ePosto);alert("Erro ao criar posto");return}
+nome_posto:nomeNormalizado
+})
+.select()
+.single()
+
+if(ePosto){
+console.error(ePosto)
+
+// 🔥 fallback se índice único barrar
+let retry=data.postos_veiculos.find(p=>p.nome===nomeNormalizado)
+
+if(retry){
+postoId=retry.id
+}else{
+alert("Erro ao criar posto")
+return
+}
+
+}else{
 postoId=newPosto.id
 }
 }
+}
 
+// 🔥 VALORES
 let litros=parseFloat(document.getElementById("cad_litros").value||0)
 let valor=parseFloat(document.getElementById("cad_valor").value||0)
-let km=parseFloat(document.getElementById("cad_km").value||0)
+let kmInput=document.getElementById("cad_km").value
+let km=kmInput?parseFloat(kmInput):null
 
-if(!dataVal || !postoId || !litros || !valor || !km){
+// 🔥 REGRA: parcial pode não ter KM
+if(tanque==="parcial"){
+km=null
+}
+
+// 🔥 VALIDAÇÃO
+if(!dataVal || !postoId || litros<=0 || valor<=0){
 alert("Preencha todos os campos corretamente")
 return
 }
 
+// 🔥 VEÍCULO
+let veiculoId=data.veiculo_veiculos[0]?.id
+if(!veiculoId){
+alert("Nenhum veículo cadastrado")
+return
+}
+
+// 🔥 PAYLOAD
 let payload={
 empresa_id:EMPRESA,
-veiculo_id:data.veiculo_veiculos[0]?.id,
+veiculo_id:veiculoId,
 posto_id:postoId,
 data_abastecimento:dataVal,
 litros:litros,
@@ -393,13 +441,26 @@ quilometragem:km,
 tanque:tanque
 }
 
+// 🔥 INSERT
 let {error}=await db.from("abastecimento_veiculos").insert(payload)
 
-if(error){console.error(error);alert("Erro ao salvar");return}
+if(error){
+console.error(error)
+alert("Erro ao salvar")
+return
+}
 
-limparForm()
-carregarBanco()
+// 🔥 LIMPEZA
+document.getElementById("cad_litros").value=""
+document.getElementById("cad_valor").value=""
+document.getElementById("cad_km").value=""
+document.getElementById("cad_posto_nome").value=""
+
+// 🔥 ATUALIZA
+await carregarBanco()
+
 alert("Salvo com sucesso")
+
 }
 
 function fData(d){if(!d)return"-";let x=new Date(d);return x.toLocaleDateString("pt-BR")}
