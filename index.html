@@ -72,16 +72,16 @@ th{resize:horizontal;overflow:auto;min-width:80px}
 #top-create button{
 background:#ef4444;
 color:#fff;
-border:none;
-padding:12px 24px;
-border-radius:10px;
+padding:20px 40px;
+font-size:18px;
+border-radius:14px;
 font-weight:bold;
 cursor:pointer;
 box-shadow:0 4px 15px rgba(0,0,0,0.4);
 transition:.2s;
 }
 #top-create button:hover{transform:scale(1.05);}
-
+                   
   
 </style>
 </head>
@@ -106,8 +106,7 @@ transition:.2s;
 <div class="top-header">
 <span id="header-title">APP: MANOEL FERNANDES NETO</span>
 <div style="display:flex;gap:10px;">
-<button class="btn-edit-mode" onclick="toggleEditMode()">🛠️ EDITAR</button>
-<button onclick="forceReload()" style="background:#22c55e;">🔄 ATUALIZAR</button>
+<div id="acoes-header"></div>
 <button class="btn-sair" onclick="logout()">SAIR</button>
 </div>
 </div>
@@ -133,6 +132,7 @@ transition:.2s;
 </div>
 <span id="kpi-total" class="kpi-val">--</span>
 </div>
+  
 <div class="card">
 <div style="display:flex;justify-content:space-between;align-items:center;">
 <span>Litros Total</span>
@@ -151,7 +151,9 @@ transition:.2s;
 <div id="tab-abast" class="container tab-content" style="display:none;">
 <div style="font-size:18px;font-weight:bold;color:#22c55e;margin-bottom:10px;">⛽ Controle de Abastecimentos</div>
 <!-- 🔥 FORMULÁRIO DE CADASTRO -->
-<div class="card">
+<button onclick="toggleNovoAbast()" style="margin-bottom:10px;">➕ NOVO ABASTECIMENTO</button>
+
+<div id="box-novo-abast" class="card" style="display:none;">
 <h3>Novo Abastecimento</h3>
 <input type="date" id="cad_data">
 <select id="cad_posto_select"></select>
@@ -225,6 +227,8 @@ if(u==='neto' && p==='1234'){
 localStorage.setItem("logado","1")
 document.getElementById('login-screen').style.display='none'
 document.getElementById('app').style.display='flex'
+let topBtn=document.getElementById('top-create')
+if(topBtn)topBtn.style.display='none'
 carregarBanco()
 }else{
 alert('Acesso Negado.')
@@ -248,8 +252,10 @@ cnpj:p.cnpj||""
 .sort((a,b)=>a.nome.localeCompare(b.nome))
 let sel2=document.getElementById("cad_posto_select")
 if(sel2){
-sel2.innerHTML=data.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("")
+sel2.innerHTML=`<option value="" disabled selected>Escolha/Selecione um Posto aqui</option>`+
+data.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("")
 }
+sel2.value=""
 data.abastecimento_veiculos=(abast||[]).map(a=>{
 let dataFmt=a.data_abastecimento?new Date(a.data_abastecimento).toLocaleDateString("pt-BR"):"-"
 return{
@@ -371,7 +377,17 @@ abBody.innerHTML=data.abastecimento_veiculos.map(a=>`<tr>
 <button class="btn-mini" style="background:var(--danger)" onclick="excluirAbast('${a.id}')">🗑️</button>
 </td>
 </tr>`).join('')
-document.querySelector('#tbl-veic tbody').innerHTML=data.veiculo_veiculos.map(v=>`<tr><td>${v.placa}</td><td>${v.modelo}</td><td>${v.marca||"-"}</td><td>${v.ano||"-"}</td><td>${v.cor||"-"}</td><td>${(v.km_atual||0).toLocaleString("pt-BR")}</td><td>${v.renavam||"-"}</td></tr>`).join('')
+document.querySelector('#tbl-veic tbody').innerHTML=data.veiculo_veiculos.map(v=>`
+<tr>
+<td>${v.placa}</td>
+<td contenteditable="true" onblur="updateVeiculo('${v.id}','modelo',this.innerText)">${v.modelo||""}</td>
+<td contenteditable="true" onblur="updateVeiculo('${v.id}','marca',this.innerText)">${v.marca||""}</td>
+<td contenteditable="true" onblur="updateVeiculo('${v.id}','ano',this.innerText)">${v.ano||""}</td>
+<td contenteditable="true" onblur="updateVeiculo('${v.id}','cor',this.innerText)">${v.cor||""}</td>
+<td contenteditable="true" onblur="updateVeiculo('${v.id}','km_atual',this.innerText.replace(/\./g,''))">${(v.km_atual||0).toLocaleString("pt-BR")}</td>
+<td>${v.renavam||"-"}</td>
+</tr>
+`).join('')
 document.querySelector('#tbl-posto tbody').innerHTML=data.postos_veiculos.map(p=>`<tr><td>${p.nome}</td><td>${fCNPJ(p.cnpj)}</td><td>${p.cidade||"-"}</td><td>${p.uf||"-"}</td><td>${p.cep||"-"}</td></tr>`).join('')
 }
 
@@ -743,6 +759,35 @@ carregarBanco()
 setTimeout(()=>renderChart(),300)
 }
 
+function toggleNovoAbast(){
+let el=document.getElementById("box-novo-abast")
+if(!el)return
+el.style.display=el.style.display==="none"?"block":"none"
+}
+
+async function updateVeiculo(id,campo,valor){
+let payload={}
+if(campo==="km_atual"||campo==="ano"){
+payload[campo]=Number(String(valor).replace(/\D/g,''))||0
+}else{
+payload[campo]=valor.trim()
+}
+let {error}=await db.from("veiculo_veiculos").update(payload).eq("id",id)
+if(error){
+console.error(error)
+alert("Erro ao atualizar veículo")
+}else{
+console.log("✔ atualizado:",campo,valor)
+}
+}
+
+async function updatePosto(id,campo,valor){
+let payload={}
+payload[campo]=valor
+let {error}=await db.from("postos_veiculos").update(payload).eq("id",id)
+if(error)console.error(error)
+}
+
 function logout(){
 localStorage.removeItem("logado")
 location.reload()
@@ -750,6 +795,8 @@ location.reload()
   
 window.addEventListener("load",()=>{
 if(localStorage.getItem("logado")==="1"){
+let topBtn=document.getElementById('top-create')
+if(topBtn)topBtn.style.display='none'
 document.getElementById('login-screen').style.display='none'
 document.getElementById('app').style.display='flex'
 carregarBanco()
