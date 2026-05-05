@@ -78,12 +78,27 @@ th{resize:horizontal;overflow:auto;min-width:80px}
   
 <div id="tab-dash" class="container tab-content">
 <div style="font-size:18px;font-weight:bold;color:#22c55e;margin-bottom:10px;">📊 Dashboard Geral</div>
+
 <div class="kpi-grid">
 <div class="card">Km Atual <span id="kpi-km-atual" class="kpi-val">--</span></div>
 <div class="card">Km/L Médio <span id="kpi-kml" class="kpi-val">--</span></div>
 <div class="card">Custo/Km <span id="kpi-custokm" class="kpi-val">--</span></div>
-<div class="card">Gasto Total <span id="kpi-total" class="kpi-val">--</span></div>
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;">
+<span>Gasto Total</span>
+<button onclick="toggleValor('kpi-total')" style="width:28px;height:28px;font-size:11px;">👁️</button>
 </div>
+<span id="kpi-total" class="kpi-val">--</span>
+</div>
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;">
+<span>Litros Total</span>
+<button onclick="toggleValor('kpi-litros')" style="width:28px;height:28px;font-size:11px;">👁️</button>
+</div>
+<span id="kpi-litros" class="kpi-val">--</span>
+</div>
+</div>
+  
 <div class="card"><canvas id="mainChart"></canvas></div>
 </div>
   
@@ -229,6 +244,7 @@ document.body.classList.toggle('editing', isEditMode);
 function updateDash(){
 let total=0
 let kmAtual=0
+let litrosTotalGeral=0  
 // 🔥 ORDENAR POR DATA REAL
 let arr=data.abastecimento_veiculos
 .filter(a=>a.data)
@@ -240,8 +256,15 @@ return da-db
 // 🔥 KPIs básicos
 arr.forEach(a=>{
 total+=Number(a.total||0)
+litrosTotalGeral+=Number(a.litros||0)
 if(a.km && a.km>kmAtual)kmAtual=a.km
 })
+
+let elLitros=document.getElementById('kpi-litros')
+if(elLitros){
+elLitros.innerText=litrosTotalGeral.toLocaleString("pt-BR",{minimumFractionDigits:2})+" L"
+}
+
 document.getElementById('kpi-total').innerText=
 total.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
 // 🔥 CÁLCULO REAL (COM PARCIAL)
@@ -632,6 +655,20 @@ return ctx.raw+" L"
 }
 }
 })
+}
+
+let ocultos={}
+function toggleValor(id){
+let el=document.getElementById(id)
+if(!el)return
+if(!ocultos[id]){
+el.dataset.valorReal=el.innerText
+el.innerText="••••••"
+ocultos[id]=true
+}else{
+el.innerText=el.dataset.valorReal||el.innerText
+ocultos[id]=false
+}
 }
 
 function logout(){
