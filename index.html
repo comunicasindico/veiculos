@@ -36,10 +36,13 @@ table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
 th { background: var(--border); color: var(--accent); position: sticky; top: 0; }
 @media (max-width: 768px) { body { overflow: auto; } #app { height: auto; } }
+.top-header button{min-width:110px;height:36px;}
+
 
 </style>
 </head>
 <body>
+  
 <div id="login-screen">
 <div class="login-box">
 <h2>VEÍCULOS<br><span style="font-size: 14px; color: #fff;">Controle Total</span></h2>
@@ -54,18 +57,20 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
 <div id="app">
 <div class="top-header">
 <span id="header-title">APP: MANOEL FERNANDES NETO</span>
-<div>
+<div style="display:flex;gap:10px;">
 <button class="btn-edit-mode" onclick="toggleEditMode()">🛠️ EDITAR</button>
-<button onclick="carregarBanco()" style="background:#22c55e;margin-right:10px;">🔄 ATUALIZAR</button>
+<button onclick="carregarBanco()" style="background:#22c55e;">🔄 ATUALIZAR</button>
 <button class="btn-sair" onclick="location.reload()">SAIR</button>
 </div>
 </div>
+  
 <div class="tabs">
 <button class="tab-btn active" onclick="showTab('tab-dash', event)">📊 Dashboard</button>
 <button class="tab-btn" onclick="showTab('tab-abast', event)">⛽ Abastecimentos</button>
 <button class="tab-btn" onclick="showTab('tab-veic', event)">🚗 Veículos</button>
 <button class="tab-btn" onclick="showTab('tab-posto', event)">🏪 Postos</button>
 </div>
+  
 <div id="tab-dash" class="container tab-content">
 <div class="kpi-grid">
 <div class="card">Km/L Médio <span id="kpi-kml" class="kpi-val">--</span></div>
@@ -74,18 +79,21 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
 </div>
 <div class="card"><canvas id="mainChart" height="200"></canvas></div>
 </div>
+  
 <div id="tab-abast" class="container tab-content" style="display:none;">
 <!-- 🔥 FORMULÁRIO DE CADASTRO -->
 <div class="card">
 <h3>Novo Abastecimento</h3>
-
 <input type="date" id="cad_data">
 <select id="cad_posto"></select>
 <input type="number" id="cad_litros" placeholder="Litros">
 <input type="number" id="cad_valor" placeholder="Valor Total">
 <input type="number" id="cad_km" placeholder="KM Atual">
-
+<div style="display:flex;gap:10px;">
 <button onclick="salvarAbastecimento()">SALVAR</button>
+<button onclick="atualizarAbast()">ATUALIZAR</button>
+<button onclick="limparForm()">LIMPAR</button>
+</div>
 </div>
 
 <div class="card table-wrapper">
@@ -95,6 +103,7 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
 </table>
 </div>
 </div>
+  
 <div id="tab-veic" class="container tab-content" style="display:none;">
 <div class="card table-wrapper">
 <table id="tbl-veic"><thead><tr><th>ID</th><th>Placa</th><th>Modelo</th><th class="actions-cell">Ações</th></tr></thead><tbody></tbody></table>
@@ -105,6 +114,7 @@ th { background: var(--border); color: var(--accent); position: sticky; top: 0; 
 <table id="tbl-posto"><thead><tr><th>ID</th><th>Nome</th><th>CNPJ</th><th class="actions-cell">Ações</th></tr></thead><tbody></tbody></table>
 </div>
 </div>
+  
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -188,17 +198,24 @@ document.getElementById('kpi-custokm').innerText='--'
 }
 }
 
-function renderTables() {
-const abBody = document.querySelector('#tbl-abast tbody');
-abBody.innerHTML = data.abastecimento_veiculos.map(a => `<tr>
-<td>${a.data}</td><td>${a.posto}</td><td>${a.litros}L</td><td>${a.km}</td><td>R$ ${a.total}</td>
-<td class="actions-cell"><button class="btn-mini">✏️</button><button class="btn-mini" style="background:var(--danger)">🗑️</button></td></tr>`).join('');
-document.querySelector('#tbl-veic tbody').innerHTML = data.veiculo_veiculos.map(v => `<tr><td>${v.id.substring(0,8)}</td><td>${v.placa}</td><td>${v.modelo}</td><td class="actions-cell"><button class="btn-mini">✏️</button></td></tr>`).join('');
-document.querySelector('#tbl-posto tbody').innerHTML = data.postos_veiculos.map(p => `<tr><td>${p.id.substring(0,8)}</td><td>${p.nome}</td><td>${p.cnpj}</td><td class="actions-cell"><button class="btn-mini">✏️</button></td></tr>`).join('');
+function renderTables(){
+const abBody=document.querySelector('#tbl-abast tbody')
+abBody.innerHTML=data.abastecimento_veiculos.map(a=>`<tr>
+<td>${a.data}</td>
+<td>${a.posto}</td>
+<td>${a.litros.toFixed(2)}L</td>
+<td>${a.km}</td>
+<td>${fMoeda(a.total)}</td>
+<td class="actions-cell">
+<button class="btn-mini" onclick="editarAbast('${a.id}')">✏️</button>
+<button class="btn-mini" style="background:var(--danger)" onclick="excluirAbast('${a.id}')">🗑️</button>
+</td>
+</tr>`).join('')
+document.querySelector('#tbl-veic tbody').innerHTML=data.veiculo_veiculos.map(v=>`<tr><td>${v.id.substring(0,8)}</td><td>${v.placa}</td><td>${v.modelo}</td><td class="actions-cell"><button class="btn-mini">✏️</button></td></tr>`).join('')
+document.querySelector('#tbl-posto tbody').innerHTML=data.postos_veiculos.map(p=>`<tr><td>${p.id.substring(0,8)}</td><td>${p.nome}</td><td>${fCNPJ(p.cnpj)}</td><td class="actions-cell"><button class="btn-mini">✏️</button></td></tr>`).join('')
 }
 
 let chartRef
-
 function renderChart(){
 const ctx=document.getElementById('mainChart').getContext('2d')
 if(chartRef){
@@ -265,7 +282,42 @@ document.getElementById("cad_km").value=""
 carregarBanco()
 alert("Salvo com sucesso")
 }
-  
+
+function fData(d){if(!d)return"-";let x=new Date(d);return x.toLocaleDateString("pt-BR")}
+function fMoeda(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+function fCNPJ(v){v=(v||"").replace(/\D/g,"").slice(0,14);return v.replace(/^(\d{2})(\d)/,"$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1/$2").replace(/(\d{4})(\d)/,"$1-$2")}
+function fCPF(v){v=(v||"").replace(/\D/g,"").slice(0,11);return v.replace(/^(\d{3})(\d)/,"$1.$2").replace(/^(\d{3})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1-$2")}
+function fCel(v){v=(v||"").replace(/\D/g,"").slice(0,11);if(v.length<=10)return v.replace(/^(\d{2})(\d)/,"($1) $2").replace(/(\d{4})(\d)/,"$1-$2");return v.replace(/^(\d{2})(\d)/,"($1) $2").replace(/(\d{5})(\d)/,"$1-$2")}
+
+let editId=null
+function editarAbast(id){
+let a=data.abastecimento_veiculos.find(x=>x.id===id);if(!a)return
+editId=id
+document.getElementById("cad_data").value=new Date(a.data.split("/").reverse().join("-")).toISOString().split("T")[0]
+let p=data.postos_veiculos.find(p=>p.nome===a.posto);if(p)document.getElementById("cad_posto").value=p.id
+document.getElementById("cad_litros").value=a.litros
+document.getElementById("cad_valor").value=a.total
+document.getElementById("cad_km").value=a.km
+}
+async function atualizarAbast(){
+if(!editId)return alert("Selecione um registro")
+let payload={data_abastecimento:document.getElementById("cad_data").value,posto_id:document.getElementById("cad_posto").value,litros:parseFloat(document.getElementById("cad_litros").value||0),valor_total:parseFloat(document.getElementById("cad_valor").value||0),quilometragem:parseFloat(document.getElementById("cad_km").value||0)}
+let {error}=await db.from("abastecimento_veiculos").update(payload).eq("id",editId)
+if(error){console.error(error);alert("Erro ao atualizar");return}
+editId=null;limparForm();carregarBanco()
+}
+async function excluirAbast(id){
+if(!confirm("Excluir registro?"))return
+let {error}=await db.from("abastecimento_veiculos").delete().eq("id",id)
+if(error){console.error(error);alert("Erro ao excluir");return}
+carregarBanco()
+}
+function limparForm(){
+document.getElementById("cad_litros").value=""
+document.getElementById("cad_valor").value=""
+document.getElementById("cad_km").value=""
+}
+
 window.addEventListener("load",()=>{
 if(localStorage.getItem("logado")==="1"){
 document.getElementById('login-screen').style.display='none'
