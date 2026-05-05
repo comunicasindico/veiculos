@@ -81,7 +81,16 @@ box-shadow:0 4px 15px rgba(0,0,0,0.4);
 transition:.2s;
 }
 #top-create button:hover{transform:scale(1.05);}
-                   
+#tbl-veic td[contenteditable="true"]{
+background:rgba(255,255,255,0.02);
+cursor:text;
+transition:.2s;
+}
+#tbl-veic td[contenteditable="true"]:focus{
+outline:none;
+background:rgba(34,197,94,0.15);
+box-shadow:0 0 0 1px #22c55e inset;
+}                   
   
 </style>
 </head>
@@ -379,15 +388,41 @@ abBody.innerHTML=data.abastecimento_veiculos.map(a=>`<tr>
 </tr>`).join('')
 document.querySelector('#tbl-veic tbody').innerHTML=data.veiculo_veiculos.map(v=>`
 <tr>
-<td>${v.placa}</td>
-<td contenteditable="true" onblur="updateVeiculo('${v.id}','modelo',this.innerText)">${v.modelo||""}</td>
-<td contenteditable="true" onblur="updateVeiculo('${v.id}','marca',this.innerText)">${v.marca||""}</td>
-<td contenteditable="true" onblur="updateVeiculo('${v.id}','ano',this.innerText)">${v.ano||""}</td>
-<td contenteditable="true" onblur="updateVeiculo('${v.id}','cor',this.innerText)">${v.cor||""}</td>
-<td contenteditable="true" onblur="updateVeiculo('${v.id}','km_atual',this.innerText.replace(/\./g,''))">${(v.km_atual||0).toLocaleString("pt-BR")}</td>
-<td>${v.renavam||"-"}</td>
+<td>${v.placa||"-"}</td>
+
+<td contenteditable="true"
+onblur="updateVeiculo('${v.id}','modelo',this.innerText)">
+${v.modelo||""}
+</td>
+
+<td contenteditable="true"
+onblur="updateVeiculo('${v.id}','marca',this.innerText)">
+${v.marca||""}
+</td>
+
+<td contenteditable="true"
+onblur="updateVeiculo('${v.id}','ano',this.innerText)">
+${v.ano||""}
+</td>
+
+<td contenteditable="true"
+onblur="updateVeiculo('${v.id}','cor',this.innerText)">
+${v.cor||""}
+</td>
+
+<td contenteditable="true"
+onblur="updateVeiculo('${v.id}','km_atual',this.innerText)">
+${(v.km_atual||0).toLocaleString("pt-BR")}
+</td>
+
+<td contenteditable="true"
+onblur="updateVeiculo('${v.id}','renavam',this.innerText)">
+${v.renavam||""}
+</td>
+
 </tr>
 `).join('')
+
 document.querySelector('#tbl-posto tbody').innerHTML=data.postos_veiculos.map(p=>`<tr><td>${p.nome}</td><td>${fCNPJ(p.cnpj)}</td><td>${p.cidade||"-"}</td><td>${p.uf||"-"}</td><td>${p.cep||"-"}</td></tr>`).join('')
 }
 
@@ -767,17 +802,20 @@ el.style.display=el.style.display==="none"?"block":"none"
 
 async function updateVeiculo(id,campo,valor){
 let payload={}
-if(campo==="km_atual"||campo==="ano"){
+if(campo==="km_atual" || campo==="ano"){
 payload[campo]=Number(String(valor).replace(/\D/g,''))||0
 }else{
 payload[campo]=valor.trim()
 }
-let {error}=await db.from("veiculo_veiculos").update(payload).eq("id",id)
+let {error}=await db
+.from("veiculo_veiculos")
+.update(payload)
+.eq("id",id)
 if(error){
-console.error(error)
-alert("Erro ao atualizar veículo")
+console.error("ERRO UPDATE:",error)
+alert("Erro ao salvar alteração")
 }else{
-console.log("✔ atualizado:",campo,valor)
+console.log("✔ salvo:",campo,valor)
 }
 }
 
