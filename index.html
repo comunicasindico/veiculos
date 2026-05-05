@@ -88,8 +88,8 @@ th{resize:horizontal;overflow:auto;min-width:80px}
 <div class="card">
 <h3>Novo Abastecimento</h3>
 <input type="date" id="cad_data">
-<input list="postosList" id="cad_posto_nome" placeholder="Digite ou escolha posto">
-<datalist id="postosList"></datalist>
+<select id="cad_posto_select"></select>
+<input type="text" id="cad_posto_nome" placeholder="Ou digite novo posto">
 <input type="number" id="cad_litros" placeholder="Litros">
 <input type="number" id="cad_valor" placeholder="Valor Total">
 <input type="number" id="cad_km" placeholder="KM Atual">
@@ -98,6 +98,13 @@ th{resize:horizontal;overflow:auto;min-width:80px}
 <button onclick="atualizarAbast()">ATUALIZAR</button>
 <button onclick="limparForm()">LIMPAR</button>
 </div>
+</div>
+
+<div style="display:flex;gap:10px;">
+<input type="date" id="filtro_inicio">
+<input type="date" id="filtro_fim">
+<button onclick="filtrarPeriodo()">FILTRAR</button>
+<button onclick="carregarBanco()">LIMPAR</button>
 </div>
 
 <div class="card table-wrapper">
@@ -163,6 +170,10 @@ if(e2)console.error("ERRO POSTOS:",e2)
 if(e3)console.error("ERRO ABAST:",e3)
 data.veiculo_veiculos=Array.isArray(veic)?veic:[]
 data.postos_veiculos=(postos||[]).map(p=>({id:p.id,nome:p.nome_posto||"-",cnpj:p.cnpj||""}))
+let sel2=document.getElementById("cad_posto_select")
+if(sel2){
+sel2.innerHTML=data.postos_veiculos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("")
+}
 let dl=document.getElementById("postosList")
 if(dl){
 dl.innerHTML=data.postos_veiculos.map(p=>`<option value="${p.nome}">`).join("")
@@ -211,6 +222,7 @@ abBody.innerHTML=data.abastecimento_veiculos.map(a=>`<tr>
 <td>${a.km}</td>
 <td>${fMoeda(a.total)}</td>
 <td class="actions-cell">
+<button class="btn-mini" onclick="verGrafico('${a.id}')">📊</button>
 <button class="btn-mini" onclick="editarAbast('${a.id}')">✏️</button>
 <button class="btn-mini" style="background:var(--danger)" onclick="excluirAbast('${a.id}')">🗑️</button>
 </td>
@@ -237,18 +249,24 @@ document.getElementById(id).style.display = 'flex'; e.target.classList.add('acti
 
 async function salvarAbastecimento(){
 let dataVal=document.getElementById("cad_data").value
-let nomePosto=document.getElementById("cad_posto_nome").value
-let postoObj=data.postos_veiculos.find(p=>p.nome===nomePosto)
-let postoId=postoObj?postoObj.id:null
-if(!postoId){
-let {data:newPosto}=await db.from("postos_veiculos").insert({empresa_id:EMPRESA,nome_posto:nomePosto}).select().single()
+let postoSelect=document.getElementById("cad_posto_select")?document.getElementById("cad_posto_select").value:null
+let nomeDigitado=document.getElementById("cad_posto_nome").value.trim()
+let postoId=postoSelect
+if(nomeDigitado){
+let postoExistente=data.postos_veiculos.find(p=>p.nome.toLowerCase()===nomeDigitado.toLowerCase())
+if(postoExistente){
+postoId=postoExistente.id
+}else{
+let {data:newPosto,error:ePosto}=await db.from("postos_veiculos").insert({empresa_id:EMPRESA,nome_posto:nomeDigitado}).select().single()
+if(ePosto){console.error(ePosto);alert("Erro ao criar posto");return}
 postoId=newPosto.id
+}
 }
 let litros=parseFloat(document.getElementById("cad_litros").value||0)
 let valor=parseFloat(document.getElementById("cad_valor").value||0)
 let km=parseFloat(document.getElementById("cad_km").value||0)
-if(!dataVal || !posto || !litros || !valor || !km){
-alert("Preencha todos os campos")
+if(!dataVal || !postoId || !litros || !valor || !km){
+alert("Preencha todos os campos corretamente")
 return
 }
 let payload={
@@ -260,19 +278,12 @@ litros:litros,
 valor_total:valor,
 quilometragem:km
 }
-let {error}=await db
-.from("abastecimento_veiculos")
-.insert(payload)
-if(error){
-console.error(error)
-alert("Erro ao salvar")
-return
-}
-// limpa campos
+let {error}=await db.from("abastecimento_veiculos").insert(payload)
+if(error){console.error(error);alert("Erro ao salvar");return}
 document.getElementById("cad_litros").value=""
 document.getElementById("cad_valor").value=""
 document.getElementById("cad_km").value=""
-// recarrega dados
+document.getElementById("cad_posto_nome").value=""
 carregarBanco()
 alert("Salvo com sucesso")
 }
@@ -310,6 +321,56 @@ function limparForm(){
 document.getElementById("cad_litros").value=""
 document.getElementById("cad_valor").value=""
 document.getElementById("cad_km").value=""
+}
+
+async function filtrarPeriodo(){
+let ini=document.getElementById("filtro_inicio").value
+let fim=document.getElementById("filtro_fim").value
+let {data:abast}=await db
+.from("abastecimento_veiculos")
+.select("*, postos_veiculos(nome_posto)")
+.eq("empresa_id",EMPRESA)
+.gte("data_abastecimento",ini)
+.lte("data_abastecimento",fim)
+.order("data_abastecimento",{ascending:false})
+data.abastecimento_veiculos=(abast||[]).map(a=>({
+id:a.id,
+data:fData(a.data_abastecimento),
+posto:a.postos_veiculos?.nome_posto||"-",
+litros:a.litros,
+km:a.quilometragem,
+total:a.valor_total
+}))
+renderTables()
+updateDash()
+renderChart()
+}
+
+function verGrafico(id){
+let a=data.abastecimento_veiculos.find(x=>x.id===id)
+if(!a)return
+const ctx=document.getElementById('mainChart').getContext('2d')
+if(chartRef)chartRef.destroy()
+chartRef=new Chart(ctx,{
+type:'bar',
+data:{
+labels:['Valor R$','Litros'],
+datasets:[{
+data:[a.total,a.litros]
+}]
+},
+options:{
+plugins:{
+tooltip:{
+callbacks:{
+label:function(ctx){
+if(ctx.dataIndex===0)return fMoeda(ctx.raw)
+return ctx.raw+" L"
+}
+}
+}
+}
+})
 }
 
 window.addEventListener("load",()=>{
