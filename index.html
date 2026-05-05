@@ -30,7 +30,7 @@ body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); co
 input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid var(--border); background: #0f172a; color: #fff; font-size: 15px; }
 button { background: var(--accent); color: #000; font-weight: bold; cursor: pointer; border: none; }
 .actions-cell { display: none; gap: 5px; justify-content: center; }
-.editing .actions-cell { display: flex; }
+.editing .actions-cell{display:flex !important;}
 .btn-mini { padding: 4px 8px; font-size: 11px; width: auto; margin: 0; }
 .btn-sair { background: var(--danger); color: #fff !important; width: auto !important; padding: 8px 15px !important; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -64,8 +64,8 @@ th{resize:horizontal;overflow:auto;min-width:80px}
 <span id="header-title">APP: MANOEL FERNANDES NETO</span>
 <div style="display:flex;gap:10px;">
 <button class="btn-edit-mode" onclick="toggleEditMode()">🛠️ EDITAR</button>
-<button onclick="carregarBanco()" style="background:#22c55e;">🔄 ATUALIZAR</button>
-<button class="btn-sair" onclick="location.reload()">SAIR</button>
+<button onclick="forceReload()" style="background:#22c55e;">🔄 ATUALIZAR</button>
+<button class="btn-sair" onclick="logout()">SAIR</button>
 </div>
 </div>
   
@@ -236,9 +236,13 @@ updateDash()
 renderChart()
 }
   
-function toggleEditMode() {
-isEditMode = !isEditMode;
-document.body.classList.toggle('editing', isEditMode);
+function toggleEditMode(){
+isEditMode=!isEditMode
+if(isEditMode){
+document.body.classList.add('editing')
+}else{
+document.body.classList.remove('editing')
+}
 }
 
 function updateDash(){
@@ -671,6 +675,11 @@ ocultos[id]=false
 }
 }
 
+function forceReload(){
+carregarBanco()
+setTimeout(()=>renderChart(),300)
+}
+
 function logout(){
 localStorage.removeItem("logado")
 location.reload()
@@ -689,7 +698,7 @@ if(campo && !campo.value) campo.value=d
 })
 
 setInterval(()=>{
-if(localStorage.getItem("logado")==="1" && !editId){
+if(localStorage.getItem("logado")==="1" && !editId && !isEditMode){
 carregarBanco()
 }
 },15000)
