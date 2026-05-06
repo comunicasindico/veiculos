@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.2, user-scalable=yes">
-<title>VEÍCULOS MASTER - EDITION</title>
+<title>VEÍCULOS MASTER - BI EDITION</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,7 +12,7 @@
 :root { --bg: #020617; --card: #0f172a; --accent: #22c55e; --edit: #3b82f6; --danger: #ef4444; --border: #1e293b; --text: #f8fafc; --text-dim: #94a3b8; --kpi-1: #3b82f6; --kpi-2: #8b5cf6; --kpi-3: #10b981; }
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
 body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; background-image: radial-gradient(circle at 50% -20%, #1e293b, #020617); }
-#login-screen { position: fixed; inset: 0; background: linear-gradient(rgba(2,6,23,0.2), rgba(2,6,23,0.2)), url('https://raw.githubusercontent.com/comunicasindico/veiculos/main/img/bcveiculos.png') no-repeat center center/cover; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+#login-screen { position: fixed; inset: 0; background: linear-gradient(rgba(2,6,23,0.3), rgba(2,6,23,0.3)), url('https://raw.githubusercontent.com/comunicasindico/veiculos/main/img/bcveiculos.png') no-repeat center center/cover; display: flex; justify-content: center; align-items: center; z-index: 9999; }
 .login-box { width: 90%; max-width: 400px; background: rgba(15, 23, 42, 0.98); padding: 40px; border-radius: 24px; border: 1px solid var(--border); text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
 input, select { width: 100%; padding: 10px; margin: 6px 0; border-radius: 8px; border: 1px solid var(--border); background: #1e293b; color: #fff; outline: none; font-size: 13px; }
 button { padding: 10px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
@@ -54,7 +54,7 @@ td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
 <div id="login-screen">
 <div class="login-box">
 <h2 style="color:var(--accent); font-weight:800; font-size: 24px;">VEÍCULOS MASTER</h2>
-<p style="color:var(--text-dim); font-size: 10px; margin-bottom: 20px;">GESTÃO DE VEÍCULOS</p>
+<p style="color:var(--text-dim); font-size: 10px; margin-bottom: 20px;">BI E GESTÃO DE FROTAS</p>
 <input type="text" id="user" placeholder="Usuário">
 <input type="password" id="pass" placeholder="Senha">
 <button class="btn-primary" onclick="login()">ACESSAR PAINEL</button>
@@ -128,7 +128,7 @@ let qA = db.from("abastecimento_veiculos").select("*, postos_veiculos(nome_posto
 if(start && end) qA = qA.gte("data_abastecimento", start).lte("data_abastecimento", end);
 const [v, p, a, m] = await Promise.all([
 db.from("veiculo_veiculos").select("*").eq("empresa_id", EMPRESA_ID),
-db.from("postos_veiculos").select("*").eq("empresa_id", EMPRESA_ID),
+db.from("postos_veiculos").select("*").eq("empresa_id", EMPRESA_ID).order("nome_posto"),
 qA,
 db.from("motoristas_veiculos").select("*").eq("empresa_id", EMPRESA_ID)
 ]);
@@ -209,10 +209,10 @@ window.currentTableAdd = table;
 async function saveNew() {
 const t = window.currentTableAdd; let d = { empresa_id: EMPRESA_ID };
 if(t === 'abastecimento_veiculos') d = { ...d, data_abastecimento: document.getElementById('new-data').value, posto_id: document.getElementById('new-posto').value, veiculo_id: document.getElementById('new-veic').value, tanque: document.getElementById('new-tanque').value, litros: parseFloat(document.getElementById('new-litros').value), quilometragem: parseInt(document.getElementById('new-km').value), valor_total: parseFloat(document.getElementById('new-valor').value), tipo_combustivel: 'Gasolina Aditivada' };
-else if(t === 'veiculo_veiculos') d = { ...d, placa: document.getElementById('new-placa').value, modelo: document.getElementById('new-modelo').value, vencimento_licenciamento: document.getElementById('new-lic').value, vencimento_renavam: document.getElementById('new-ren').value, km_atual: parseInt(document.getElementById('new-km-v').value), tipo_combustivel: 'Gasolina' };
+else if(t === 'veiculo_veiculos') d = { ...d, placa: document.getElementById('new-placa').value, modelo: document.getElementById('new-modelo').value, vencimento_licenciamento: document.getElementById('new-lic').value || null, vencimento_renavam: document.getElementById('new-ren').value || null, km_atual: parseInt(document.getElementById('new-km-v').value) || 0, tipo_combustivel: 'Gasolina' };
 else if(t === 'postos_veiculos') d = { ...d, nome_posto: document.getElementById('new-n-posto').value, cnpj: document.getElementById('new-cnpj').value, cidade: 'Tubarão', uf: 'SC' };
 else if(t === 'motoristas_veiculos') d = { ...d, nome: document.getElementById('new-n-moto').value, telefone: document.getElementById('new-tel').value, cpf: document.getElementById('new-cpf').value };
-const { error } = await db.from(t).insert([d]); if(!error) { closeModal(); init(); } else alert("Erro ao inserir.");
+const { error } = await db.from(t).insert([d]); if(!error) { closeModal(); init(); } else { console.error(error); alert("Erro ao inserir: " + error.message); }
 }
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
 function logout() { location.reload(); }
