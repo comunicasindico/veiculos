@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.2, user-scalable=yes">
-<title>VEÍCULOS MASTER - 2026 EDITION</title>
+<title>VEÍCULOS MASTER - BI EDITION</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,38 +17,39 @@ body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidde
 input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid var(--border); background: #1e293b; color: #fff; outline: none; font-size: 14px; }
 button { padding: 12px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
 .btn-primary { background: var(--accent); color: #052e16; width: 100%; }
-.btn-add { background: var(--accent); color: #052e16; padding: 8px 16px; font-size: 12px; }
+.btn-add { background: var(--accent); color: #052e16; padding: 8px 16px; font-size: 11px; }
 #app { display: none; height: 100vh; flex-direction: column; }
 .top-header { background: var(--card); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
 .tabs { display: flex; gap: 4px; padding: 8px 16px; background: var(--card); overflow-x: auto; border-bottom: 1px solid var(--border); scrollbar-width: none; }
 .tab-btn { background: transparent; color: var(--text-dim); padding: 10px 18px; border-radius: 8px; border: none; font-size: 11px; white-space: nowrap; font-weight: 700; cursor: pointer; }
 .tab-btn.active { background: rgba(34,197,94,0.1); color: var(--accent); }
-.main-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+.main-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
 .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; position: relative; overflow: hidden; }
 .kpi-card::before { content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--c); }
 .kpi-label { color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }
 .kpi-value { font-size: 22px; font-weight: 800; }
-.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 15px; }
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; }
+.alert-box { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); border-radius: 16px; padding: 15px; color: #fca5a5; font-size: 12px; }
 .table-wrapper { overflow-x: auto; background: var(--card); border-radius: 16px; border: 1px solid var(--border); }
-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1000px; }
 th { background: #1e293b; padding: 14px; color: var(--text-dim); text-transform: uppercase; font-weight: 800; text-align: left; }
-td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
 .actions { display: flex; gap: 6px; justify-content: center; }
 .btn-action { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; }
 .btn-del { background: var(--danger); }
 .btn-edit { background: var(--edit); }
-[contenteditable="true"] { background: rgba(255,255,255,0.05)!important; outline: 1px solid var(--edit); border-radius: 4px; }
-#modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; }
-.modal-content { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 24px; width: 90%; max-width: 500px; }
+#modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; }
+.modal-content { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 24px; width: 95%; max-width: 500px; }
+[contenteditable="true"] { background: rgba(255,255,255,0.05); outline: 1px solid var(--edit); border-radius: 4px; }
 </style>
 </head>
 <body>
 <div id="login-screen">
 <div class="login-box">
 <h2 style="color:var(--accent); font-weight:800; font-size: 26px;">VEÍCULOS MASTER</h2>
-<p style="color:var(--text-dim); font-size: 12px; margin-bottom: 25px;">CONTROLE ESTRATÉGICO</p>
+<p style="color:var(--text-dim); font-size: 11px; margin-bottom: 25px;">AUDITORIA E BI ESTRATÉGICO</p>
 <input type="text" id="user" placeholder="Usuário">
 <input type="password" id="pass" placeholder="Senha">
 <button class="btn-primary" onclick="login()">ACESSAR SISTEMA</button>
@@ -56,8 +57,8 @@ td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
 </div>
 <div id="app">
 <div class="top-header">
-<h1 style="font-size:15px; color:var(--accent); font-weight:800; display:flex; align-items:center; gap:8px;">
-<span style="background:var(--accent); color:#000; padding:2px 6px; border-radius:4px; font-size:10px;">BI</span> VEÍCULOS MASTER
+<h1 style="font-size:14px; color:var(--accent); font-weight:800; display:flex; align-items:center; gap:8px;">
+<span style="background:var(--accent); color:#000; padding:2px 6px; border-radius:4px; font-size:9px;">POWER BI</span> AUDITORIA MASTER
 </h1>
 <button class="btn-sair" style="background:var(--danger); color:white; font-size:10px; padding:6px 12px;" onclick="logout()">SAIR</button>
 </div>
@@ -73,30 +74,33 @@ td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
 <div class="kpi-card" style="--c:var(--kpi-1)"><div class="kpi-label">Investimento Total</div><div id="kpi-total" class="kpi-value">R$ 0,00</div></div>
 <div class="kpi-card" style="--c:var(--kpi-2)"><div class="kpi-label">Eficiência Média</div><div id="kpi-kml" class="kpi-value">0.00 Km/L</div></div>
 <div class="kpi-card" style="--c:var(--kpi-3)"><div class="kpi-label">Volume Abastecido</div><div id="kpi-litros" class="kpi-value">0.00 L</div></div>
+<div class="kpi-card" style="--c:var(--danger)"><div class="kpi-label">Alertas Críticos</div><div id="kpi-alerts" class="kpi-value">0</div></div>
 </div>
+<div id="bi-alerts-panel"></div>
 <div class="chart-grid">
-<div class="card" style="height: 300px;"><canvas id="chart-money"></canvas></div>
-<div class="card" style="height: 300px;"><canvas id="chart-eff"></canvas></div>
+<div class="card" style="height: 320px;"><canvas id="chart-money"></canvas></div>
+<div class="card" style="height: 320px;"><canvas id="chart-eff"></canvas></div>
+<div class="card" style="height: 320px;"><canvas id="chart-litros"></canvas></div>
 </div>
 </div>
 <div id="tab-abast" class="main-container" style="display:none">
-<div style="display:flex; justify-content:space-between; align-items:center;"><h3>Histórico de Cargas</h3><button class="btn-add" onclick="openAdd('abastecimento_veiculos')">+ NOVO ABASTECIMENTO</button></div>
-<div class="table-wrapper"><table id="tbl-abast"><thead><tr><th>DATA</th><th>POSTO</th><th>VEÍCULO</th><th class="txt-right">LITROS</th><th class="txt-right">KM ATUAL</th><th class="txt-right">KM/L</th><th class="txt-right">TOTAL</th><th class="txt-center">AÇÕES</th></tr></thead><tbody></tbody></table></div>
+<div style="display:flex; justify-content:space-between; align-items:center;"><h3>Histórico de Abastecimentos</h3><button class="btn-add" onclick="openAdd('abastecimento_veiculos')">+ NOVO ABASTECIMENTO</button></div>
+<div class="table-wrapper"><table id="tbl-abast"><thead><tr><th>DATA</th><th>POSTO</th><th>VEÍCULO</th><th class="txt-right">LITROS</th><th class="txt-right">KM ATUAL</th><th class="txt-right">KM/L</th><th class="txt-right">COMBUSTÍVEL</th><th class="txt-right">TOTAL</th><th class="txt-center">AÇÕES</th></tr></thead><tbody></tbody></table></div>
 </div>
 <div id="tab-veic" class="main-container" style="display:none">
-<div style="display:flex; justify-content:space-between; align-items:center;"><h3>Frota Ativa</h3><button class="btn-add" onclick="openAdd('veiculo_veiculos')">+ NOVO VEÍCULO</button></div>
-<div class="table-wrapper"><table id="tbl-veic"><thead><tr><th>PLACA</th><th>MODELO</th><th>MARCA</th><th>ANO</th><th>RENAVAM</th><th class="txt-right">KM ATUAL</th><th class="txt-center">AÇÕES</th></tr></thead><tbody></tbody></table></div>
+<div style="display:flex; justify-content:space-between; align-items:center;"><h3>Frota Master</h3><button class="btn-add" onclick="openAdd('veiculo_veiculos')">+ NOVO VEÍCULO</button></div>
+<div class="table-wrapper"><table id="tbl-veic"><thead><tr><th>PLACA</th><th>MODELO</th><th>TIPO</th><th>LICENCIAMENTO</th><th>RENAVAM VENC.</th><th class="txt-right">KM ATUAL</th><th class="txt-center">AÇÕES</th></tr></thead><tbody></tbody></table></div>
 </div>
 <div id="tab-posto" class="main-container" style="display:none">
 <div style="display:flex; justify-content:space-between; align-items:center;"><h3>Rede de Postos</h3><button class="btn-add" onclick="openAdd('postos_veiculos')">+ NOVO POSTO</button></div>
-<div class="table-wrapper"><table id="tbl-posto"><thead><tr><th>NOME POSTO</th><th>CNPJ</th><th>CIDADE</th><th>UF</th><th class="txt-center">AÇÕES</th></tr></thead><tbody></tbody></table></div>
+<div class="table-wrapper"><table id="tbl-posto"><thead><tr><th>NOME POSTO</th><th>CNPJ</th><th>CIDADE</th><th class="txt-center">AÇÕES</th></tr></thead><tbody></tbody></table></div>
 </div>
 <div id="tab-motorista" class="main-container" style="display:none">
-<div style="display:flex; justify-content:space-between; align-items:center;"><h3>Equipe de Condutores</h3><button class="btn-add" onclick="openAdd('motoristas_veiculos')">+ NOVO MOTORISTA</button></div>
-<div class="table-wrapper"><table id="tbl-motorista"><thead><tr><th>NOME</th><th>TELEFONE</th><th>CPF</th><th>CNH</th><th class="txt-center">AÇÕES</th></tr></thead><tbody></tbody></table></div>
+<div style="display:flex; justify-content:space-between; align-items:center;"><h3>Condutores Ativos</h3><button class="btn-add" onclick="openAdd('motoristas_veiculos')">+ NOVO MOTORISTA</button></div>
+<div class="table-wrapper"><table id="tbl-motorista"><thead><tr><th>NOME</th><th>TELEFONE</th><th>CPF</th><th class="txt-center">AÇÕES</th></tr></thead><tbody></tbody></table></div>
 </div>
 </div>
-<div id="modal"><div class="modal-content"><h3 id="modal-title" style="margin-bottom:20px; color:var(--accent);">NOVO REGISTRO</h3><div id="modal-body"></div><div style="display:flex; gap:10px; margin-top:20px;"><button class="btn-primary" onclick="saveNew()">SALVAR REGISTRO</button><button style="background:#334155; color:white; width:100%;" onclick="closeModal()">CANCELAR</button></div></div></div>
+<div id="modal"><div class="modal-content"><h3 id="modal-title" style="margin-bottom:15px; color:var(--accent); font-size:18px;">NOVO REGISTRO</h3><div id="modal-body"></div><div style="display:flex; gap:10px; margin-top:20px;"><button class="btn-primary" onclick="saveNew()">SALVAR</button><button style="background:#334155; color:white; width:100%;" onclick="closeModal()">CANCELAR</button></div></div></div>
 <script>
 const SUPABASE_URL = "https://gspdlrenyrzbkxlvyugc.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzcGRscmVueXJ6Ymt4bHZ5dWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODU0NzAsImV4cCI6MjA5MDQ2MTQ3MH0.UWfkWvOh4qMDEcByVL-KZ6ejJ80V7wJlDOFH76TywaI";
@@ -119,23 +123,46 @@ renderAll();
 function renderAll() {
 const kpiTotal = store.data.abastecimentos.reduce((acc, r) => acc + (r.valor_total || 0), 0);
 const kpiLitros = store.data.abastecimentos.reduce((acc, r) => acc + (r.litros || 0), 0);
+let totalKml = 0, countKml = 0, alertsCount = 0;
+const alertsHtml = [];
+store.data.veiculos.forEach(v => {
+const dLic = new Date(v.vencimento_licenciamento);
+const dRen = new Date(v.vencimento_renavam);
+const agora = new Date();
+if(dLic < agora || dRen < agora) { alertsCount++; alertsHtml.push(`<div class="alert-box"><strong>ALERTA:</strong> Veículo ${v.placa} com documento vencido (Lic: ${v.vencimento_licenciamento || 'N/A'}, Ren: ${v.vencimento_renavam || 'N/A'})</div>`); }
+});
 document.getElementById('kpi-total').innerText = fMoeda(kpiTotal);
 document.getElementById('kpi-litros').innerText = kpiLitros.toFixed(2) + " L";
+document.getElementById('kpi-alerts').innerText = alertsCount;
+document.getElementById('bi-alerts-panel').innerHTML = alertsHtml.join('');
 renderTable('tbl-abast', store.data.abastecimentos, r => {
-const prev = store.data.abastecimentos.filter(a => a.veiculo_id === r.veiculo_id && new Date(a.data_abastecimento) < new Date(r.data_abastecimento)).sort((a,b) => new Date(b.data_abastecimento) - new Date(a.data_abastecimento))[0];
-const kml = prev ? ((r.quilometragem - prev.quilometragem) / r.litros).toFixed(2) : "0.00";
-return `<td>${new Date(r.data_abastecimento).toLocaleDateString('pt-BR')}</td><td data-col="posto_id">${r.postos_veiculos?.nome_posto}</td><td data-col="veiculo_id">${r.veiculo_veiculos?.placa}</td><td class="txt-right" data-col="litros">${r.litros}</td><td class="txt-right" data-col="quilometragem">${fMilhar(r.quilometragem)}</td><td class="txt-right" style="color:var(--accent); font-weight:700;">${kml}</td><td class="txt-right" data-col="valor_total">${fMoeda(r.valor_total)}</td><td class="txt-center">${actions('abastecimento_veiculos', r.id)}</td>`;
+const vAbs = store.data.abastecimentos.filter(ab => ab.veiculo_id === r.veiculo_id && new Date(ab.data_abastecimento) < new Date(r.data_abastecimento)).sort((a,b) => new Date(b.data_abastecimento) - new Date(a.data_abastecimento))[0];
+const kml = vAbs ? ((r.quilometragem - vAbs.quilometragem) / r.litros) : 0;
+if(kml > 0) { totalKml += kml; countKml++; }
+return `<td>${new Date(r.data_abastecimento).toLocaleDateString('pt-BR')}</td>
+<td><select onchange="updateRow('abastecimento_veiculos', '${r.id}', 'posto_id', this.value)">${store.data.postos.map(p => `<option value="${p.id}" ${p.id === r.posto_id ? 'selected' : ''}>${p.nome_posto}</option>`).join('')}</select></td>
+<td><select onchange="updateRow('abastecimento_veiculos', '${r.id}', 'veiculo_id', this.value)">${store.data.veiculos.map(v => `<option value="${v.id}" ${v.id === r.veiculo_id ? 'selected' : ''}>${v.placa}</option>`).join('')}</select></td>
+<td class="txt-right" data-col="litros">${r.litros}</td><td class="txt-right" data-col="quilometragem">${fMilhar(r.quilometragem)}</td>
+<td class="txt-right" style="color:var(--accent); font-weight:700;">${kml.toFixed(2)}</td><td data-col="tipo_combustivel">${r.tipo_combustivel || 'Gasolina Aditivada'}</td>
+<td class="txt-right" data-col="valor_total">${fMoeda(r.valor_total)}</td><td class="txt-center">${actions('abastecimento_veiculos', r.id)}</td>`;
 });
-renderTable('tbl-veic', store.data.veiculos, r => `<td data-col="placa">${r.placa}</td><td data-col="modelo">${r.modelo}</td><td data-col="marca">${r.marca}</td><td data-col="ano">${r.ano}</td><td data-col="renavam">${r.renavam}</td><td class="txt-right" data-col="km_atual">${fMilhar(r.km_atual)}</td><td class="txt-center">${actions('veiculo_veiculos', r.id)}</td>`);
-renderTable('tbl-posto', store.data.postos, r => `<td data-col="nome_posto">${r.nome_posto}</td><td data-col="cnpj">${r.cnpj}</td><td data-col="cidade">${r.cidade}</td><td data-col="uf">${r.uf}</td><td class="txt-center">${actions('postos_veiculos', r.id)}</td>`);
-renderTable('tbl-motorista', store.data.motoristas, r => `<td data-col="nome">${r.nome}</td><td data-col="telefone">${r.telefone}</td><td data-col="cpf">${r.cpf}</td><td data-col="cnh">${r.cnh}</td><td class="txt-center">${actions('motoristas_veiculos', r.id)}</td>`);
+document.getElementById('kpi-kml').innerText = countKml > 0 ? (totalKml / countKml).toFixed(2) + " Km/L" : "0.00 Km/L";
+renderTable('tbl-veic', store.data.veiculos, r => `<td data-col="placa">${r.placa}</td><td data-col="modelo">${r.modelo}</td><td data-col="tipo_combustivel">${r.tipo_combustivel || 'Gasolina'}</td><td data-col="vencimento_licenciamento">${r.vencimento_licenciamento || ''}</td><td data-col="vencimento_renavam">${r.vencimento_renavam || ''}</td><td class="txt-right" data-col="km_atual">${fMilhar(r.km_atual)}</td><td class="txt-center">${actions('veiculo_veiculos', r.id)}</td>`);
+renderTable('tbl-posto', store.data.postos, r => `<td data-col="nome_posto">${r.nome_posto}</td><td data-col="cnpj">${r.cnpj}</td><td data-col="cidade">${r.cidade}</td><td class="txt-center">${actions('postos_veiculos', r.id)}</td>`);
+renderTable('tbl-motorista', store.data.motoristas, r => `<td data-col="nome">${r.nome}</td><td data-col="telefone">${r.telefone}</td><td data-col="cpf">${r.cpf}</td><td class="txt-center">${actions('motoristas_veiculos', r.id)}</td>`);
 renderCharts();
 }
 function renderCharts() {
-const ctxMoney = document.getElementById('chart-money').getContext('2d');
-if(store.charts.money) store.charts.money.destroy();
 const sorted = [...store.data.abastecimentos].reverse();
-store.charts.money = new Chart(ctxMoney, { type:'line', data: { labels: sorted.map(a => new Date(a.data_abastecimento).toLocaleDateString('pt-BR')), datasets: [{ label: 'Gasto por Abastecimento (R$)', data: sorted.map(a => a.valor_total), borderColor: '#3b82f6', tension: 0.4, fill: true, backgroundColor: 'rgba(59,130,246,0.1)' }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } });
+const labels = sorted.map(a => new Date(a.data_abastecimento).toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}));
+const year = new Date().getFullYear();
+const createChart = (id, label, data, color) => {
+if(store.charts[id]) store.charts[id].destroy();
+store.charts[id] = new Chart(document.getElementById(id).getContext('2d'), { type:'line', data: { labels, datasets: [{ label: `${label} - ${year}`, data, borderColor: color, tension: 0.3, fill: true, backgroundColor: color + '1A' }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{title:{display:true, text:label, color:'#fff'}} } });
+};
+createChart('chart-money', 'Gasto Total (R$)', sorted.map(a => a.valor_total), '#3b82f6');
+createChart('chart-eff', 'Eficiência (Km/L)', sorted.map((r, i) => { const prev = sorted[i-1]; return prev ? (r.quilometragem - prev.quilometragem) / r.litros : 0; }), '#22c55e');
+createChart('chart-litros', 'Volume (L)', sorted.map(a => a.litros), '#8b5cf6');
 }
 function actions(tb, id) { return `<div class="actions"><button class="btn-action btn-edit" onclick="enableEdit(this, '${tb}', '${id}')">✏️</button><button class="btn-action btn-del" onclick="del('${tb}', '${id}')">🗑️</button></div>`; }
 function enableEdit(btn, table, id) {
@@ -143,6 +170,7 @@ const row = btn.closest('tr'); const cells = row.querySelectorAll('td[data-col]'
 if(btn.innerText !== "💾") { cells.forEach(c => c.contentEditable = "true"); btn.innerText = "💾"; btn.style.background = "#22c55e"; }
 else { const updates = {}; cells.forEach(c => { let val = c.innerText.replace(/[R$\.\s-]/g, '').replace(',', '.'); updates[c.dataset.col] = isNaN(val) || val === "" ? c.innerText : parseFloat(val); c.contentEditable = "false"; }); save(table, id, updates); btn.innerText = "✏️"; btn.style.background = "#3b82f6"; }
 }
+async function updateRow(table, id, col, val) { const updates = {}; updates[col] = val; save(table, id, updates); }
 async function save(table, id, data) { const { error } = await db.from(table).update(data).eq('id', id); if(!error) init(); else alert("Erro ao salvar"); }
 async function del(table, id) { if(confirm("Excluir?")) { await db.from(table).delete().eq('id', id); init(); } }
 function renderTable(id, data, rowFn) { const tbody = document.querySelector(`#${id} tbody`); if(tbody) tbody.innerHTML = data.map(r => `<tr>${rowFn(r)}</tr>`).join(''); }
@@ -150,20 +178,15 @@ function showTab(id, e) { document.querySelectorAll('.main-container').forEach(t
 let currentTableAdd = "";
 function openAdd(table) {
 currentTableAdd = table; document.getElementById('modal').style.display = 'flex'; const body = document.getElementById('modal-body'); body.innerHTML = "";
-if(table === 'abastecimento_veiculos') {
-body.innerHTML = `<input type="date" id="new-data"><select id="new-posto">${store.data.postos.map(p => `<option value="${p.id}">${p.nome_posto}</option>`).join('')}</select><select id="new-veic">${store.data.veiculos.map(v => `<option value="${v.id}">${v.placa}</option>`).join('')}</select><input type="number" id="new-litros" placeholder="Litros"><input type="number" id="new-km" placeholder="KM Atual"><input type="number" id="new-valor" placeholder="Valor Total R$">`;
-} else if(table === 'veiculo_veiculos') {
-body.innerHTML = `<input type="text" id="new-placa" placeholder="Placa"><input type="text" id="new-modelo" placeholder="Modelo"><input type="text" id="new-marca" placeholder="Marca"><input type="number" id="new-ano" placeholder="Ano"><input type="number" id="new-km-v" placeholder="KM Inicial">`;
-} else if(table === 'postos_veiculos') {
-body.innerHTML = `<input type="text" id="new-n-posto" placeholder="Nome do Posto"><input type="text" id="new-cnpj" placeholder="CNPJ"><input type="text" id="new-cidade" placeholder="Cidade">`;
-} else if(table === 'motoristas_veiculos') {
-body.innerHTML = `<input type="text" id="new-n-moto" placeholder="Nome Completo"><input type="text" id="new-tel" placeholder="Telefone"><input type="text" id="new-cpf" placeholder="CPF">`;
-}
+if(table === 'abastecimento_veiculos') body.innerHTML = `<input type="date" id="new-data"><select id="new-posto">${store.data.postos.map(p => `<option value="${p.id}">${p.nome_posto}</option>`).join('')}</select><select id="new-veic">${store.data.veiculos.map(v => `<option value="${v.id}">${v.placa}</option>`).join('')}</select><input type="number" id="new-litros" placeholder="Litros"><input type="number" id="new-km" placeholder="KM Atual"><input type="number" id="new-valor" placeholder="Valor Total R$"><input type="text" id="new-comb" value="Gasolina Aditivada">`;
+else if(table === 'veiculo_veiculos') body.innerHTML = `<input type="text" id="new-placa" placeholder="Placa"><input type="text" id="new-modelo" placeholder="Modelo"><input type="text" id="new-comb-v" value="Gasolina"><input type="date" id="new-lic" placeholder="Licenciamento"><input type="date" id="new-ren" placeholder="Renavam"><input type="number" id="new-km-v" placeholder="KM Inicial">`;
+else if(table === 'postos_veiculos') body.innerHTML = `<input type="text" id="new-n-posto" placeholder="Nome do Posto"><input type="text" id="new-cnpj" placeholder="CNPJ"><input type="text" id="new-cidade" placeholder="Cidade">`;
+else if(table === 'motoristas_veiculos') body.innerHTML = `<input type="text" id="new-n-moto" placeholder="Nome"><input type="text" id="new-tel" placeholder="Telefone"><input type="text" id="new-cpf" placeholder="CPF">`;
 }
 async function saveNew() {
 let data = { empresa_id: EMPRESA_ID };
-if(currentTableAdd === 'abastecimento_veiculos') data = { ...data, data_abastecimento: document.getElementById('new-data').value, posto_id: document.getElementById('new-posto').value, veiculo_id: document.getElementById('new-veic').value, litros: parseFloat(document.getElementById('new-litros').value), quilometragem: parseInt(document.getElementById('new-km').value), valor_total: parseFloat(document.getElementById('new-valor').value) };
-else if(currentTableAdd === 'veiculo_veiculos') data = { ...data, placa: document.getElementById('new-placa').value, modelo: document.getElementById('new-modelo').value, marca: document.getElementById('new-marca').value, ano: parseInt(document.getElementById('new-ano').value), km_atual: parseInt(document.getElementById('new-km-v').value) };
+if(currentTableAdd === 'abastecimento_veiculos') data = { ...data, data_abastecimento: document.getElementById('new-data').value, posto_id: document.getElementById('new-posto').value, veiculo_id: document.getElementById('new-veic').value, litros: parseFloat(document.getElementById('new-litros').value), quilometragem: parseInt(document.getElementById('new-km').value), valor_total: parseFloat(document.getElementById('new-valor').value), tipo_combustivel: document.getElementById('new-comb').value };
+else if(currentTableAdd === 'veiculo_veiculos') data = { ...data, placa: document.getElementById('new-placa').value, modelo: document.getElementById('new-modelo').value, tipo_combustivel: document.getElementById('new-comb-v').value, vencimento_licenciamento: document.getElementById('new-lic').value, vencimento_renavam: document.getElementById('new-ren').value, km_atual: parseInt(document.getElementById('new-km-v').value) };
 else if(currentTableAdd === 'postos_veiculos') data = { ...data, nome_posto: document.getElementById('new-n-posto').value, cnpj: document.getElementById('new-cnpj').value, cidade: document.getElementById('new-cidade').value };
 else if(currentTableAdd === 'motoristas_veiculos') data = { ...data, nome: document.getElementById('new-n-moto').value, telefone: document.getElementById('new-tel').value, cpf: document.getElementById('new-cpf').value };
 const { error } = await db.from(currentTableAdd).insert([data]);
