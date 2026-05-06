@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.2, user-scalable=yes">
-<title>VEÍCULOS MASTER - BI EDITION</title>
+<title>VEÍCULOS MASTER - EDITION</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -32,9 +32,9 @@ button { padding: 10px; border-radius: 8px; border: none; font-weight: 700; curs
 .kpi-value { font-size: 18px; font-weight: 800; }
 .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 15px; }
-.alert-list { background: rgba(239, 68, 68, 0.05); border: 1px solid var(--danger); border-radius: 12px; padding: 12px; color: #fca5a5; font-size: 11px; }
+.alert-box { background: rgba(239, 68, 68, 0.05); border: 1px solid var(--danger); border-radius: 12px; padding: 12px; color: #fca5a5; font-size: 11px; }
 .table-wrapper { overflow-x: auto; background: var(--card); border-radius: 16px; border: 1px solid var(--border); }
-table { width: 100%; border-collapse: collapse; font-size: 10px; min-width: 900px; }
+table { width: 100%; border-collapse: collapse; font-size: 10px; min-width: 1000px; }
 th { background: #1e293b; padding: 12px; color: var(--text-dim); text-transform: uppercase; font-weight: 800; text-align: left; }
 td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
 .actions { display: flex; gap: 4px; justify-content: center; }
@@ -50,7 +50,7 @@ td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
 <div id="login-screen">
 <div class="login-box">
 <h2 style="color:var(--accent); font-weight:800; font-size: 24px;">VEÍCULOS MASTER</h2>
-<p style="color:var(--text-dim); font-size: 10px; margin-bottom: 20px;">CONTROLE DE FROTAS</p>
+<p style="color:var(--text-dim); font-size: 10px; margin-bottom: 20px;">2026 CONTROLE</p>
 <input type="text" id="user" placeholder="Usuário">
 <input type="password" id="pass" placeholder="Senha">
 <button class="btn-primary" onclick="login()">ACESSAR PAINEL</button>
@@ -79,7 +79,7 @@ td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
 </div>
 <div class="kpi-grid">
 <div class="kpi-card" style="--c:var(--kpi-1)"><div class="kpi-label">Investimento Total</div><div id="kpi-total" class="kpi-value">R$ 0,00</div></div>
-<div class="kpi-card" style="--c:var(--kpi-2)"><div class="kpi-label">Eficiência Média (Período)</div><div id="kpi-kml" class="kpi-value">0.00 Km/L</div></div>
+<div class="kpi-card" style="--c:var(--kpi-2)"><div class="kpi-label">Eficiência Geral (Período)</div><div id="kpi-kml" class="kpi-value">0.00 Km/L</div></div>
 <div class="kpi-card" style="--c:var(--kpi-3)"><div class="kpi-label">Volume Abastecido</div><div id="kpi-litros" class="kpi-value">0.00 L</div></div>
 <div class="kpi-card" style="--c:var(--danger)"><div class="kpi-label">Vencimentos</div><div id="kpi-alerts" class="kpi-value">0</div></div>
 </div>
@@ -91,8 +91,8 @@ td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
 </div>
 </div>
 <div id="tab-abast" class="main-container" style="display:none">
-<div style="display:flex; justify-content:space-between; align-items:center;"><h3>Abastecimentos</h3><button class="btn-add" onclick="openAdd('abastecimento_veiculos')">+ NOVO ABASTECIMENTO</button></div>
-<div class="table-wrapper"><table id="tbl-abast"><thead><tr><th>DATA</th><th>POSTO</th><th>VEÍCULO</th><th class="txt-right">LITROS</th><th class="txt-right">KM</th><th class="txt-right">KM/L</th><th class="txt-right">TIPO</th><th class="txt-right">TOTAL</th><th class="txt-center">AÇÕES</th></tr></thead><tbody></tbody></table></div>
+<div style="display:flex; justify-content:space-between; align-items:center;"><h3>Histórico de Abastecimentos</h3><button class="btn-add" onclick="openAdd('abastecimento_veiculos')">+ NOVO ABASTECIMENTO</button></div>
+<div class="table-wrapper"><table id="tbl-abast"><thead><tr><th>DATA</th><th>POSTO</th><th>VEÍCULO</th><th>TANQUE</th><th class="txt-right">LITROS</th><th class="txt-right">KM</th><th class="txt-right">KM/L</th><th class="txt-right">TIPO</th><th class="txt-right">TOTAL</th><th class="txt-center">AÇÕES</th></tr></thead><tbody></tbody></table></div>
 </div>
 <div id="tab-veic" class="main-container" style="display:none">
 <div style="display:flex; justify-content:space-between; align-items:center;"><h3>Frota Master</h3><button class="btn-add" onclick="openAdd('veiculo_veiculos')">+ NOVO VEÍCULO</button></div>
@@ -118,14 +118,12 @@ const fMoeda = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', cur
 const fMilhar = (v) => Number(v).toLocaleString('pt-BR');
 async function login() { document.getElementById('login-screen').style.display = 'none'; document.getElementById('app').style.display = 'flex'; init(); }
 function suggestDates() {
-if(!store.data.abastecimentos.length) return;
-const last = store.data.abastecimentos[0].data_abastecimento;
-document.getElementById('filter-start').value = last;
+document.getElementById('filter-start').value = '2026-01-01';
 document.getElementById('filter-end').value = '2026-06-05';
 }
 async function init() {
-const start = document.getElementById('filter-start').value;
-const end = document.getElementById('filter-end').value;
+const start = document.getElementById('filter-start').value || '2026-01-01';
+const end = document.getElementById('filter-end').value || '2026-06-05';
 let qA = db.from("abastecimento_veiculos").select("*, postos_veiculos(nome_posto), veiculo_veiculos(placa)").eq("empresa_id", EMPRESA_ID).order("data_abastecimento", {ascending:false});
 if(start && end) qA = qA.gte("data_abastecimento", start).lte("data_abastecimento", end);
 const [v, p, a, m] = await Promise.all([
@@ -149,7 +147,7 @@ document.getElementById('kpi-litros').innerText = totalL.toFixed(2) + " L";
 document.getElementById('kpi-kml').innerText = totalL > 0 ? (totK / totalL).toFixed(2) + " Km/L" : "0.00";
 const alerts = []; const agora = new Date('2026-06-05');
 store.data.veiculos.forEach(v => {
-if(new Date(v.vencimento_licenciamento) < agora || new Date(v.vencimento_renavam) < agora) alerts.push(`<div class="alert-list">Veículo ${v.placa} com Documentos Vencidos (Lic: ${v.vencimento_licenciamento || 'N/A'})</div>`);
+if(new Date(v.vencimento_licenciamento) < agora || new Date(v.vencimento_renavam) < agora) alerts.push(`<div class="alert-box">Veículo ${v.placa} com Documentos Vencidos</div>`);
 });
 document.getElementById('kpi-alerts').innerText = alerts.length;
 document.getElementById('alert-panel').innerHTML = alerts.join('');
@@ -159,6 +157,7 @@ const kml = vAbs ? ((r.quilometragem - vAbs.quilometragem) / r.litros).toFixed(2
 return `<td>${new Date(r.data_abastecimento).toLocaleDateString('pt-BR')}</td>
 <td><select onchange="updateRow('abastecimento_veiculos', '${r.id}', 'posto_id', this.value)">${store.data.postos.map(p => `<option value="${p.id}" ${p.id === r.posto_id ? 'selected' : ''}>${p.nome_posto}</option>`).join('')}</select></td>
 <td><select onchange="updateRow('abastecimento_veiculos', '${r.id}', 'veiculo_id', this.value)">${store.data.veiculos.map(v => `<option value="${v.id}" ${v.id === r.veiculo_id ? 'selected' : ''}>${v.placa}</option>`).join('')}</select></td>
+<td data-col="tanque">${r.tanque || 'Cheio'}</td>
 <td class="txt-right" data-col="litros">${r.litros}</td><td class="txt-right" data-col="quilometragem">${fMilhar(r.quilometragem)}</td>
 <td class="txt-right" style="color:var(--accent);">${kml}</td><td data-col="tipo_combustivel">${r.tipo_combustivel || 'Gasolina Aditivada'}</td>
 <td class="txt-right" data-col="valor_total">${fMoeda(r.valor_total)}</td><td class="txt-center">${actions('abastecimento_veiculos', r.id)}</td>`;
@@ -171,13 +170,13 @@ renderCharts();
 function renderCharts() {
 const sorted = [...store.data.abastecimentos].reverse();
 const labels = sorted.map(a => new Date(a.data_abastecimento).toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}));
-const year = new Date().getFullYear();
+const year = 2026;
 const draw = (id, label, data, color) => {
 if(store.charts[id]) store.charts[id].destroy();
 store.charts[id] = new Chart(document.getElementById(id).getContext('2d'), { type:'line', data: { labels, datasets: [{ label: `${label} - ${year}`, data, borderColor: color, tension: 0.3, fill: true, backgroundColor: color + '1A' }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{title:{display:true, text:label, color:'#fff'}} } });
 };
-draw('chart-money', 'Evolução de Gastos (R$)', sorted.map(a => a.valor_total), '#3b82f6');
-draw('chart-litros', 'Evolução de Volume (L)', sorted.map(a => a.litros), '#8b5cf6');
+draw('chart-money', 'Gasto Total (R$)', sorted.map(a => a.valor_total), '#3b82f6');
+draw('chart-litros', 'Volume (L)', sorted.map(a => a.litros), '#8b5cf6');
 draw('chart-eff', 'Eficiência (Km/L)', sorted.map((r, i) => { const prev = sorted[i-1]; return prev ? (r.quilometragem - prev.quilometragem) / r.litros : 0; }), '#22c55e');
 }
 function actions(tb, id) { return `<div class="actions"><button class="btn-action btn-edit" onclick="enableEdit(this, '${tb}', '${id}')">✏️</button><button class="btn-action btn-del" onclick="del('${tb}', '${id}')">🗑️</button></div>`; }
@@ -187,29 +186,36 @@ if(btn.innerText !== "💾") { cells.forEach(c => c.contentEditable = "true"); b
 else { const u = {}; cells.forEach(c => { let val = c.innerText.replace(/[R$\.\s-]/g, '').replace(',', '.'); u[c.dataset.col] = isNaN(val) || val === "" ? c.innerText : parseFloat(val); c.contentEditable = "false"; }); save(table, id, u); btn.innerText = "✏️"; btn.style.background = "#3b82f6"; }
 }
 async function updateRow(t, id, c, v) { const u = {}; u[c] = v; save(t, id, u); }
-async function save(t, id, d) { const { error } = await db.from(t).update(d).eq('id', id); if(!error) init(); else alert("Erro ao salvar"); }
+async function save(t, id, d) { 
+const cleanData = {};
+Object.keys(d).forEach(k => { if(d[k] !== undefined && d[k] !== null) cleanData[k] = d[k]; });
+const { error } = await db.from(t).update(cleanData).eq('id', id); 
+if(!error) init(); 
+else { console.error(error); alert("Erro ao salvar dados."); }
+}
 async function del(t, id) { if(confirm("Excluir?")) { await db.from(t).delete().eq('id', id); init(); } }
 function renderTable(id, data, rowFn) { const tbody = document.querySelector(`#${id} tbody`); if(tbody) tbody.innerHTML = data.map(r => `<tr>${rowFn(r)}</tr>`).join(''); }
 function showTab(id, e) { document.querySelectorAll('.main-container').forEach(t => t.style.display = 'none'); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(id).style.display = 'flex'; if(e) e.target.classList.add('active'); }
 let currentTableAdd = "";
 function openAdd(table) {
 currentTableAdd = table; document.getElementById('modal').style.display = 'flex'; const body = document.getElementById('modal-body'); body.innerHTML = "";
-if(table === 'abastecimento_veiculos') body.innerHTML = `<input type="date" id="new-data"><select id="new-posto">${store.data.postos.map(p => `<option value="${p.id}">${p.nome_posto}</option>`).join('')}</select><select id="new-veic">${store.data.veiculos.map(v => `<option value="${v.id}">${v.placa}</option>`).join('')}</select><input type="number" id="new-litros" placeholder="Litros"><input type="number" id="new-km" placeholder="KM Atual"><input type="number" id="new-valor" placeholder="Valor Total R$"><input type="text" id="new-comb" value="Gasolina Aditivada">`;
+if(table === 'abastecimento_veiculos') body.innerHTML = `<input type="date" id="new-data"><select id="new-posto">${store.data.postos.map(p => `<option value="${p.id}">${p.nome_posto}</option>`).join('')}</select><select id="new-veic">${store.data.veiculos.map(v => `<option value="${v.id}">${v.placa}</option>`).join('')}</select><select id="new-tanque"><option>Cheio</option><option>Parcial</option></select><input type="number" id="new-litros" placeholder="Litros"><input type="number" id="new-km" placeholder="KM Atual"><input type="number" id="new-valor" placeholder="Valor Total R$"><input type="text" id="new-comb" value="Gasolina Aditivada">`;
 else if(table === 'veiculo_veiculos') body.innerHTML = `<input type="text" id="new-placa" placeholder="Placa"><input type="text" id="new-modelo" placeholder="Modelo"><input type="text" id="new-comb-v" value="Gasolina"><input type="date" id="new-lic" placeholder="Licenciamento"><input type="date" id="new-ren" placeholder="Renavam"><input type="number" id="new-km-v" placeholder="KM Inicial">`;
-else if(table === 'postos_veiculos') body.innerHTML = `<input type="text" id="new-n-posto" placeholder="Nome do Posto"><input type="text" id="new-cnpj" placeholder="CNPJ"><input type="text" id="new-cidade" placeholder="Cidade">`;
+else if(table === 'postos_veiculos') body.innerHTML = `<input type="text" id="new-n-posto" placeholder="Nome do Posto"><input type="text" id="new-cnpj" placeholder="CNPJ"><input type="text" id="new-cidade" value="Tubarão"><input type="text" id="new-uf" value="SC">`;
 else if(table === 'motoristas_veiculos') body.innerHTML = `<input type="text" id="new-n-moto" placeholder="Nome"><input type="text" id="new-tel" placeholder="Telefone"><input type="text" id="new-cpf" placeholder="CPF">`;
 }
 async function saveNew() {
 let d = { empresa_id: EMPRESA_ID };
-if(currentTableAdd === 'abastecimento_veiculos') d = { ...d, data_abastecimento: document.getElementById('new-data').value, posto_id: document.getElementById('new-posto').value, veiculo_id: document.getElementById('new-veic').value, litros: parseFloat(document.getElementById('new-litros').value), quilometragem: parseInt(document.getElementById('new-km').value), valor_total: parseFloat(document.getElementById('new-valor').value), tipo_combustivel: document.getElementById('new-comb').value };
+if(currentTableAdd === 'abastecimento_veiculos') d = { ...d, data_abastecimento: document.getElementById('new-data').value, posto_id: document.getElementById('new-posto').value, veiculo_id: document.getElementById('new-veic').value, tanque: document.getElementById('new-tanque').value, litros: parseFloat(document.getElementById('new-litros').value), quilometragem: parseInt(document.getElementById('new-km').value), valor_total: parseFloat(document.getElementById('new-valor').value), tipo_combustivel: document.getElementById('new-comb').value };
 else if(currentTableAdd === 'veiculo_veiculos') d = { ...d, placa: document.getElementById('new-placa').value, modelo: document.getElementById('new-modelo').value, tipo_combustivel: document.getElementById('new-comb-v').value, vencimento_licenciamento: document.getElementById('new-lic').value, vencimento_renavam: document.getElementById('new-ren').value, km_atual: parseInt(document.getElementById('new-km-v').value) };
-else if(currentTableAdd === 'postos_veiculos') d = { ...d, nome_posto: document.getElementById('new-n-posto').value, cnpj: document.getElementById('new-cnpj').value, cidade: document.getElementById('new-cidade').value };
+else if(currentTableAdd === 'postos_veiculos') d = { ...d, nome_posto: document.getElementById('new-n-posto').value, cnpj: document.getElementById('new-cnpj').value, cidade: document.getElementById('new-cidade').value, uf: document.getElementById('new-uf').value };
 else if(currentTableAdd === 'motoristas_veiculos') d = { ...d, nome: document.getElementById('new-n-moto').value, telefone: document.getElementById('new-tel').value, cpf: document.getElementById('new-cpf').value };
 const { error } = await db.from(currentTableAdd).insert([d]);
-if(!error) { closeModal(); init(); } else alert("Erro ao inserir");
+if(!error) { closeModal(); init(); } else { console.error(error); alert("Erro ao inserir novo registro."); }
 }
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
 function logout() { location.reload(); }
+window.onload = () => { suggestDates(); };
 </script>
 </body>
-</html>
+</html>,language:html},success:true},name:codeGenerate}
